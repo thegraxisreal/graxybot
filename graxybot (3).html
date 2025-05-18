@@ -458,7 +458,7 @@ html, body {
 
 <div id="popupOverlay">
     <div class="popup-content">
-        <h2>Graxybot Web v2.0)</h2>
+        <h2>Graxybot Web v1.5.6 (Streaming Fix)</h2>
         <p>Key changes:</p>
         <ul>
             <li>Image Generation Now available for free!</li>
@@ -714,7 +714,7 @@ html, body {
                 break;
         }
 
-        currentThinkingIndicatorElement = displayMessage('', 'bot-thinking', false, null, null, iconClass);
+        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, iconClass); // Pass empty array for contentParts
         if (currentThinkingIndicatorElement) {
             currentThinkingIndicatorElement.classList.add(indicatorClass);
             const msgDiv = currentThinkingIndicatorElement.querySelector('.message');
@@ -738,7 +738,6 @@ html, body {
     }
 
     function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedImageSrc = null, customIconClass = null, imagePrompt = null) {
-        // contentParts is expected to be an array like [{text: "..."}, {inline_data: ...}] or just text string for older calls
         if (!chatMessagesContainer) { console.error("Chat message container not found."); return null; }
         const wrapper = document.createElement('div');
         wrapper.classList.add('message-content-wrapper');
@@ -773,7 +772,7 @@ html, body {
         messageDiv.classList.add('message');
 
         if (sender === 'bot-thinking') {
-            // Dots and text are added by showThinkingIndicator
+            // Dots and text are added by showThinkingIndicator, no paragraph needed here
         } else {
             const paragraph = document.createElement('p');
             paragraph.dataset.streamTarget = "true";
@@ -782,40 +781,39 @@ html, body {
             if (Array.isArray(contentParts)) {
                 const textPart = contentParts.find(part => part.text);
                 if (textPart) textFromParts = textPart.text;
-            } else if (typeof contentParts === 'string') { // Fallback for direct string content
-                textFromParts = contentParts;
+            } else if (typeof contentParts === 'string') {
+                textFromParts = contentParts; // Should ideally be array, but handle for safety
             }
 
 
-            if (generatedImageSrc) { // For bot displaying a generated image
+            if (generatedImageSrc) {
                 const imgElement = document.createElement('img');
                 imgElement.src = generatedImageSrc;
                 imgElement.alt = imagePrompt || "Generated image";
                 imgElement.classList.add('generated-image');
                 messageDiv.appendChild(imgElement);
-                if (imagePrompt) { // Display prompt under generated image
+                if (imagePrompt) {
                     paragraph.innerHTML = `<em>Prompt: ${imagePrompt.replace(/\n/g, '<br>')}</em>`;
-                } else if (textFromParts) { // Fallback to any other text if no specific prompt
+                } else if (textFromParts) {
                      processAndAppendText(textFromParts, paragraph);
                 }
-            } else if (actualSenderType === 'user' && imagePreview) { // For user displaying their uploaded image preview
+            } else if (actualSenderType === 'user' && imagePreview) {
                 const imgElement = document.createElement('img');
                 imgElement.src = imagePreview;
                 imgElement.alt = "Sent image preview";
                 imgElement.classList.add('sent-image');
-                messageDiv.appendChild(imgElement); // Image first for user
-                if (textFromParts) { // Then text
+                messageDiv.appendChild(imgElement);
+                if (textFromParts) {
                     processAndAppendText(textFromParts, paragraph);
                 }
-            } else if (textFromParts) { // For regular text messages (bot or user without image)
+            } else if (textFromParts) {
                 processAndAppendText(textFromParts, paragraph);
-            } else if (!imagePreview && !generatedImageSrc && actualSenderType !== 'bot') { // User sent truly empty message
+            } else if (!imagePreview && !generatedImageSrc && actualSenderType !== 'bot') {
                  paragraph.textContent = "[Empty Message]";
             }
 
-
-            // Only append paragraph if it has content OR if it's for a generated image prompt display
-            if (paragraph.hasChildNodes() || paragraph.textContent) {
+            // Append paragraph if it's for bot text streaming OR if it has content for other types
+            if ((actualSenderType === 'bot' && !generatedImageSrc && !isError) || paragraph.hasChildNodes() || paragraph.textContent) {
                  messageDiv.appendChild(paragraph);
             }
 
@@ -1220,11 +1218,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
 
     async function sendMessageInternal(messageText, isInitialMessage = false) {
-        if ((!messageText && !selectedImageData && !isImageGenerationModeActive) || // Allow empty text if image mode active
-            (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText)) // Allow sending prompt if image mode is active even if indicator is shown for a moment
+        if ((!messageText && !selectedImageData && !isImageGenerationModeActive) ||
+            (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText))
            ) {
             if (isImageGenerationModeActive && !messageText && !selectedImageData) {
-                // If image mode is on but no text and no image, prompt user.
                 displayMessage([{text:"Image generation mode is active. Please type a prompt or attach an image to describe."}], 'bot', true);
                 return;
             }
@@ -1242,7 +1239,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         const localSelectedImageMimeType = selectedImageMimeType;
         const localSelectedImagePreviewUrl = selectedImagePreviewUrl;
 
-        // Build the user's message parts (text and/or uploaded image)
         const userMessagePayloadParts = [];
         if (messageText) {
             userMessagePayloadParts.push({ text: messageText });
@@ -1253,22 +1249,21 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
 
         if (isImageGenerationModeActive) {
-            if (messageText) { // Use typed text as prompt
-                displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl); // Display what user sent
+            if (messageText) {
+                displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
                 addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
                 if (messageInput) messageInput.value = '';
                 if (initialMessageInput) initialMessageInput.value = '';
-                removeSelectedImage(); // Clear uploaded image after it's logged/displayed as part of prompt.
+                removeSelectedImage();
 
-                await triggerStableDiffusionGeneration(messageText); // Generate image with this text
+                await triggerStableDiffusionGeneration(messageText);
                 return;
-            } else { // No text, but image mode is on. This shouldn't happen if initial check is good.
+            } else {
                 displayMessage([{text:"Image generation mode is active. Please type a prompt."}], 'bot', true);
                 return;
             }
         }
 
-        // --- Regular message or "Thinking" mode processing ---
         let chatIdForMessage = currentChatId;
         const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
         if (welcomeContainer) chatMessagesContainer.innerHTML = '';
@@ -1284,32 +1279,18 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             deactivateImageGenerationMode();
         }
 
-        // Display user message (text and/or attached image)
-        // Ensure partsForDisplayAndHistory is correctly formed even if only an image is sent
-        let partsForDisplayAndHistory;
-        if (userMessagePayloadParts.length > 0) {
-            partsForDisplayAndHistory = userMessagePayloadParts;
-        } else if (localSelectedImagePreviewUrl) { // Fallback if only preview exists (should mean inline_data was also there)
-            partsForDisplayAndHistory = [{ text: "[Image Sent]" }]; // Should ideally not be needed if userMessagePayloadParts is robust
-        } else {
-            // This case means messageText was empty AND no image was selected.
-            // The initial check in sendMessageInternal should prevent this.
-            // If somehow reached, send an empty text part to avoid errors.
-            partsForDisplayAndHistory = [{ text: "" }];
-        }
-
+        let partsForDisplayAndHistory = userMessagePayloadParts.length > 0 ? userMessagePayloadParts : (localSelectedImagePreviewUrl ? [{ text: "[Image Sent]" }] : [{ text: "" }]);
         displayMessage(partsForDisplayAndHistory, 'user', false, localSelectedImagePreviewUrl);
         addMessageToCurrentChatHistory('user', partsForDisplayAndHistory, localSelectedImagePreviewUrl);
 
-        removeSelectedImage(); // Clear uploaded image after it's been processed for this message
+        removeSelectedImage();
 
         if (!chatIdForMessage || !chats[chatIdForMessage]) { console.error("Chat ID/data invalid."); return; }
 
         if (messageInput) messageInput.disabled = true;
         if (sendButton) sendButton.disabled = true;
         if (initialSendButton) initialSendButton.disabled = true;
-        // Action buttons (Thinking, Create Image) are disabled by showThinkingIndicator
-        updateActionButtonsState(); // Explicitly disable here too
+        updateActionButtonsState();
         if (imageUploadButton) imageUploadButton.disabled = true;
 
 
@@ -1351,14 +1332,12 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             const modelToUseGoogle = modelMapping[DEFAULT_FAKE_MODEL];
             const systemPromptForSendGoogle = getSystemPrompt(DEFAULT_FAKE_MODEL);
 
-            // userMessagePayloadParts already contains the text and/or inline_data for the current user message
             const contentPartsForGoogleAI = [...userMessagePayloadParts];
 
             if (contentPartsForGoogleAI.length === 0) {
-                console.warn("No content for Google AI. This should not happen if initial checks are correct.");
-                // Re-enable buttons and return
+                console.warn("No content for Google AI.");
                 removeThinkingIndicator();
-                deactivateReasonMode(); // Also deactivates image mode via updateActionButtonsState
+                deactivateReasonMode();
                 if (messageInput) messageInput.disabled = false;
                 if (sendButton) sendButton.disabled = false;
                 if (initialSendButton) initialSendButton.disabled = false;
@@ -1375,26 +1354,25 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 const modelInstance = genAI.getGenerativeModel({ model: modelToUseGoogle, safetySettings });
                 const mainHistory = chats[chatIdForMessage]?.history || [];
 
-                // History for API should now correctly include inline_data for user messages
                 const historyForAPI = mainHistory
-                    .slice(-10) // Get last 10 messages (user or model)
+                    .slice(-10)
                     .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
                     .map(msg => ({
                         role: msg.role,
-                        parts: msg.parts.map(part => { // Ensure parts are correctly formatted for API
-                            if (part.text !== undefined) return { text: part.text }; // Allow empty string for text
+                        parts: msg.parts.map(part => {
+                            if (part.text !== undefined) return { text: part.text };
                             if (part.inline_data) return { inline_data: { mime_type: part.inline_data.mime_type, data: part.inline_data.data }};
-                            return null; // Should not happen if parts are well-formed
+                            return null;
                         }).filter(p => p !== null)
                     }))
-                    .filter(msg => msg.parts.length > 0); // Ensure message still has valid parts
+                    .filter(msg => msg.parts.length > 0);
 
 
                 const streamResult = await modelInstance.generateContentStream({
                     contents: [...historyForAPI, { role: "user", parts: contentPartsForGoogleAI }],
                     systemInstruction: { role: "system", parts: [{ text: systemPromptForSendGoogle }] }
                 });
-                botMessageElement = displayMessage([], 'bot'); // Display empty initially for streaming
+                botMessageElement = displayMessage([], 'bot'); // Pass empty array for contentParts
                 if (botMessageElement) {
                     botMessageBubble = botMessageElement.querySelector('.message-bubble');
                     botMessageParagraph = botMessageBubble?.querySelector('p[data-stream-target="true"]');
@@ -1416,16 +1394,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown'}]` }]);
             }
         }
-        // Deactivate modes and re-enable inputs
-        deactivateReasonMode(); // Will call updateActionButtonsState
-        // Image mode is handled within its own flow or by this point should be off
-        // General re-enabling if not handled by specific mode deactivation:
-        removeThinkingIndicator(); // General cleanup
+        deactivateReasonMode();
+        removeThinkingIndicator();
         if (messageInput) messageInput.disabled = false;
         if (sendButton) sendButton.disabled = false;
         if (initialSendButton) initialSendButton.disabled = false;
         if (imageUploadButton) imageUploadButton.disabled = false;
-        updateActionButtonsState(); // Ensure correct final state
+        updateActionButtonsState();
         if (messageInput && !messageInput.disabled) messageInput.focus();
     }
 
@@ -1447,8 +1422,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
         if (messageText || imageSelected || isImageGenerationModeActive) {
             if (!isImageGenerationModeActive || (isImageGenerationModeActive && !messageText && !imageSelected) ) {
-                 // Clear input only if not in image mode waiting for prompt,
-                 // or if in image mode but user sent truly empty (no text, no new image)
                  if (!(isImageGenerationModeActive && (messageText || imageSelected))) {
                     messageInput.value = '';
                  }
