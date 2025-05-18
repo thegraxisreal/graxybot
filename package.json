@@ -1,13 +1,13 @@
 {
-  "name": "graxybot-web",  // Or whatever you want to name your project
+  "name": "graxybot-web",
   "version": "1.0.0",
   "description": "Server for the Graxybot web interface",
-  "main": "server.js",   // The entry point of your application
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js"  // The command Render will use to start your server
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.17.1"  // Or the version of Express you installed
+    "express": "^4.17.1"
   },
   "keywords": [],
   "author": "Grayson",
