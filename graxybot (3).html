@@ -1350,7 +1350,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
             let fullResponseText = "";
             try {
-                if (!genAI) throw new Error("Google AI Client not initialized.");
+                if (!genAI) throw new Error("Graxybot Not initialized. Please reload.");
                 const modelInstance = genAI.getGenerativeModel({ model: modelToUseGoogle, safetySettings });
                 const mainHistory = chats[chatIdForMessage]?.history || [];
 
