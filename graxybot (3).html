@@ -304,6 +304,7 @@ html, body {
 .code-block-buttons button { background-color: var(--code-button-bg); border: none; color: var(--code-text-color); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; transition: background-color var(--transition); }
 .code-block-buttons button:hover { background-color: var(--code-button-hover-bg); }
 .code-block-buttons button i { margin-right: 4px; }
+.code-block-buttons button i { margin-right: 4px; }
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; white-space: pre-wrap; }
 .line-numbers .line-numbers-rows { border-right-color: var(--code-header-bg) !important; }
 .line-numbers-rows > span::before { color: #6272a4 !important; }
@@ -389,6 +390,21 @@ html, body {
 }
 .popup-content button:hover { background: #805AD5; }
 
+/* --- Mobile Menu Toggle (Hidden by default) --- */
+.menu-toggle {
+    display: none; /* Hidden by default, shown in mobile media query */
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 1001; /* Ensure it's on top */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 5px;
+}
+
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 768px) {
@@ -425,12 +441,29 @@ html, body {
     #model-selector { font-size: 0.8rem; padding-right: 15px;}
     .model-selector-container::after { font-size: 0.6rem; right: 0px;}
     .initial-view h1 { font-size: 2rem; }
-    .chat-messages { padding: 15px 0px; }
+    /* Adjust chat messages padding to make space for fixed input */
+    .chat-messages { padding: 15px 0px 120px 0px; } /* Added bottom padding */
     .message-content-wrapper { padding: 0 10px; gap: 8px; }
     .message-icon { width: 25px; height: 25px; font-size: 0.7rem;}
     .message-bubble { max-width: calc(100% - 33px); }
     .code-block-container pre[class*="language-"] { font-size: 0.8rem; }
-    .chat-input-container { padding: 8px 10px; }
+
+    /* Fix the chat input container at the bottom */
+    .chat-input-container {
+        position: fixed; /* Fix position */
+        bottom: 0; /* Align to bottom */
+        left: 0;
+        right: 0;
+        width: 100%; /* Full width */
+        max-width: 100%; /* Override max-width */
+        padding: 8px 10px 10px; /* Adjust padding for better look */
+        background-color: var(--background); /* Ensure background covers content */
+        border-top: 1px solid var(--border-color); /* Add top border */
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.05); /* Add a subtle shadow */
+        z-index: 10; /* Ensure it's above chat messages */
+        margin: 0; /* Remove auto margin */
+    }
+
     .chat-input-area { padding: 3px 3px 3px 10px; }
     #message-input { padding: 8px 0; }
     .btn { width: 36px; height: 36px; }
@@ -446,6 +479,32 @@ html, body {
     .popup-content button { padding: 8px 16px; font-size: 14px; }
     .welcome-title { font-size: 2rem; }
     .prompt-button { font-size: 0.85rem; padding: 10px; }
+
+    /* Mobile Sidebar Adjustments */
+    .sidebar {
+        position: fixed; /* Make sidebar fixed */
+        left: 0;
+        top: 0;
+        height: 100%;
+        z-index: 1000; /* Ensure it's on top */
+        transform: translateX(-100%); /* Hide it by default */
+        transition: transform 0.3s ease;
+        width: 250px; /* Set a width for the mobile sidebar */
+    }
+
+    .sidebar.visible {
+        transform: translateX(0); /* Show sidebar when active */
+    }
+
+    .main-content {
+        width: 100%; /* Main content takes full width */
+        margin-left: 0; /* Remove left margin */
+    }
+
+    /* Show the menu toggle button */
+    .menu-toggle {
+        display: block;
+    }
 }
 
 </style>
@@ -473,7 +532,11 @@ html, body {
 
 
 <div class="chat-app">
-    <aside class="sidebar">
+    <button class="menu-toggle" id="menu-toggle" title="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
         <button class="new-chat-btn" id="new-chat-btn">
             <i class="fas fa-plus"></i> New Chat
         </button>
@@ -534,9 +597,9 @@ html, body {
     </main>
 </div>
 
-<script src="https://cdnjs.flare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" xintegrity="sha512-9khQRAUBYEJDCDVP2yw3LRUQvjJ0Pjx0EShmaQjcHa6AXiOv6qHQu9lCAIR8O+/D8FtaCoJ2c0Tf9Xo7hYH01Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.flare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" xintegrity="sha512-SkmBfuA2hqjzEVNWb8CUApVR5fFWrSDcUOahSEgUd07FNMef+AbUd/yPkMkNUabIMZrcOg/1wslzAZMuUrNmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.flare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" xintegrity="sha512-BttltKXFyWnGZQcRWj6UJFdLmWhtQxfqVfRMS9EDGDpMh/Db82MACoMMQqGWf0Y69Fc27TwnXyIE+fsHLugUDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" xintegrity="sha512-9khQRAUBYEJDCDVP2yw3LRUQvjJ0Pjx0EShmaQjcHa6AXiOv6qHQu9lCAIR8O+/D8FtaCoJ2c0Tf9Xo7hYH01Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" xintegrity="sha512-SkmBfuA2hqjzEVNWb8CUApVR5fFWrSDcUOahSEgUd07FNMef+AbUd/yPkMkNUabIMZrcOg/1wslzAZMuUrNmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" xintegrity="sha512-BttltKXFyWnGZQcRWj6UJFdLmWhtQxfqVfRMS9EDGDpMh/Db82MACoMMQqGWf0Y69Fc27TwnXyIE+fsHLugUDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script type="importmap">
 {
@@ -584,7 +647,7 @@ html, body {
     // --- DOM Element References ---
     let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
     let initialView, chatView, initialMessageInput, initialSendButton;
-    let sidebar, newChatBtn, chatListUl;
+    let sidebar, newChatBtn, chatListUl, menuToggleBtn; // Added menuToggleBtn
     let reasonButton, reasonUsageDisplay, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let modelNotificationDiv;
@@ -698,7 +761,7 @@ html, body {
         switch(type) {
             case 'local':
                 indicatorClass = 'local-thinking-indicator';
-                indicatorText = `Thinking (${QUEN_3_LOCAL_MODEL_NAME})...`;
+                indicatorText = `Thinking (${REASON_MODE_DISPLAY_NAME} - Local)...`; // Updated text
                 iconClass = 'fa-robot';
                 break;
             case 'image':
@@ -1594,6 +1657,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if(messageInput) messageInput.focus();
     }
 
+    // Added toggleSidebar function
+    function toggleSidebar() {
+        if (sidebar) {
+            sidebar.classList.toggle('visible');
+        }
+    }
+
 
     function showPopup() { if (popupOverlay) popupOverlay.classList.add('visible'); }
     function hidePopup() { if (popupOverlay) popupOverlay.classList.remove('visible'); }
@@ -1627,8 +1697,9 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         closePopupButton = document.getElementById('closePopupButton');
         initialLoader = document.getElementById('initial-loader');
         chatLoader = document.getElementById('chat-loader');
+        menuToggleBtn = document.getElementById('menu-toggle'); // Get the menu toggle button
 
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader };
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn }; // Added menuToggleBtn
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found.");
             document.body.innerHTML = "<p style='color: red; padding: 20px;'>Error: UI failed to load. Check console.</p>"; return;
@@ -1680,6 +1751,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         removeImageButton?.addEventListener('click', removeSelectedImage);
         closePopupButton?.addEventListener('click', hidePopup);
         popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); });
+
+        menuToggleBtn?.addEventListener('click', toggleSidebar); // Add event listener for the menu toggle
 
         showPopup();
         if(initialLoader) initialLoader.classList.add('hidden');
