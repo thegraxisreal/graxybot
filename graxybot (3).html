@@ -7,7 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/graxybot.png"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="graxybot.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" xintegrity="sha512-mIs9kKbaw6JZFfSuo+MovjU+Ntggfoj8RwAmJbVXQ5mkAX5LlgETQEweFPI18humSPHymTb5iikEOKWF7I8ncQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" xintegrity="sha512-cbQXwDFK7lj2Fqfkuxbo5iD1dSbLlJGXGpfTDqbIOIEHD8HBxe7+rzMGGEAPseCS6VVuLESXNKRsQXHHMxJx/g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -47,6 +48,9 @@
     --reason-button-active-bg: var(--primary);
     --reason-button-active-border: var(--primary-active);
     --reason-button-active-text: white;
+    --animate-button-active-bg: #28a745; /* Green for animate */
+    --animate-button-active-border: #1e7e34; /* Darker green for animate border */
+    --animate-button-active-text: white;
     --image-preview-border: #ccc;
     --image-remove-bg: rgba(0, 0, 0, 0.5);
     --image-remove-text: white;
@@ -229,7 +233,7 @@ html, body {
 .message p { margin: 0 0 5px 0; }
 .message p:last-child { margin-bottom: 0; }
 .message .timestamp { font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; text-align: right; }
-.message .sent-image, .message .generated-image {
+.message .sent-image, .message .generated-image, .message .generated-video { /* Added .generated-video */
     max-width: 100%;
     max-height: 400px;
     width: auto;
@@ -264,32 +268,38 @@ html, body {
 /* Thinking Indicator Styles */
 .local-thinking-indicator .message,
 .reason-thinking-indicator .message,
-.image-generating-indicator .message {
+.image-generating-indicator .message,
+.video-generating-indicator .message { /* Added .video-generating-indicator */
     padding: 15px 18px; display: flex; align-items: center; gap: 5px;
     background-color: var(--bot-message-bg); border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .local-thinking-indicator span,
 .reason-thinking-indicator span,
-.image-generating-indicator span {
+.image-generating-indicator span,
+.video-generating-indicator span { /* Added .video-generating-indicator */
     display: inline-block; width: 8px; height: 8px; background-color: var(--text-secondary);
     border-radius: 50%; animation: typing 1s infinite ease-in-out;
 }
 .local-thinking-indicator span:nth-child(1),
 .reason-thinking-indicator span:nth-child(1),
-.image-generating-indicator span:nth-child(1) { animation-delay: 0s; }
+.image-generating-indicator span:nth-child(1),
+.video-generating-indicator span:nth-child(1) { animation-delay: 0s; } /* Added .video-generating-indicator */
 
 .local-thinking-indicator span:nth-child(2),
 .reason-thinking-indicator span:nth-child(2),
-.image-generating-indicator span:nth-child(2) { animation-delay: 0.1s; }
+.image-generating-indicator span:nth-child(2),
+.video-generating-indicator span:nth-child(2) { animation-delay: 0.1s; } /* Added .video-generating-indicator */
 
 .local-thinking-indicator span:nth-child(3),
 .reason-thinking-indicator span:nth-child(3),
-.image-generating-indicator span:nth-child(3) { animation-delay: 0.2s; }
+.image-generating-indicator span:nth-child(3),
+.video-generating-indicator span:nth-child(3) { animation-delay: 0.2s; } /* Added .video-generating-indicator */
 
 
 .reason-thinking-indicator .message-icon { background-color: var(--primary-active); }
 .local-thinking-indicator .message-icon { background-color: var(--primary); }
 .image-generating-indicator .message-icon { background-color: var(--primary-light); }
+.video-generating-indicator .message-icon { background-color: var(--animate-button-active-bg); } /* Style for video generating icon */
 
 
 @keyframes typing {
@@ -302,7 +312,6 @@ html, body {
 .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
 .code-block-buttons button { background-color: var(--code-button-bg); border: none; color: var(--code-text-color); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; transition: background-color var(--transition); }
 .code-block-buttons button:hover { background-color: var(--code-button-hover-bg); }
-.code-block-buttons button i { margin-right: 4px; }
 .code-block-buttons button i { margin-right: 4px; }
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; white-space: pre-wrap; }
 .line-numbers .line-numbers-rows { border-right-color: var(--code-header-bg) !important; }
@@ -343,23 +352,30 @@ html, body {
 }
 #remove-image-button:hover { background-color: rgba(0, 0, 0, 0.7); }
 
-/* Input Controls Area (Thinking, Create Image buttons) */
+/* Input Controls Area (Thinking, Create Image, Animate Video buttons) */
 .input-controls-area { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 10px; }
 .action-buttons-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-#reason-button, #create-image-button { /* Combined styles */
+#reason-button, #create-image-button, #animate-video-button { /* Combined styles */
     display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 8px;
     font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid var(--reason-button-border);
     background-color: var(--reason-button-bg); color: var(--reason-button-text);
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
-#reason-button:hover, #create-image-button:hover { background-color: var(--reason-button-hover-bg); }
-#reason-button.active, #create-image-button.active { /* Active state for both */
+#reason-button:hover, #create-image-button:hover, #animate-video-button:hover { background-color: var(--reason-button-hover-bg); }
+
+#reason-button.active, #create-image-button.active { /* Active state for Thinking and Create Image */
     background-color: var(--reason-button-active-bg); border-color: var(--reason-button-active-border); color: var(--reason-button-active-text);
     animation: pulse-button 0.5s ease-out;
 }
-#reason-button:disabled, #create-image-button:disabled { opacity: 0.6; cursor: not-allowed; }
-#reason-button i, #create-image-button i { margin-right: 5px; font-size: 0.8rem; }
+#animate-video-button.active { /* Specific active state for Animate Video */
+    background-color: var(--animate-button-active-bg); border-color: var(--animate-button-active-border); color: var(--animate-button-active-text);
+    animation: pulse-button 0.5s ease-out; /* Optional: use pulse or a different animation */
+    box-shadow: 0 0 8px var(--animate-button-active-bg); /* Green glow */
+}
+
+#reason-button:disabled, #create-image-button:disabled, #animate-video-button:disabled { opacity: 0.6; cursor: not-allowed; }
+#reason-button i, #create-image-button i, #animate-video-button i { margin-right: 5px; font-size: 0.8rem; }
 #reason-usage-display { display: none; }
 
 @keyframes pulse-button { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -421,7 +437,7 @@ html, body {
     #message-input { font-size: 0.95rem; }
     .btn { width: 38px; height: 38px; }
     #initial-send-button { width: 38px; height: 38px; }
-    #reason-button, #create-image-button { font-size: 0.8rem; padding: 5px 10px; }
+    #reason-button, #create-image-button, #animate-video-button { font-size: 0.8rem; padding: 5px 10px; }
     .image-preview-container { max-width: 80px; }
     #model-notification { font-size: 0.75rem; padding: 3px 8px;}
     .popup-content h2 { font-size: 20px; }
@@ -467,7 +483,7 @@ html, body {
     #message-input { padding: 8px 0; }
     .btn { width: 36px; height: 36px; }
     #initial-send-button { width: 36px; height: 36px; }
-    #reason-button, #create-image-button { font-size: 0.75rem; padding: 4px 8px; }
+    #reason-button, #create-image-button, #animate-video-button { font-size: 0.75rem; padding: 4px 8px; }
     .action-buttons-area { gap: 6px; }
     .image-preview-container { max-width: 60px; }
     #image-upload-button { padding: 0 8px; font-size: 1.1rem;}
@@ -516,9 +532,9 @@ html, body {
 
 <div id="popupOverlay">
     <div class="popup-content">
-        <h2>Graxybot Web v2.0</h2>
-        <p>Key changes:</p>
+        <h2>Graxybot Web v2.1</h2> <p>Key changes:</p>
         <ul>
+            <li><strong>New:</strong> Animate Video feature added! Use the "Animate" button.</li>
             <li>Image Generation Now available for free!</li>
             <li>New General Intelligence Model</li>
             <li>Graxybot auto-detects Global sheets and responds accordingly</li>
@@ -560,20 +576,20 @@ html, body {
                     <div class="model-selector-container">
                         <select id="model-selector">
                             <option value="graxybot">Graxybot</option>
-                        </select>
+                            </select>
                     </div>
                     <h1 id="chat-view-title">Graxybot</h1> </div>
                 </div>
 
             <div class="chat-messages" id="chat-messages">
-                 <div id="chat-loader">
-                    <div class="spinner"></div>
+                 <div id="chat-loader"> <div class="spinner"></div>
                     <span>Loading Chat...</span>
                  </div>
                 </div>
 
             <div class="chat-input-container">
-                 <div id="model-notification" style="display: none;"></div>
+                 <div id="model-notification" style="display: none;">
+                    </div>
                  <div class="chat-input-area">
                     <button id="image-upload-button" title="Attach Image"><i class="fas fa-paperclip"></i></button>
                     <input type="file" id="image-upload-input" accept="image/*">
@@ -588,8 +604,10 @@ html, body {
                     <div class="action-buttons-area">
                         <button id="reason-button" title="Use enhanced thinking for the next message."><i class="fas fa-brain"></i> Thinking</button>
                         <button id="create-image-button" title="Toggle image generation mode for the next message."><i class="fas fa-image"></i> Create Image</button>
+                        <button id="animate-video-button" title="Toggle video animation mode for the next message."><i class="fas fa-film"></i> Animate</button>
                         <span id="reason-usage-display"></span> </div>
-                    <div id="rate-limit-message" class="rate-limit-info" style="display: none;"></div>
+                    <div id="rate-limit-message" class="rate-limit-info" style="display: none;">
+                        </div>
                  </div>
             </div>
         </div>
@@ -612,31 +630,34 @@ html, body {
     import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
     // --- Configuration ---
-    const API_KEY = "AIzaSyBbj7cDi0Oa86lUN5963IThL0R1pffgDkk"; // Your actual API key
-    const LOCAL_MODEL_URL = "https://launch-machine-yields-tobacco.trycloudflare.com";
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://necklace-qualifications-adrian-advertisements.trycloudflare.com";
+    const API_KEY = "AIzaSyBbj7cDi0Oa86lUN5963IThL0R1pffgDkk"; // Your actual Google AI API key
+    const LOCAL_MODEL_URL = "https://launch-machine-yields-tobacco.trycloudflare.com"; // Your local model server URL
+    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://necklace-qualifications-adrian-advertisements.trycloudflare.com"; // Your Stable Diffusion server URL
+    // This URL should point to your AnimateDiff backend
+    const ANIMATEDIFF_API_URL = "https://amend-scientist-remote-aruba.trycloudflare.com/generate_video"; //LINKS
+
 
     // --- Model Definitions ---
-    const QUEN_3_LOCAL_MODEL_NAME = "quen-3";
-    const modelMapping = { "graxybot": "gemini-1.5-flash-latest" };
+    const QUEN_3_LOCAL_MODEL_NAME = "quen-3"; // Name for your local model (used with REASON_MODE)
+    const modelMapping = { "graxybot": "gemini-1.5-flash-latest" }; // Mapping for Google AI models
     const REASON_MODE_MODEL_FOR_THINKING_BUTTON = QUEN_3_LOCAL_MODEL_NAME;
-    const REASON_MODE_DISPLAY_NAME = "Graxybot Quen 3";
-    const DEFAULT_FAKE_MODEL = "graxybot";
+    const REASON_MODE_DISPLAY_NAME = "Graxybot Quen 3"; // Display name for thinking mode
+    const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
 
     // --- UI & Storage Keys ---
-    const BOT_ICON_SRC = "graxybot.png";
-    const USER_ICON_CLASS = "fas fa-user";
-    const CHATS_STORAGE_KEY = "graxybot_all_chats_v2";
-    const CURRENT_CHAT_ID_KEY = "graxybot_current_chat_id";
-    const MODEL_STORAGE_KEY = "graxybot_selected_model";
+    const BOT_ICON_SRC = "graxybot.png"; // Path to your bot's icon
+    const USER_ICON_CLASS = "fas fa-user"; // Font Awesome class for user icon
+    const CHATS_STORAGE_KEY = "graxybot_all_chats_v2"; // Key for storing all chats in localStorage
+    const CURRENT_CHAT_ID_KEY = "graxybot_current_chat_id"; // Key for storing the current active chat ID
+    const MODEL_STORAGE_KEY = "graxybot_selected_model"; // Key for storing the user's model preference
 
     // --- Limits & Settings ---
-    const MAX_MESSAGES_PER_WINDOW = 14;
-    const TIME_WINDOW_MS = 60 * 1000;
-    const MIN_REASON_DELAY_MS = 1000;
-    const MAX_REASON_DELAY_MS = 3000;
-    let messageTimestamps = [];
-    const safetySettings = [
+    const MAX_MESSAGES_PER_WINDOW = 14; // Max messages for rate limiting (currently not strictly enforced in send)
+    const TIME_WINDOW_MS = 60 * 1000; // Time window for rate limiting (1 minute)
+    const MIN_REASON_DELAY_MS = 1000; // Min simulated delay for local model thinking
+    const MAX_REASON_DELAY_MS = 3000; // Max simulated delay for local model thinking
+    let messageTimestamps = []; // Array to track message timestamps for rate limiting
+    const safetySettings = [ // Google AI safety settings
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -646,121 +667,177 @@ html, body {
     // --- DOM Element References ---
     let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
     let initialView, chatView, initialMessageInput, initialSendButton;
-    let sidebar, newChatBtn, chatListUl, menuToggleBtn; // Added menuToggleBtn
-    let reasonButton, reasonUsageDisplay, createImageButton;
+    let sidebar, newChatBtn, chatListUl, menuToggleBtn;
+    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let modelNotificationDiv;
     let popupOverlay, closePopupButton;
     let initialLoader, chatLoader;
 
     // --- Application State ---
-    let genAI;
-    let currentChatSession = null;
-    let chats = {};
-    let currentChatId = null;
-    let isInitializing = false;
-    let isReasonModeActive = false;
-    let isImageGenerationModeActive = false;
-    let currentThinkingIndicatorElement = null;
-    let selectedImageData = null;
-    let selectedImageMimeType = null;
-    let selectedImagePreviewUrl = null;
+    let genAI; // Google AI client instance
+    let currentChatSession = null; // Stores the current Google AI chat session (not heavily used with streaming)
+    let chats = {}; // Object to store all chat histories
+    let currentChatId = null; // ID of the currently active chat
+    let isInitializing = false; // Flag to prevent multiple initializations
+    let isReasonModeActive = false; // Flag for "Thinking" mode
+    let isImageGenerationModeActive = false; // Flag for "Create Image" mode
+    let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
+    let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
+    let selectedImageData = null; // Base64 string of the uploaded image
+    let selectedImageMimeType = null; // Mime type of the uploaded image
+    let selectedImagePreviewUrl = null; // Object URL for the image preview
 
 
     // --- Core Functions ---
+
+    /**
+     * Generates a unique ID for a new chat.
+     * @returns {string} A unique chat ID.
+     */
     function generateChatId() { return `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`; }
 
+    /**
+     * Loads all chats from localStorage.
+     * Performs basic validation and data migration if needed.
+     * @returns {object} The chats object.
+     */
     function loadAllChats() {
         try {
             const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
             if (storedChats) {
                 const parsedChats = JSON.parse(storedChats);
                 if (typeof parsedChats === 'object' && parsedChats !== null) {
+                    // Basic data integrity check and migration for older chat formats
                     Object.keys(parsedChats).forEach(id => {
-                        if (!parsedChats[id]) return;
+                        if (!parsedChats[id]) return; // Skip if chat data is somehow null
                         if (!Array.isArray(parsedChats[id].history)) { parsedChats[id].history = []; }
+                        // Ensure message parts are in the correct array format
                         parsedChats[id].history.forEach(msg => {
                             if (typeof msg.parts === 'string') {
                                 msg.parts = [{ text: msg.parts }];
                             } else if (!Array.isArray(msg.parts)) {
-                                msg.parts = [{ text: String(msg.parts) }];
+                                msg.parts = [{ text: String(msg.parts) }]; // Convert to string if not array/object
                             }
                         });
-                        parsedChats[id].model = DEFAULT_FAKE_MODEL;
-                        delete parsedChats[id].personality;
+                        // Standardize model name and remove deprecated fields
+                        parsedChats[id].model = DEFAULT_FAKE_MODEL; // Default to graxybot for old chats
+                        delete parsedChats[id].personality; // Remove old personality field
                     });
                     return parsedChats;
                 }
             }
-        } catch (error) { console.error("Error loading chats:", error); localStorage.removeItem(CHATS_STORAGE_KEY); }
-        return {};
+        } catch (error) {
+            console.error("Error loading chats from localStorage:", error);
+            localStorage.removeItem(CHATS_STORAGE_KEY); // Clear corrupted data
+        }
+        return {}; // Return empty object if no chats or error
        }
 
-    function saveAllChats() { try { localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats)); } catch (e) { console.error("Error saving chats:", e); }}
+    /** Saves all chats to localStorage. */
+    function saveAllChats() { try { localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats)); } catch (e) { console.error("Error saving chats to localStorage:", e); }}
+
+    /** Loads the current chat ID from localStorage. */
     function loadCurrentChatId() { const id = localStorage.getItem(CURRENT_CHAT_ID_KEY); return (id && chats[id]) ? id : null; }
+
+    /** Saves the current chat ID to localStorage. */
     function saveCurrentChatId() { if (currentChatId) localStorage.setItem(CURRENT_CHAT_ID_KEY, currentChatId); else localStorage.removeItem(CURRENT_CHAT_ID_KEY); }
-    function loadSelectedModelPreference() { return DEFAULT_FAKE_MODEL; }
+
+    /** Loads the selected model preference (currently defaults to DEFAULT_FAKE_MODEL). */
+    function loadSelectedModelPreference() { return DEFAULT_FAKE_MODEL; /* localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_FAKE_MODEL; */ }
+
+    /** Saves the selected model preference (currently only saves if it's DEFAULT_FAKE_MODEL). */
     function saveSelectedModelPreference(name) { if (name === DEFAULT_FAKE_MODEL) localStorage.setItem(MODEL_STORAGE_KEY, name); }
 
+    /**
+     * Updates the state (enabled/disabled, active class) of action buttons
+     * (Thinking, Create Image, Animate Video) based on current app state.
+     */
     function updateActionButtonsState() {
         const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
         if (reasonButton) {
             reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME} - Local) for the next message.`;
-            reasonButton.disabled = thinkingOrGenerating || isImageGenerationModeActive;
-            if (isReasonModeActive) reasonButton.classList.add('active'); else reasonButton.classList.remove('active');
+            reasonButton.disabled = thinkingOrGenerating || isImageGenerationModeActive || isAnimateVideoModeActive;
+            reasonButton.classList.toggle('active', isReasonModeActive);
         }
         if (createImageButton) {
             createImageButton.title = "Toggle image generation mode for the next message.";
-            createImageButton.disabled = thinkingOrGenerating || isReasonModeActive;
-            if (isImageGenerationModeActive) createImageButton.classList.add('active'); else createImageButton.classList.remove('active');
+            createImageButton.disabled = thinkingOrGenerating || isReasonModeActive || isAnimateVideoModeActive;
+            createImageButton.classList.toggle('active', isImageGenerationModeActive);
+        }
+        if (animateVideoButton) {
+            animateVideoButton.title = "Toggle video animation mode for the next message.";
+            animateVideoButton.disabled = thinkingOrGenerating || isReasonModeActive || isImageGenerationModeActive;
+            animateVideoButton.classList.toggle('active', isAnimateVideoModeActive);
         }
     }
 
-
+    /**
+     * Gets the system prompt for Google AI, tailored for Graxybot.
+     * @param {string} fakeModelName - The display name of the model (currently unused in prompt generation).
+     * @returns {string} The system instruction string.
+     */
     function getSystemPrompt(fakeModelName) {
+        // This prompt guides the AI's persona and response style.
         return `You are Graxybot, a helpful AI assistant. You are currently running on the Graxybot model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
     }
 
-    function addMessageToCurrentChatHistory(role, contentParts, imagePreview = null, generatedImageSrc = null, imagePrompt = null) {
-       // 'contentParts' is expected to be an array of part objects (e.g., [{text: "..."}, {inline_data: ...}])
-       if (!currentChatId || !chats[currentChatId]) { console.error("No active/valid chat for history."); return; }
+    /**
+     * Adds a message to the current chat's history in the `chats` object and saves it.
+     * Updates the chat title if it's the first user message.
+     * @param {string} role - 'user' or 'model'.
+     * @param {Array<object>} contentParts - Array of message parts (e.g., [{text: "..."}, {inline_data: ...}]).
+     * @param {string|null} imagePreview - Data URL for user's uploaded image preview (for display).
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated image or video.
+     * @param {string|null} mediaPrompt - The prompt used to generate the media.
+     * @param {string} mediaType - 'image' or 'video'.
+     */
+    function addMessageToCurrentChatHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null, mediaType = 'image') {
+       if (!currentChatId || !chats[currentChatId]) { console.error("Add to History: No active/valid chat."); return; }
        if (!Array.isArray(chats[currentChatId].history)) chats[currentChatId].history = [];
 
-       let messageData = { role, parts: contentParts }; // Directly use contentParts
+       let messageData = { role, parts: contentParts };
 
-       if (role === 'user' && imagePreview) messageData.imagePreview = imagePreview; // For local display of user's uploaded image preview
-       if (generatedImageSrc) { // For bot's generated images
-            messageData.generatedImageSrc = generatedImageSrc;
-            messageData.imagePrompt = imagePrompt;
+       if (role === 'user' && imagePreview) messageData.imagePreview = imagePreview;
+       if (generatedMediaSrc) {
+            messageData.generatedMediaSrc = generatedMediaSrc;
+            messageData.mediaPrompt = mediaPrompt;
+            messageData.mediaType = mediaType;
        }
 
        chats[currentChatId].history.push(messageData);
+       // If this is the first user message, set the chat title
        if (chats[currentChatId].history.filter(m => m.role === 'user').length === 1 && role === 'user') {
            const firstTextPart = contentParts.find(p => p.text);
-           let firstContentSummary = "New Chat";
+           let firstContentSummary = "New Chat"; // Default title
            if (firstTextPart && firstTextPart.text.trim()) {
                firstContentSummary = firstTextPart.text.trim();
            } else if (contentParts.some(p => p.inline_data)) {
                firstContentSummary = "[Image Sent]";
-           } else if (generatedImageSrc) { // Should not happen for user's first message but good fallback
-               firstContentSummary = "[Image Generated]";
+           } else if (generatedMediaSrc) { // Should not happen for user's first message but good fallback
+               firstContentSummary = mediaType === 'video' ? "[Video Generated]" : "[Image Generated]";
            }
-
+           // Truncate title if too long
            chats[currentChatId].title = firstContentSummary.substring(0, 35) + (firstContentSummary.length > 35 ? '...' : '');
-           renderChatList();
+           renderChatList(); // Update the sidebar
        }
        saveAllChats();
     }
 
 
+    /**
+     * Displays a "thinking" or "generating" indicator in the chat.
+     * @param {string} type - 'local' (for Quen 3), 'image', 'video', or 'reason' (default Gemini).
+     * @param {string} message - Custom message for the indicator (e.g., the prompt).
+     */
     function showThinkingIndicator(type = 'reason', message = '') {
-        removeThinkingIndicator();
+        removeThinkingIndicator(); // Remove any existing indicator
         let indicatorClass, indicatorText, iconClass;
 
         switch(type) {
             case 'local':
                 indicatorClass = 'local-thinking-indicator';
-                indicatorText = `Thinking (${REASON_MODE_DISPLAY_NAME} - Local)...`; // Updated text
+                indicatorText = `Thinking (${REASON_MODE_DISPLAY_NAME} - Local)...`;
                 iconClass = 'fa-robot';
                 break;
             case 'image':
@@ -768,7 +845,12 @@ html, body {
                 indicatorText = message || 'Generating image...';
                 iconClass = 'fa-image';
                 break;
-            case 'reason':
+            case 'video':
+                indicatorClass = 'video-generating-indicator';
+                indicatorText = message || 'Generating animation...';
+                iconClass = 'fa-film';
+                break;
+            case 'reason': // Default for Gemini API calls
             default:
                 indicatorClass = 'reason-thinking-indicator';
                 indicatorText = 'Thinking...';
@@ -776,54 +858,71 @@ html, body {
                 break;
         }
 
-        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, iconClass); // Pass empty array for contentParts
+        // Create and display the indicator message element
+        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, iconClass);
         if (currentThinkingIndicatorElement) {
             currentThinkingIndicatorElement.classList.add(indicatorClass);
             const msgDiv = currentThinkingIndicatorElement.querySelector('.message');
-            if (msgDiv) {
+            if (msgDiv) { // Add animated dots and text
                 msgDiv.innerHTML = `<span></span><span></span><span></span> ${indicatorText}`;
             }
         }
-        updateActionButtonsState();
+        updateActionButtonsState(); // Disable buttons while thinking
     }
 
+    /** Removes any active thinking/generating indicator from the chat. */
     function removeThinkingIndicator() {
         if (currentThinkingIndicatorElement && currentThinkingIndicatorElement.parentNode) {
             try { currentThinkingIndicatorElement.parentNode.removeChild(currentThinkingIndicatorElement); }
             catch (e) { console.warn("Error removing thinking indicator:", e); }
             finally { currentThinkingIndicatorElement = null; }
         }
-        document.querySelectorAll('.reason-thinking-indicator, .local-thinking-indicator, .image-generating-indicator').forEach(el => {
+        // Fallback to remove any stragglers by class name
+        document.querySelectorAll('.reason-thinking-indicator, .local-thinking-indicator, .image-generating-indicator, .video-generating-indicator').forEach(el => {
             try { el.parentNode?.removeChild(el); } catch (e) { /* ignore */ }
         });
-        updateActionButtonsState();
+        updateActionButtonsState(); // Re-enable buttons
     }
 
-    function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedImageSrc = null, customIconClass = null, imagePrompt = null) {
+    /**
+     * Displays a message in the chat UI.
+     * @param {Array<object>|string} contentParts - Message content.
+     * @param {string} sender - 'user', 'bot', or 'bot-thinking'.
+     * @param {boolean} isError - True if it's an error message.
+     * @param {string|null} imagePreview - Data URL for user's image preview.
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
+     * @param {string|null} customIconClass - Font Awesome class for custom bot icon.
+     * @param {string|null} mediaPrompt - Prompt for generated media.
+     * @param {string} mediaType - 'image' or 'video'.
+     * @returns {HTMLElement|null} The created message wrapper element.
+     */
+    function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null, mediaType = 'image') {
         if (!chatMessagesContainer) { console.error("Chat message container not found."); return null; }
+
         const wrapper = document.createElement('div');
         wrapper.classList.add('message-content-wrapper');
 
         let actualSenderType = sender;
-        if (sender === 'bot-thinking') actualSenderType = 'bot';
+        if (sender === 'bot-thinking') actualSenderType = 'bot'; // Treat thinking indicator as from bot for styling
 
+        // Add sender-specific classes
         if (actualSenderType === 'user') wrapper.classList.add('user-message');
         else if (actualSenderType === 'bot') wrapper.classList.add('bot-message');
         if (isError) wrapper.classList.add('error-message');
 
+        // Create message icon
         const iconDiv = document.createElement('div');
         iconDiv.classList.add('message-icon');
-
         if (actualSenderType === 'user') {
             iconDiv.classList.add('user-icon');
             iconDiv.innerHTML = `<i class="${USER_ICON_CLASS}"></i>`;
-        } else {
+        } else { // Bot icon
             if (customIconClass) {
                  iconDiv.innerHTML = `<i class="fas ${customIconClass}"></i>`;
-            } else {
+            } else { // Default bot icon
                 const img = document.createElement('img');
-                img.src = BOT_ICON_SRC; img.alt = "G";
-                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`;
+                img.src = BOT_ICON_SRC; img.alt = "G"; // Bot initial
+                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`; // Fallback icon
                 iconDiv.appendChild(img);
             }
         }
@@ -834,79 +933,92 @@ html, body {
         messageDiv.classList.add('message');
 
         if (sender === 'bot-thinking') {
-            // Dots and text are added by showThinkingIndicator, no paragraph needed here
+            // Content (dots and text) for thinking indicator is added by showThinkingIndicator
         } else {
             const paragraph = document.createElement('p');
-            paragraph.dataset.streamTarget = "true";
+            paragraph.dataset.streamTarget = "true"; // For streaming text into
             let textFromParts = "";
 
+            // Extract text from contentParts
             if (Array.isArray(contentParts)) {
                 const textPart = contentParts.find(part => part.text);
                 if (textPart) textFromParts = textPart.text;
-            } else if (typeof contentParts === 'string') {
-                textFromParts = contentParts; // Should ideally be array, but handle for safety
+            } else if (typeof contentParts === 'string') { // Handle if string is passed directly (legacy)
+                textFromParts = contentParts;
             }
 
-
-            if (generatedImageSrc) {
-                const imgElement = document.createElement('img');
-                imgElement.src = generatedImageSrc;
-                imgElement.alt = imagePrompt || "Generated image";
-                imgElement.classList.add('generated-image');
-                messageDiv.appendChild(imgElement);
-                if (imagePrompt) {
-                    paragraph.innerHTML = `<em>Prompt: ${imagePrompt.replace(/\n/g, '<br>')}</em>`;
-                } else if (textFromParts) {
+            // Handle generated media (image or video)
+            if (generatedMediaSrc) {
+                const mediaElement = document.createElement('img'); // Use <img> for GIFs too
+                mediaElement.src = generatedMediaSrc;
+                mediaElement.alt = mediaPrompt || (mediaType === 'video' ? "Generated animation" : "Generated image");
+                mediaElement.classList.add(mediaType === 'video' ? 'generated-video' : 'generated-image');
+                messageDiv.appendChild(mediaElement);
+                // Display prompt if available
+                if (mediaPrompt) {
+                    paragraph.innerHTML = `<em>Prompt: ${mediaPrompt.replace(/\n/g, '<br>')}</em>`;
+                } else if (textFromParts) { // Or display text if no prompt but text exists
                      processAndAppendText(textFromParts, paragraph);
                 }
-            } else if (actualSenderType === 'user' && imagePreview) {
+            } else if (actualSenderType === 'user' && imagePreview) { // Handle user's uploaded image preview
                 const imgElement = document.createElement('img');
                 imgElement.src = imagePreview;
                 imgElement.alt = "Sent image preview";
                 imgElement.classList.add('sent-image');
                 messageDiv.appendChild(imgElement);
-                if (textFromParts) {
+                if (textFromParts) { // Display text alongside image if present
                     processAndAppendText(textFromParts, paragraph);
                 }
-            } else if (textFromParts) {
+            } else if (textFromParts) { // Handle regular text messages
                 processAndAppendText(textFromParts, paragraph);
-            } else if (!imagePreview && !generatedImageSrc && actualSenderType !== 'bot') {
+            } else if (!imagePreview && !generatedMediaSrc && actualSenderType !== 'bot') { // Handle empty user message
                  paragraph.textContent = "[Empty Message]";
             }
 
-            // Append paragraph if it's for bot text streaming OR if it has content for other types
-            if ((actualSenderType === 'bot' && !generatedImageSrc && !isError) || paragraph.hasChildNodes() || paragraph.textContent) {
+            // Append paragraph if it's for bot text streaming OR if it has content
+            if ((actualSenderType === 'bot' && !generatedMediaSrc && !isError) || paragraph.hasChildNodes() || paragraph.textContent) {
                  messageDiv.appendChild(paragraph);
             }
 
-
+            // Add timestamp
             const timestampSpan = document.createElement('span');
             timestampSpan.classList.add('timestamp');
             timestampSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            bubbleDiv.appendChild(timestampSpan);
+            bubbleDiv.appendChild(timestampSpan); // Add timestamp to bubble, not messageDiv
         }
         bubbleDiv.appendChild(messageDiv);
         wrapper.appendChild(iconDiv);
         wrapper.appendChild(bubbleDiv);
         chatMessagesContainer.appendChild(wrapper);
+        // Scroll to the bottom smoothly
         requestAnimationFrame(() => chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' }));
-        return wrapper;
+        return wrapper; // Return the created message element
     }
 
+    /**
+     * Processes text content, identifies code blocks, and appends formatted HTML to the target element.
+     * @param {string} text - The raw text to process.
+     * @param {HTMLElement} targetElement - The HTML element to append the formatted content to.
+     * @returns {boolean} True if code blocks were found and processed.
+     */
     function processAndAppendText(text, targetElement) {
-        const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
+        const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g; // Regex to find code blocks
         let lastIndex = 0;
         let match;
         let hasCode = false;
-        targetElement.innerHTML = '';
+        targetElement.innerHTML = ''; // Clear existing content
 
+        // Iterate over code block matches
         while ((match = codeBlockRegex.exec(text)) !== null) {
             hasCode = true;
+            // Append text before the code block
             const textBefore = text.substring(lastIndex, match.index);
-            targetElement.innerHTML += textBefore.replace(/\n/g, '<br>');
+            targetElement.innerHTML += textBefore.replace(/\n/g, '<br>'); // Convert newlines to <br>
 
-            const lang = match[1]?.trim() || 'plaintext';
-            const code = match[2].trim();
+            const lang = match[1]?.trim() || 'plaintext'; // Get language or default
+            const code = match[2].trim(); // Get code content
+
+            // Create code block container and header
             const codeContainer = document.createElement('div');
             codeContainer.classList.add('code-block-container');
             const header = document.createElement('div');
@@ -916,11 +1028,15 @@ html, body {
             langSpan.textContent = lang;
             const buttonsDiv = document.createElement('div');
             buttonsDiv.classList.add('code-block-buttons');
+
+            // Create "Copy" button
             const copyBtn = document.createElement('button');
             copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
             copyBtn.title = "Copy code";
-            copyBtn.onclick = ((codeToCopy) => () => handleCopyCode(codeToCopy, copyBtn))(code);
+            copyBtn.onclick = ((codeToCopy) => () => handleCopyCode(codeToCopy, copyBtn))(code); // Closure to pass code
             buttonsDiv.appendChild(copyBtn);
+
+            // Create "Run" button for HTML/JS
             const lowerLang = lang.toLowerCase();
             if (['html', 'javascript', 'js'].includes(lowerLang)) {
                 const runBtn = document.createElement('button');
@@ -929,37 +1045,43 @@ html, body {
                 runBtn.onclick = ((codeToRun, langToRun) => () => handleRunCode(codeToRun, langToRun))(code, lowerLang);
                 buttonsDiv.appendChild(runBtn);
             }
+
             header.appendChild(langSpan);
             header.appendChild(buttonsDiv);
             codeContainer.appendChild(header);
+
+            // Create <pre> and <code> elements for Prism.js
             const pre = document.createElement('pre');
-            pre.className = 'line-numbers';
+            pre.className = 'line-numbers'; // Enable line numbers plugin
             const codeEl = document.createElement('code');
             codeEl.className = `language-${lang}`;
             codeEl.textContent = code;
             pre.appendChild(codeEl);
             codeContainer.appendChild(pre);
-            targetElement.appendChild(codeContainer);
-            lastIndex = codeBlockRegex.lastIndex;
+            targetElement.appendChild(codeContainer); // Add to the message
+
+            lastIndex = codeBlockRegex.lastIndex; // Update index for next search
         }
+        // Append any remaining text after the last code block
         const textAfter = text.substring(lastIndex);
         targetElement.innerHTML += textAfter.replace(/\n/g, '<br>');
+
+        // If code was found, highlight it using Prism.js
         if (hasCode && window.Prism) {
+            // Use a timeout to ensure DOM is updated before highlighting
             setTimeout(() => Prism.highlightAllUnder(targetElement.closest('.message-bubble') || targetElement), 0);
         }
         return hasCode;
     }
-    function createTextMessageDiv(text) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        const paragraph = document.createElement('p');
-        paragraph.textContent = text;
-        messageDiv.appendChild(paragraph);
-        return messageDiv;
-    }
+
+    /**
+     * Copies code content to the clipboard and provides user feedback on the button.
+     * @param {string} codeContent - The code to copy.
+     * @param {HTMLElement} buttonElement - The button that was clicked.
+     */
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
-            console.log("Code copied");
+            console.log("Code copied to clipboard");
             const originalText = buttonElement.innerHTML;
             buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
             buttonElement.disabled = true;
@@ -971,154 +1093,246 @@ html, body {
             setTimeout(() => { buttonElement.innerHTML = originalText; buttonElement.disabled = false; }, 2000);
         });
     }
+
+    /**
+     * "Runs" HTML or JavaScript code by opening it in a new tab.
+     * @param {string} codeContent - The code to run.
+     * @param {string} language - The language of the code ('html', 'javascript', 'js').
+     */
     function handleRunCode(codeContent, language) {
-         console.log(`Running ${language} code...`);
+         console.log(`Attempting to "run" ${language} code...`);
         try {
             let htmlToRun = '';
-            if (language === 'html') { htmlToRun = codeContent; }
-            else if (language === 'javascript' || language === 'js') {
+            if (language === 'html') {
+                htmlToRun = codeContent;
+            } else if (language === 'javascript' || language === 'js') {
+                // Wrap JS in a basic HTML structure with an output area and error handling
                 htmlToRun = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>JS Runner</title><style>body{font-family:monospace;background-color:#f0f0f0;padding:15px;font-size:.9em;color:#333}h1{font-size:1.2em;color:#555;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:10px}pre{background-color:#fff;padding:10px;border:1px solid #ccc;border-radius:5px;white-space:pre-wrap;word-wrap:break-word;font-size:.95em;max-height:80vh;overflow-y:auto}.error{color:#D8000C;font-weight:700;background-color:#FFD2D2;padding:2px 4px;border-radius:3px}.log-entry{margin-bottom:4px}</style></head><body><h1>JavaScript Output:</h1><pre id="output"></pre><script>
 const outputElement=document.getElementById("output"),originalConsoleLog=console.log,originalConsoleError=console.error,logHistory=[];const formatArg=e=>{if(e instanceof Error)return\`Error: \${e.message}\n\${e.stack}\`;if("object"==typeof e&&null!==e)try{return JSON.stringify(e,null,2)}catch{return String(e)}return String(e)};console.log=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry">\${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleLog.apply(console,e)},console.error=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry error">ERROR: \${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleError.apply(console,e)},window.addEventListener("unhandledrejection",e=>{console.error("Unhandled Promise Rejection:",e.reason)}),window.addEventListener("error",e=>{console.error("Script Error:",e.message,"at",e.filename,":",e.lineno)});try{${codeContent}}catch(e){console.error("Execution Error:",e)}<\/script></body></html>`;
-            } else { console.warn("Run action not supported for language:", language); alert(`Running code directly is not supported for ${language}.`); return; }
-            const newTab = window.open('about:blank', '_blank');
-            if (newTab) { newTab.document.open(); newTab.document.write(htmlToRun); newTab.document.close(); console.log("Code execution tab opened."); }
-            else { alert("Could not open new tab. Please check if pop-ups are blocked."); }
-        } catch (error) { console.error("Error preparing or running code:", error); alert("An error occurred while trying to run the code."); }
-    }
-    function isRateLimited() {
-        const now = Date.now();
-        messageTimestamps = messageTimestamps.filter(timestamp => now - timestamp < TIME_WINDOW_MS);
-        if (messageTimestamps.length >= MAX_MESSAGES_PER_WINDOW) {
-            console.warn(`Rate limit exceeded: ${messageTimestamps.length} messages in ${TIME_WINDOW_MS / 1000}s. Max ${MAX_MESSAGES_PER_WINDOW}/${TIME_WINDOW_MS/1000/60}min.`);
-            if (rateLimitMessageDiv) {
-                rateLimitMessageDiv.textContent = `Rate limit: ${MAX_MESSAGES_PER_WINDOW} msg/${TIME_WINDOW_MS / 1000 / 60} min. Wait.`;
-                rateLimitMessageDiv.style.display = 'block';
-                setTimeout(() => { if (rateLimitMessageDiv) rateLimitMessageDiv.style.display = 'none'; }, 3000);
+            } else {
+                console.warn("Run action not supported for language:", language);
+                alert(`Running code directly is not supported for ${language}.`);
+                return;
             }
-            return true;
+            const newTab = window.open('about:blank', '_blank');
+            if (newTab) {
+                newTab.document.open();
+                newTab.document.write(htmlToRun);
+                newTab.document.close();
+                console.log("Code execution tab opened.");
+            } else {
+                alert("Could not open new tab. Please check if pop-ups are blocked.");
+            }
+        } catch (error) {
+            console.error("Error preparing or running code:", error);
+            alert("An error occurred while trying to run the code.");
         }
-        return false;
     }
+
+    /** Switches the UI from the initial welcome view to the chat view. */
     function switchToChatView() {
         if (initialView) initialView.classList.add('hidden');
         if (chatView) chatView.classList.remove('hidden');
+        // Ensure action buttons are visible in chat view
         if (reasonButton) reasonButton.style.display = 'inline-flex';
         if (createImageButton) createImageButton.style.display = 'inline-flex';
-        if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
-        updateModelNotification(DEFAULT_FAKE_MODEL);
+        if (animateVideoButton) animateVideoButton.style.display = 'inline-flex';
+        if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none'; // Typically hidden unless used
+        updateModelNotification(DEFAULT_FAKE_MODEL); // Update model notification if any
     }
+
+    /** Switches the UI from the chat view back to the initial welcome view. */
     function switchToInitialView() {
         if (initialView) initialView.classList.remove('hidden');
         if (chatView) chatView.classList.add('hidden');
+        // Hide action buttons in initial view
         if (reasonButton) reasonButton.style.display = 'none';
         if (createImageButton) createImageButton.style.display = 'none';
+        if (animateVideoButton) animateVideoButton.style.display = 'none';
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
+
+        // Reset chat state
         currentChatId = null;
         saveCurrentChatId();
-        currentChatSession = null;
-        if (chatMessagesContainer) chatMessagesContainer.innerHTML = '';
-        updateActiveChatListItem();
-        if (modelSelector) modelSelector.value = loadSelectedModelPreference();
+        currentChatSession = null; // Reset Google AI session
+        if (chatMessagesContainer) chatMessagesContainer.innerHTML = ''; // Clear messages
+        updateActiveChatListItem(); // Update sidebar
+        if (modelSelector) modelSelector.value = loadSelectedModelPreference(); // Reset model selector
+
+        // Deactivate all special modes
         deactivateReasonMode();
         deactivateImageGenerationMode();
-        removeSelectedImage();
+        deactivateAnimateVideoMode();
+        removeSelectedImage(); // Clear any uploaded image
     }
+
+    /** Renders the list of chats in the sidebar. */
     function renderChatList() {
         if (!chatListUl) return;
-        chatListUl.innerHTML = '';
+        chatListUl.innerHTML = ''; // Clear existing list
+        // Sort chats by timestamp (newest first)
         const sortedChatIds = Object.keys(chats).sort((a, b) => {
-            const timeA = parseInt(a.split('_')[1] || '0');
+            const timeA = parseInt(a.split('_')[1] || '0'); // Extract timestamp from ID
             const timeB = parseInt(b.split('_')[1] || '0');
             return timeB - timeA;
         });
+
         sortedChatIds.forEach(chatId => {
             const chatData = chats[chatId];
-            if (!chatData) return;
+            if (!chatData) return; // Skip if chat data is missing
+
             const li = document.createElement('li');
             li.classList.add('chat-list-item');
             li.dataset.chatId = chatId;
-            const titleText = chatData.title || `Chat ${chatId.substring(chatId.length - 5)}`;
+            const titleText = chatData.title || `Chat ${chatId.substring(chatId.length - 5)}`; // Use title or part of ID
             li.textContent = titleText;
-            li.title = titleText;
-            if (chatId === currentChatId) { li.classList.add('active'); }
+            li.title = titleText; // Tooltip
+            if (chatId === currentChatId) { li.classList.add('active'); } // Highlight active chat
+
+            // Add delete button to each chat item
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-chat-btn');
-            deleteBtn.innerHTML = '&times;';
+            deleteBtn.innerHTML = '&times;'; // "x" symbol
             deleteBtn.title = "Delete Chat";
-            deleteBtn.onclick = (event) => { event.stopPropagation(); handleDeleteChat(chatId); };
+            deleteBtn.onclick = (event) => { event.stopPropagation(); handleDeleteChat(chatId); }; // Prevent li click
             li.appendChild(deleteBtn);
+
             li.addEventListener('click', () => { handleSelectChat(chatId); });
             chatListUl.appendChild(li);
         });
     }
+
+    /** Updates the 'active' class on the currently selected chat item in the sidebar. */
     function updateActiveChatListItem() {
         if (!chatListUl) return;
         const items = chatListUl.querySelectorAll('.chat-list-item');
-        items.forEach(item => { item.classList.toggle('active', item.dataset.chatId === currentChatId); });
+        items.forEach(item => {
+            item.classList.toggle('active', item.dataset.chatId === currentChatId);
+        });
     }
+
+    /** Updates the model notification area (currently not used extensively). */
     function updateModelNotification(selectedModelName) {
         if (!modelNotificationDiv) return;
-        modelNotificationDiv.style.display = 'none';
+        // Example: modelNotificationDiv.textContent = `Using ${selectedModelName}`;
+        modelNotificationDiv.style.display = 'none'; // Hidden by default
     }
+
+    /** Deactivates the "Thinking" (Reason) mode. */
     function deactivateReasonMode() {
         isReasonModeActive = false;
         updateActionButtonsState();
     }
+
+    /** Deactivates the "Create Image" mode and resets placeholder if needed. */
     function deactivateImageGenerationMode() {
         isImageGenerationModeActive = false;
-        if(messageInput && messageInput.placeholder === "Enter image prompt...") { // Reset placeholder if it was changed
-            messageInput.placeholder = "Message Graxybot...";
+        if(messageInput && messageInput.placeholder === "Enter image prompt...") {
+            messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
         }
         updateActionButtonsState();
     }
 
+    /** Deactivates the "Animate Video" mode and resets placeholder if needed. */
+    function deactivateAnimateVideoMode() {
+        isAnimateVideoModeActive = false;
+        if(messageInput && messageInput.placeholder === "Enter animation prompt...") {
+            messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
+        }
+        updateActionButtonsState();
+    }
+
+    /**
+     * Converts a File object to a base64 encoded string.
+     * @param {File} file - The file to convert.
+     * @returns {Promise<string>} A promise that resolves with the base64 string.
+     */
     function fileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = () => { const base64String = reader.result.split(',')[1]; resolve(base64String); };
+            reader.onload = () => {
+                const base64String = reader.result.split(',')[1]; // Get data part of Data URL
+                resolve(base64String);
+            };
             reader.onerror = error => reject(error);
         });
     }
+
+    /**
+     * Handles image selection from the file input.
+     * Validates file type and size, then converts to base64 and displays a preview.
+     * @param {Event} event - The file input change event.
+     */
     async function handleImageSelection(event) {
         const file = event.target.files[0];
         if (!file) return;
+
+        // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) { alert("Please select a valid image file (JPEG, PNG, GIF, WebP)."); imageUploadInput.value = ''; return; }
-        const maxSizeMB = 4;
-        if (file.size > maxSizeMB * 1024 * 1024) { alert(`Image size exceeds ${maxSizeMB}MB limit.`); imageUploadInput.value = ''; return; }
+        if (!allowedTypes.includes(file.type)) {
+            alert("Please select a valid image file (JPEG, PNG, GIF, WebP).");
+            imageUploadInput.value = ''; // Reset file input
+            return;
+        }
+        // Validate file size
+        const maxSizeMB = 4; // Max 4MB
+        if (file.size > maxSizeMB * 1024 * 1024) {
+            alert(`Image size exceeds ${maxSizeMB}MB limit.`);
+            imageUploadInput.value = ''; // Reset file input
+            return;
+        }
+
         try {
-            selectedImageData = await fileToBase64(file);
+            selectedImageData = await fileToBase64(file); // Convert to base64
             selectedImageMimeType = file.type;
-            if (selectedImagePreviewUrl) { URL.revokeObjectURL(selectedImagePreviewUrl); }
-            selectedImagePreviewUrl = URL.createObjectURL(file);
+            if (selectedImagePreviewUrl) { URL.revokeObjectURL(selectedImagePreviewUrl); } // Revoke old preview URL
+            selectedImagePreviewUrl = URL.createObjectURL(file); // Create new preview URL
             displayImagePreview(selectedImagePreviewUrl);
-        } catch (error) { console.error("Error processing image:", error); alert("Error processing image. Please try again."); removeSelectedImage(); }
+        } catch (error) {
+            console.error("Error processing image:", error);
+            alert("Error processing image. Please try again.");
+            removeSelectedImage(); // Clear selection on error
+        }
     }
+
+    /** Displays the image preview in the UI. */
     function displayImagePreview(imageUrl) {
-        if (imagePreview && imagePreviewArea) { imagePreview.src = imageUrl; imagePreviewArea.style.display = 'inline-block'; }
+        if (imagePreview && imagePreviewArea) {
+            imagePreview.src = imageUrl;
+            imagePreviewArea.style.display = 'inline-block'; // Show preview area
+        }
     }
+
+    /** Removes the selected image, clears preview, and resets related state. */
     function removeSelectedImage() {
-        selectedImageData = null; selectedImageMimeType = null;
+        selectedImageData = null;
+        selectedImageMimeType = null;
         if (selectedImagePreviewUrl) { URL.revokeObjectURL(selectedImagePreviewUrl); selectedImagePreviewUrl = null; }
         if (imagePreviewArea) { imagePreviewArea.style.display = 'none'; }
-        if (imagePreview) { imagePreview.src = '#'; }
-        if (imageUploadInput) { imageUploadInput.value = ''; }
+        if (imagePreview) { imagePreview.src = '#'; } // Clear image src
+        if (imageUploadInput) { imageUploadInput.value = ''; } // Reset file input
         console.log("Selected image removed.");
     }
 
+    /**
+     * Initializes the AI for the current chat.
+     * Loads history, sets up the Google AI model instance, and displays messages.
+     */
     async function initializeAICurrentChat() {
          if (isInitializing) { console.warn("AI Initialization already in progress."); return; }
         isInitializing = true;
         console.log(`Attempting to initialize AI for chat: ${currentChatId}`);
 
+        // Show chat loader
         if (chatLoader) chatLoader.style.display = 'flex';
-        if (chatMessagesContainer) chatMessagesContainer.innerHTML = '';
+        if (chatMessagesContainer) chatMessagesContainer.innerHTML = ''; // Clear previous messages
         if (chatLoader && !chatMessagesContainer.contains(chatLoader)) {
-             chatMessagesContainer.appendChild(chatLoader);
+             chatMessagesContainer.appendChild(chatLoader); // Add loader to message area
         }
 
+        // If no valid chat ID, switch to initial view
         if (!currentChatId || !chats[currentChatId]) {
             console.log("No active chat selected or chat data missing. Switching to initial view.");
             switchToInitialView();
@@ -1128,91 +1342,108 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
 
         const chatData = chats[currentChatId];
-        const fakeModelNameToUse = DEFAULT_FAKE_MODEL;
+        const fakeModelNameToUse = DEFAULT_FAKE_MODEL; // Currently only one model choice
         const historyToLoad = chatData.history || [];
 
         console.log(`Initializing AI for chat ${currentChatId} - Model: ${fakeModelNameToUse}`);
 
-        modelSelector.value = fakeModelNameToUse;
+        modelSelector.value = fakeModelNameToUse; // Set dropdown
         updateModelNotification(fakeModelNameToUse);
 
+        // Disable inputs during initialization
         if(messageInput) messageInput.disabled = true;
         if(sendButton) sendButton.disabled = true;
         deactivateReasonMode();
         deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
         removeSelectedImage();
-        currentChatSession = null;
+        currentChatSession = null; // Reset Google AI session
 
         try {
+            // Validate API Key
             if (!API_KEY || API_KEY === "YOUR_GOOGLE_AI_API_KEY" || (API_KEY.startsWith("AIzaSyB") && API_KEY.length < 30)) {
                 throw new Error("Google AI API Key is missing, invalid, or a placeholder. Graxybot (Google AI) features will not work.");
             }
+            // Initialize Google AI client if not already done
              if (!genAI) {
                 genAI = new GoogleGenerativeAI(API_KEY);
                 console.log("GoogleGenerativeAI client initialized.");
             }
 
+            // Hide loader and remove it from messages
             if (chatLoader) chatLoader.style.display = 'none';
             if (chatMessagesContainer.contains(chatLoader)) {
                  chatMessagesContainer.removeChild(chatLoader);
             }
 
+            // Load and display chat history
             if (historyToLoad.length > 0) {
                 historyToLoad.forEach(message => {
-                    if (message.generatedImageSrc) { // Bot generated image
-                        displayMessage(message.parts, message.role, false, null, message.generatedImageSrc, 'fa-palette', message.imagePrompt);
-                    } else { // User message (may have imagePreview) or regular bot text
+                    if (message.generatedMediaSrc) { // If message has generated media
+                        displayMessage(message.parts, message.role, false, null, message.generatedMediaSrc, message.mediaType === 'video' ? 'fa-film' : 'fa-palette', message.mediaPrompt, message.mediaType);
+                    } else { // Regular text or user message with image preview
                         displayMessage(message.parts, message.role, false, message.imagePreview || null);
                     }
                 });
-            } else {
-                 console.log("Chat history empty, displaying welcome message.");
+            } else { // If no history, show welcome message
+                 console.log("Chat history empty, displaying new chat welcome message.");
                  displayNewChatWelcome(chatMessagesContainer);
             }
 
+            // Scroll to bottom after loading history
             setTimeout(() => { if(chatMessagesContainer) chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; }, 100);
 
+            // Re-enable inputs
             if(messageInput) messageInput.disabled = false;
             if(sendButton) sendButton.disabled = false;
-            if(messageInput) messageInput.focus();
+            if(messageInput) messageInput.focus(); // Focus on input field
             updateActionButtonsState();
 
             console.log(`AI Initialized successfully for chat ${currentChatId}. Ready for interaction.`);
 
-        } catch (error) {
+        } catch (error) { // Handle initialization errors
             console.error(`Error initializing AI for chat ${currentChatId}:`, error);
-            if (chatLoader) chatLoader.style.display = 'none';
+            if (chatLoader) chatLoader.style.display = 'none'; // Hide loader on error
             if (chatMessagesContainer.contains(chatLoader)) {
                  chatMessagesContainer.removeChild(chatLoader);
             }
             displayMessage([{text: `AI Initialization Error: ${error.message}. Please check the API Key and console for details.`}], 'bot', true);
-            if(sendButton) sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            if(sendButton) sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; // Indicate error on send button
+            // Disable all action buttons and inputs on critical error
             if (reasonButton) reasonButton.disabled = true;
             if (createImageButton) createImageButton.disabled = true;
+            if (animateVideoButton) animateVideoButton.disabled = true;
             if(messageInput) messageInput.disabled = true;
             if(sendButton) sendButton.disabled = true;
         } finally {
-            isInitializing = false;
+            isInitializing = false; // Reset initialization flag
         }
     }
 
+    /**
+     * Triggers image generation using the Stable Diffusion API.
+     * @param {string} promptText - The prompt for image generation.
+     */
     async function triggerStableDiffusionGeneration(promptText) {
-        if (currentThinkingIndicatorElement) {
+        if (currentThinkingIndicatorElement) { // Prevent concurrent operations
             console.log("Image generation request ignored, another operation is in progress.");
             return;
         }
         console.log(`Image generation triggered for prompt: "${promptText}"`);
 
+        // Clear welcome message if present
         const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
         if (welcomeContainer) chatMessagesContainer.innerHTML = '';
 
+        // Create a new chat if none is active
         if (!currentChatId) {
              handleNewChat();
-             await new Promise(resolve => setTimeout(resolve, 0));
+             await new Promise(resolve => setTimeout(resolve, 0)); // Ensure new chat is set up before proceeding
         }
 
-        showThinkingIndicator('image', `Generating: "${promptText.substring(0,50)}..."`);
+        showThinkingIndicator('image', `Generating: "${promptText.substring(0,50)}..."`); // Show indicator
 
+        // Payload for Stable Diffusion API
         const payload = {
             prompt: promptText,
             negative_prompt: "blurry, low quality, ugly, deformed, watermark, text, signature, words, letters, writing",
@@ -1220,15 +1451,16 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             cfg_scale: 7.0,
             width: 512,
             height: 512,
-            seed: -1,
+            seed: -1, // Random seed
         };
 
+        // Construct API endpoint URL
         let apiEndpoint = DEFAULT_STABLE_DIFFUSION_API_URL.trim();
         if (apiEndpoint && !apiEndpoint.endsWith('/sdapi/v1/txt2img') && !apiEndpoint.endsWith('/sdapi/v1/img2img')) {
             if (!apiEndpoint.endsWith('/')) {
                 apiEndpoint += '/';
             }
-            apiEndpoint += 'sdapi/v1/txt2img';
+            apiEndpoint += 'sdapi/v1/txt2img'; // Default to txt2img
         }
 
         try {
@@ -1241,11 +1473,11 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 body: JSON.stringify(payload)
             });
 
-            removeThinkingIndicator();
+            removeThinkingIndicator(); // Remove indicator after fetch attempt
 
-            if (!response.ok) {
+            if (!response.ok) { // Handle API errors
                 let errorData;
-                try { errorData = await response.json(); } catch (e) { /* ignore */ }
+                try { errorData = await response.json(); } catch (e) { /* ignore if response not json */ }
                 const errorDetail = errorData?.detail || errorData?.error || JSON.stringify(errorData) || response.statusText;
                 throw new Error(`API returned error: ${response.status} - ${errorDetail}`);
             }
@@ -1253,21 +1485,22 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             const data = await response.json();
             console.log("Stable Diffusion API Success Response:", data);
 
-            if (data.images && data.images.length > 0) {
+            if (data.images && data.images.length > 0) { // Process successful response
                 const base64Image = data.images[0];
                 const imageSrc = `data:image/png;base64,${base64Image}`;
-                displayMessage([{text: promptText}], 'bot', false, null, imageSrc, 'fa-palette', promptText); // Pass prompt in parts
-                addMessageToCurrentChatHistory('model', [{text: promptText}], null, imageSrc, promptText);
+                // Display generated image and add to history
+                displayMessage([{text: promptText}], 'bot', false, null, imageSrc, 'fa-palette', promptText, 'image');
+                addMessageToCurrentChatHistory('model', [{text: promptText}], null, imageSrc, promptText, 'image');
             } else {
                 throw new Error('No images found in the API response.');
             }
 
-        } catch (error) {
+        } catch (error) { // Handle fetch or processing errors
             console.error('Error generating image with Stable Diffusion:', error);
             removeThinkingIndicator();
             displayMessage([{text: `Stable Diffusion Error: ${error.message}. Check console.`}], 'bot', true);
             addMessageToCurrentChatHistory('model', [{ text: `[Stable Diffusion Error: ${error.message}]` }]);
-        } finally {
+        } finally { // Cleanup and re-enable UI
             deactivateImageGenerationMode();
             if (messageInput) messageInput.disabled = false;
             if (sendButton) sendButton.disabled = false;
@@ -1278,13 +1511,101 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
     }
 
+    /**
+     * Triggers video animation generation using the AnimateDiff backend.
+     * @param {string} promptText - The prompt for animation.
+     */
+    async function triggerAnimateDiffGeneration(promptText) {
+        if (currentThinkingIndicatorElement) {
+            console.log("Animation generation request ignored, another operation is in progress.");
+            return;
+        }
+        // Validate AnimateDiff API URL configuration
+        if (!ANIMATEDIFF_API_URL || ANIMATEDIFF_API_URL === "YOUR_CLOUDFLARED_LINK_FOR_ANIMATION/generate_video" || ANIMATEDIFF_API_URL.trim() === "/generate_video") {
+            console.error("AnimateDiff API URL is not configured correctly. Current value:", ANIMATEDIFF_API_URL);
+            displayMessage([{text: "Animation service is not configured. Please check the setup."}], 'bot', true);
+            deactivateAnimateVideoMode();
+            return;
+        }
 
+        console.log(`Animation generation triggered for prompt: "${promptText}"`);
+
+        const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
+        if (welcomeContainer) chatMessagesContainer.innerHTML = '';
+
+        if (!currentChatId) {
+             handleNewChat();
+             await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        showThinkingIndicator('video', `Animating: "${promptText.substring(0,50)}..."`);
+
+        const payload = { prompt: promptText }; // Payload for your animation backend
+
+        try {
+            console.log("Sending request to AnimateDiff API:", ANIMATEDIFF_API_URL);
+            console.log("Payload:", JSON.stringify(payload));
+
+            const response = await fetch(ANIMATEDIFF_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            removeThinkingIndicator();
+
+            if (!response.ok) {
+                let errorData;
+                try { errorData = await response.json(); } catch (e) { /* ignore */ }
+                const errorDetail = errorData?.error || JSON.stringify(errorData) || response.statusText;
+                throw new Error(`API returned error: ${response.status} - ${errorDetail}`);
+            }
+
+            const data = await response.json();
+            console.log("AnimateDiff API Success Response:", data);
+
+            if (data.success && data.videoBase64) { // Expecting {success: true, videoBase64: "..."}
+                const videoSrc = `data:image/gif;base64,${data.videoBase64}`; // GIFs are displayed with <img>
+                displayMessage([{text: promptText}], 'bot', false, null, videoSrc, 'fa-film', promptText, 'video');
+                addMessageToCurrentChatHistory('model', [{text: promptText}], null, videoSrc, promptText, 'video');
+            } else {
+                throw new Error(data.error || 'No video found in the API response or generation failed.');
+            }
+
+        } catch (error) {
+            console.error('Error generating animation with AnimateDiff:', error);
+            removeThinkingIndicator();
+            displayMessage([{text: `Animation Error: ${error.message}. Check console.`}], 'bot', true);
+            addMessageToCurrentChatHistory('model', [{ text: `[Animation Error: ${error.message}]` }]);
+        } finally {
+            deactivateAnimateVideoMode();
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            updateActionButtonsState();
+            if (messageInput && !messageInput.disabled) messageInput.focus();
+        }
+    }
+
+
+    /**
+     * Internal function to handle sending a message.
+     * Determines which mode is active (Animate, Image, Reason, or Standard) and calls the appropriate function.
+     * @param {string} messageText - The text from the input field.
+     * @param {boolean} isInitialMessage - True if sent from the initial welcome screen input.
+     */
     async function sendMessageInternal(messageText, isInitialMessage = false) {
-        if ((!messageText && !selectedImageData && !isImageGenerationModeActive) ||
-            (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText))
+        // Prevent sending if an operation is in progress or if input is invalid for active mode
+        if ((!messageText && !selectedImageData && !isImageGenerationModeActive && !isAnimateVideoModeActive) ||
+            (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText) && !(isAnimateVideoModeActive && messageText))
            ) {
             if (isImageGenerationModeActive && !messageText && !selectedImageData) {
                 displayMessage([{text:"Image generation mode is active. Please type a prompt or attach an image to describe."}], 'bot', true);
+                return;
+            }
+            if (isAnimateVideoModeActive && !messageText) {
+                displayMessage([{text:"Animation mode is active. Please type a prompt."}], 'bot', true);
                 return;
             }
             if (currentThinkingIndicatorElement) {
@@ -1297,39 +1618,60 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             }
         }
 
+        // Store current image data locally as it might be cleared by removeSelectedImage()
         const localSelectedImageData = selectedImageData;
         const localSelectedImageMimeType = selectedImageMimeType;
         const localSelectedImagePreviewUrl = selectedImagePreviewUrl;
 
+        // Construct user message payload for Google AI (if applicable)
         const userMessagePayloadParts = [];
         if (messageText) {
             userMessagePayloadParts.push({ text: messageText });
         }
-        if (localSelectedImageData && localSelectedImageMimeType) {
+        if (localSelectedImageData && localSelectedImageMimeType) { // Add image data if present
             userMessagePayloadParts.push({ inline_data: { mime_type: localSelectedImageMimeType, data: localSelectedImageData } });
         }
 
 
-        if (isImageGenerationModeActive) {
-            if (messageText) {
+        // --- Mode-Specific Logic ---
+
+        if (isAnimateVideoModeActive) { // Highest priority if active
+            if (messageText) { // Animation needs a text prompt
+                displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl); // Display user's prompt
+                addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
+                if (messageInput) messageInput.value = '';
+                if (initialMessageInput) initialMessageInput.value = '';
+                removeSelectedImage(); // Animation currently doesn't use uploaded image as input
+
+                await triggerAnimateDiffGeneration(messageText); // Call animation backend
+                return; // Exit after handling animation
+            } else {
+                displayMessage([{text:"Animation mode is active. Please type a prompt."}], 'bot', true);
+                return;
+            }
+        } else if (isImageGenerationModeActive) {
+            if (messageText) { // Image generation needs a text prompt
                 displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
                 addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
                 if (messageInput) messageInput.value = '';
                 if (initialMessageInput) initialMessageInput.value = '';
-                removeSelectedImage();
+                removeSelectedImage(); // Image generation doesn't use uploaded image as direct input (yet)
 
-                await triggerStableDiffusionGeneration(messageText);
-                return;
+                await triggerStableDiffusionGeneration(messageText); // Call image backend
+                return; // Exit after handling image generation
             } else {
                 displayMessage([{text:"Image generation mode is active. Please type a prompt."}], 'bot', true);
                 return;
             }
         }
 
+        // --- Standard Chat or Reason Mode Logic ---
+
         let chatIdForMessage = currentChatId;
         const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
-        if (welcomeContainer) chatMessagesContainer.innerHTML = '';
+        if (welcomeContainer) chatMessagesContainer.innerHTML = ''; // Clear welcome message
 
+        // If no active chat, create a new one
         if (!chatIdForMessage) {
             console.log(`No active chat. Creating new chat...`);
             const newChatId = generateChatId();
@@ -1337,18 +1679,22 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             currentChatId = newChatId; chatIdForMessage = newChatId;
             console.log(`Created and activated new chat: ${currentChatId}`);
             saveCurrentChatId(); saveAllChats(); renderChatList(); updateActiveChatListItem();
+            // Deactivate modes for a new chat
             deactivateReasonMode();
             deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
         }
 
+        // Display user's message and add to history
         let partsForDisplayAndHistory = userMessagePayloadParts.length > 0 ? userMessagePayloadParts : (localSelectedImagePreviewUrl ? [{ text: "[Image Sent]" }] : [{ text: "" }]);
         displayMessage(partsForDisplayAndHistory, 'user', false, localSelectedImagePreviewUrl);
         addMessageToCurrentChatHistory('user', partsForDisplayAndHistory, localSelectedImagePreviewUrl);
 
-        removeSelectedImage();
+        removeSelectedImage(); // Clear uploaded image after sending
 
-        if (!chatIdForMessage || !chats[chatIdForMessage]) { console.error("Chat ID/data invalid."); return; }
+        if (!chatIdForMessage || !chats[chatIdForMessage]) { console.error("Chat ID/data invalid after new chat creation or selection."); return; }
 
+        // Disable inputs while processing
         if (messageInput) messageInput.disabled = true;
         if (sendButton) sendButton.disabled = true;
         if (initialSendButton) initialSendButton.disabled = true;
@@ -1356,15 +1702,14 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (imageUploadButton) imageUploadButton.disabled = true;
 
 
-        if (isReasonModeActive) {
+        if (isReasonModeActive) { // Handle "Thinking" (Local Quen 3) mode
             console.log(`Thinking mode active. Using local model: ${REASON_MODE_MODEL_FOR_THINKING_BUTTON}.`);
             showThinkingIndicator('local');
-            let botMessageElement = null;
             try {
                 const delay = Math.random() * (MAX_REASON_DELAY_MS - MIN_REASON_DELAY_MS) + MIN_REASON_DELAY_MS;
                 console.log(`Local Quen 3: Simulating thinking for ${Math.round(delay / 1000)}s...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                if (!currentThinkingIndicatorElement) { console.log("Quen 3 call aborted."); return; }
+                await new Promise(resolve => setTimeout(resolve, delay)); // Simulate delay
+                if (!currentThinkingIndicatorElement) { console.log("Local Quen 3 call aborted (indicator removed)."); return; }
 
                 const promptForLocalQuen3 = `User query: ${messageText || (localSelectedImageData ? "Describe the image." : "...")}\n\n(Respond directly to the user's query with a detailed and insightful answer. Do not explain your thought process. Do not introduce yourself or mention your capabilities unless specifically asked.)`;
                 const requestBody = { message: promptForLocalQuen3, model: REASON_MODE_MODEL_FOR_THINKING_BUTTON };
@@ -1379,9 +1724,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 }
                 const data = await response.json();
                 if (data && data.response) {
-                    const botResponseText = data.response;
-                    botMessageElement = displayMessage([{text: botResponseText}], 'bot');
-                    addMessageToCurrentChatHistory('model', [{ text: botResponseText }]);
+                    displayMessage([{text: data.response}], 'bot');
+                    addMessageToCurrentChatHistory('model', [{ text: data.response }]);
                 } else { throw new Error(`Invalid response from local Quen 3 server.`); }
             } catch (error) {
                 console.error(`Error with local Quen 3:`, error);
@@ -1389,17 +1733,18 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 displayMessage([{text: `Error with Quen 3: ${error.message}`}], 'bot', true);
                 addMessageToCurrentChatHistory('model', [{ text: `[Error with Quen 3: ${error.message}]` }]);
             }
-        } else { // Standard Gemini call
+        } else { // Standard Graxybot (Google AI Gemini Flash) call
             console.log("Standard Graxybot call (Google AI Flash).");
             const modelToUseGoogle = modelMapping[DEFAULT_FAKE_MODEL];
             const systemPromptForSendGoogle = getSystemPrompt(DEFAULT_FAKE_MODEL);
 
-            const contentPartsForGoogleAI = [...userMessagePayloadParts];
+            const contentPartsForGoogleAI = [...userMessagePayloadParts]; // Use the parts constructed earlier
 
-            if (contentPartsForGoogleAI.length === 0) {
-                console.warn("No content for Google AI.");
-                removeThinkingIndicator();
-                deactivateReasonMode();
+            if (contentPartsForGoogleAI.length === 0) { // Should not happen if validation above is correct
+                console.warn("No content parts for Google AI. Aborting send.");
+                removeThinkingIndicator(); // Ensure no stale indicator
+                deactivateReasonMode(); // Should already be off
+                // Re-enable inputs
                 if (messageInput) messageInput.disabled = false;
                 if (sendButton) sendButton.disabled = false;
                 if (initialSendButton) initialSendButton.disabled = false;
@@ -1408,73 +1753,94 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 return;
             }
 
-
             let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
             let fullResponseText = "";
             try {
-                if (!genAI) throw new Error("Graxybot Not initialized. Please reload.");
+                if (!genAI) throw new Error("Graxybot (Google AI Client) Not initialized. Please reload.");
                 const modelInstance = genAI.getGenerativeModel({ model: modelToUseGoogle, safetySettings });
                 const mainHistory = chats[chatIdForMessage]?.history || [];
 
+                // Prepare history for Google AI API (last 10 user/model turns)
                 const historyForAPI = mainHistory
-                    .slice(-10)
+                    .slice(-10) // Take last 10 messages
                     .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
-                    .map(msg => ({
+                    .map(msg => ({ // Map to API format
                         role: msg.role,
-                        parts: msg.parts.map(part => {
+                        parts: msg.parts.map(part => { // Ensure parts are in correct format
                             if (part.text !== undefined) return { text: part.text };
                             if (part.inline_data) return { inline_data: { mime_type: part.inline_data.mime_type, data: part.inline_data.data }};
-                            return null;
+                            return null; // Should not happen if parts are well-formed
                         }).filter(p => p !== null)
                     }))
-                    .filter(msg => msg.parts.length > 0);
+                    .filter(msg => msg.parts.length > 0); // Ensure messages have parts
 
 
+                // Stream the response from Google AI
                 const streamResult = await modelInstance.generateContentStream({
-                    contents: [...historyForAPI, { role: "user", parts: contentPartsForGoogleAI }],
+                    contents: [...historyForAPI, { role: "user", parts: contentPartsForGoogleAI }], // Add current user message
                     systemInstruction: { role: "system", parts: [{ text: systemPromptForSendGoogle }] }
                 });
-                botMessageElement = displayMessage([], 'bot'); // Pass empty array for contentParts
+
+                // Create an empty bot message element to stream into
+                botMessageElement = displayMessage([], 'bot');
                 if (botMessageElement) {
                     botMessageBubble = botMessageElement.querySelector('.message-bubble');
                     botMessageParagraph = botMessageBubble?.querySelector('p[data-stream-target="true"]');
                 }
-                if (!botMessageParagraph) throw new Error("Target paragraph for streaming not found.");
+                if (!botMessageParagraph) throw new Error("Target paragraph for streaming not found in DOM.");
 
+                // Process the stream
                 for await (const chunk of streamResult.stream) {
                     const blockReason = chunk.promptFeedback?.blockReason;
-                    if (blockReason) { fullResponseText = `[Response blocked: ${blockReason}]`; break; }
-                    const chunkText = chunk.text(); fullResponseText += chunkText;
-                    botMessageParagraph.innerHTML += chunkText.replace(/\n/g, '<br>');
-                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' });
+                    if (blockReason) { // Handle blocked responses
+                        fullResponseText = `[Response blocked by safety settings: ${blockReason}]`;
+                        console.warn("Google AI response blocked:", blockReason);
+                        break; // Stop processing stream
+                    }
+                    const chunkText = chunk.text();
+                    fullResponseText += chunkText;
+                    botMessageParagraph.innerHTML += chunkText.replace(/\n/g, '<br>'); // Append chunk to paragraph
+                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' }); // Scroll with content
                 }
-                addMessageToCurrentChatHistory('model', [{ text: fullResponseText }]);
+                // After stream, re-process the full text for code blocks
+                if (fullResponseText && botMessageParagraph) {
+                    processAndAppendText(fullResponseText, botMessageParagraph);
+                }
+                addMessageToCurrentChatHistory('model', [{ text: fullResponseText }]); // Add complete response to history
             } catch (error) {
                 console.error("Google AI Error:", error);
-                if (botMessageElement && botMessageElement.parentNode && !fullResponseText) botMessageElement.parentNode.removeChild(botMessageElement);
+                // If an empty message element was created but not filled, remove it
+                if (botMessageElement && botMessageElement.parentNode && !fullResponseText.trim()) {
+                    botMessageElement.parentNode.removeChild(botMessageElement);
+                }
                 displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
-                addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown'}]` }]);
+                addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown Google AI error'}]` }]);
             }
         }
-        deactivateReasonMode();
+        // Cleanup and re-enable UI after processing
+        deactivateReasonMode(); // Ensure reason mode is off
         removeThinkingIndicator();
         if (messageInput) messageInput.disabled = false;
         if (sendButton) sendButton.disabled = false;
         if (initialSendButton) initialSendButton.disabled = false;
         if (imageUploadButton) imageUploadButton.disabled = false;
         updateActionButtonsState();
-        if (messageInput && !messageInput.disabled) messageInput.focus();
+        if (messageInput && !messageInput.disabled) messageInput.focus(); // Focus input
     }
 
+    /**
+     * Public function called when the main send button is clicked or Enter is pressed.
+     */
     function sendMessage() {
+         // Prevent sending if an operation is in progress, unless it's for an active generation mode with text
          if (isInitializing || currentThinkingIndicatorElement) {
-             if (isImageGenerationModeActive && messageInput.value.trim()) {
-                 // Allow sending if in image mode and there's text (for prompt)
+             if ((isImageGenerationModeActive && messageInput.value.trim()) || (isAnimateVideoModeActive && messageInput.value.trim())) {
+                 // Allow sending if in image/animate mode and there's text (for prompt)
              } else if (currentThinkingIndicatorElement) {
                 console.log("Send prevented: thinking/generation indicator active.");
                 return;
              } else if (isInitializing) {
-                console.log("Send prevented: initializing.");
+                console.log("Send prevented: AI is initializing.");
                 return;
              }
          }
@@ -1482,92 +1848,105 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         const messageText = messageInput.value.trim();
         const imageSelected = !!selectedImageData;
 
-        if (messageText || imageSelected || isImageGenerationModeActive) {
-            if (!isImageGenerationModeActive || (isImageGenerationModeActive && !messageText && !imageSelected) ) {
-                 if (!(isImageGenerationModeActive && (messageText || imageSelected))) {
-                    messageInput.value = '';
+        // Proceed if there's text, an image, or a generation mode is active (which might only need a prompt)
+        if (messageText || imageSelected || isImageGenerationModeActive || isAnimateVideoModeActive) {
+            // Clear input field unless it's needed for an active generation mode that doesn't use image upload
+            if (!isImageGenerationModeActive && !isAnimateVideoModeActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !imageSelected) ) {
+                 if (!((isImageGenerationModeActive || isAnimateVideoModeActive) && (messageText || imageSelected))) {
+                    messageInput.value = ''; // Clear input
                  }
             }
-            sendMessageInternal(messageText, false);
+            sendMessageInternal(messageText, false); // Call internal send function
         }
     }
+
+    /**
+     * Public function called when the send button on the initial screen is clicked or Enter is pressed.
+     */
     async function handleInitialSendMessage() {
+         // Similar prevention logic as sendMessage
          if (isInitializing || currentThinkingIndicatorElement) {
-             if (isImageGenerationModeActive && initialMessageInput.value.trim()) {
-                 // Allow sending if in image mode and there's text
+             if ((isImageGenerationModeActive && initialMessageInput.value.trim()) || (isAnimateVideoModeActive && initialMessageInput.value.trim())) {
+                 // Allow sending
              } else if (currentThinkingIndicatorElement) {
                 console.log("Send prevented: thinking/generation indicator active.");
                 return;
              } else if (isInitializing) {
-                console.log("Send prevented: initializing.");
+                console.log("Send prevented: AI is initializing.");
                 return;
              }
          }
         const messageText = initialMessageInput.value.trim();
-        if (!messageText && !isImageGenerationModeActive && !selectedImageData) return;
+        // Proceed if there's text or a generation mode is active (initial screen doesn't have image upload)
+        if (!messageText && !isImageGenerationModeActive && !isAnimateVideoModeActive && !selectedImageData) return; // No text, no image, no active mode
 
-        if (!isImageGenerationModeActive || (isImageGenerationModeActive && !messageText && !selectedImageData)) {
-            if (!(isImageGenerationModeActive && (messageText || selectedImageData))) {
+        // Clear input field (similar logic to sendMessage)
+        if (!isImageGenerationModeActive && !isAnimateVideoModeActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !selectedImageData)) {
+            if (!((isImageGenerationModeActive || isAnimateVideoModeActive) && (messageText || selectedImageData))) {
                 initialMessageInput.value = '';
             }
         }
-        switchToChatView();
-        await sendMessageInternal(messageText, true);
+        switchToChatView(); // Switch to main chat view first
+        await sendMessageInternal(messageText, true); // Then send message
     }
 
     // --- Event Handlers ---
+
+    /** Handles selection of a chat from the sidebar. */
     function handleSelectChat(chatId) {
-         if (chatId === currentChatId || isInitializing || currentThinkingIndicatorElement) { return; }
+         if (chatId === currentChatId || isInitializing || currentThinkingIndicatorElement) { return; } // No change or busy
         console.log(`Selecting chat: ${chatId}`);
         currentChatId = chatId;
         saveCurrentChatId();
         updateActiveChatListItem();
-        switchToChatView();
+        switchToChatView(); // Ensure chat view is active
+        // Deactivate modes and initialize AI for the selected chat
         deactivateReasonMode();
         deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
         initializeAICurrentChat();
     }
+
+    /** Displays the welcome message and suggested prompts in a new chat. */
     function displayNewChatWelcome(container) {
         if (!container) {
             console.error("Message container not found for welcome message.");
             return;
         }
         console.log("Displaying new chat welcome message.");
-        container.innerHTML = '';
+        container.innerHTML = ''; // Clear container
 
         const welcomeContainer = document.createElement('div');
         welcomeContainer.className = 'new-chat-welcome-container';
 
         const title = document.createElement('h1');
         title.className = 'welcome-title';
-        title.textContent = 'Graxybot';
+        title.textContent = 'Graxybot'; // Or your bot's name
         welcomeContainer.appendChild(title);
 
         const promptsGrid = document.createElement('div');
         promptsGrid.className = 'suggested-prompts-grid';
 
+        // Time-based greeting
         const hour = new Date().getHours();
         let timeBasedGreeting = "How can I help you today?";
-        if (hour < 12) {
-            timeBasedGreeting = "How's your morning? Coffee and Graxybot time?";
-        } else if (hour < 18) {
-            timeBasedGreeting = "Good afternoon! What can I help you achieve?";
-        } else {
-            timeBasedGreeting = "Good evening! Ready to wrap up the day or start something new?";
-        }
+        if (hour < 12) timeBasedGreeting = "How's your morning? Coffee and Graxybot time?";
+        else if (hour < 18) timeBasedGreeting = "Good afternoon! What can I help you achieve?";
+        else timeBasedGreeting = "Good evening! Ready to wrap up the day or start something new?";
 
         const suggestions = [
             timeBasedGreeting,
             "Explain quantum computing in simple terms.",
             "Write a short story about a robot who dreams.",
             "Click 'Create Image' then type your prompt!",
+            "Try the new 'Animate' button for a GIF!",
         ];
 
         suggestions.forEach(text => {
             const btn = document.createElement('button');
             btn.className = 'prompt-button';
             btn.textContent = text;
-            btn.onclick = () => {
+            btn.onclick = () => { // Set input field value on click
                 if (messageInput) {
                     messageInput.value = text;
                     messageInput.focus();
@@ -1579,59 +1958,88 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         welcomeContainer.appendChild(promptsGrid);
         container.appendChild(welcomeContainer);
     }
+
+    /** Handles the "New Chat" button click. */
     function handleNewChat() {
         console.log("New chat requested via button.");
-        if (isInitializing || currentThinkingIndicatorElement) return;
-        currentChatId = null;
-        saveCurrentChatId();
-        currentChatSession = null;
-        switchToChatView();
-        updateActiveChatListItem();
-        displayNewChatWelcome(chatMessagesContainer);
-        if(messageInput) { messageInput.value = ''; messageInput.disabled = false; messageInput.placeholder = "Message Graxybot..."; }
+        if (isInitializing || currentThinkingIndicatorElement) return; // Prevent if busy
+
+        currentChatId = null; // No active chat ID for a new chat yet
+        saveCurrentChatId(); // Clear stored ID
+        currentChatSession = null; // Reset Google AI session
+        switchToChatView(); // Ensure chat view is active
+        updateActiveChatListItem(); // Update sidebar (no item will be active)
+        displayNewChatWelcome(chatMessagesContainer); // Show welcome screen in message area
+
+        // Reset input field and buttons
+        if(messageInput) {
+            messageInput.value = '';
+            messageInput.disabled = false;
+            messageInput.placeholder = "Message Graxybot...";
+        }
         if(sendButton) sendButton.disabled = false;
-        const preferredModel = DEFAULT_FAKE_MODEL;
+        const preferredModel = DEFAULT_FAKE_MODEL; // Reset to default model
         if(modelSelector) modelSelector.value = preferredModel;
         updateModelNotification(preferredModel);
+
+        // Deactivate all special modes
         deactivateReasonMode();
         deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
         removeSelectedImage();
-        if(messageInput) messageInput.focus();
+        if(messageInput) messageInput.focus(); // Focus on input
     }
+
+    /** Handles deletion of a chat. */
     function handleDeleteChat(chatIdToDelete) {
-        if (!chats[chatIdToDelete] || isInitializing || currentThinkingIndicatorElement) return;
+        if (!chats[chatIdToDelete] || isInitializing || currentThinkingIndicatorElement) return; // Invalid ID or busy
         const chatTitle = chats[chatIdToDelete].title || `Chat ${chatIdToDelete.substring(chatIdToDelete.length - 5)}`;
-        if (!confirm(`Are you sure you want to delete the chat "${chatTitle}"?`)) { return; }
+        if (!confirm(`Are you sure you want to delete the chat "${chatTitle}"?`)) { return; } // Confirm deletion
+
         console.log(`Deleting chat: ${chatIdToDelete}`);
         const wasActive = (currentChatId === chatIdToDelete);
-        if (wasActive) { removeThinkingIndicator(); }
-        delete chats[chatIdToDelete];
-        saveAllChats();
-        if (wasActive) { handleNewChat(); }
-        renderChatList();
+        if (wasActive) { removeThinkingIndicator(); } // Clear indicator if active chat is deleted
+
+        delete chats[chatIdToDelete]; // Remove from chats object
+        saveAllChats(); // Update localStorage
+
+        if (wasActive) { // If active chat was deleted, start a new chat
+            handleNewChat();
+        }
+        renderChatList(); // Re-render sidebar
     }
+
+    /** Handles changes to the model selector dropdown (currently limited functionality). */
     function handleModelChange(event) {
-        if (isInitializing || currentThinkingIndicatorElement) return;
+        if (isInitializing || currentThinkingIndicatorElement) return; // Prevent if busy
         const selectedModel = event.target.value;
         console.log(`Model selected via UI: ${selectedModel}`);
-        saveSelectedModelPreference(selectedModel);
-        updateModelNotification(selectedModel);
-        if (currentChatId && chats[currentChatId]) {
+        saveSelectedModelPreference(selectedModel); // Save preference
+        updateModelNotification(selectedModel); // Update UI notification
+
+        if (currentChatId && chats[currentChatId]) { // If a chat is active, re-initialize it
             console.log(`Updating model for current chat ${currentChatId} to ${selectedModel}`);
-            chats[currentChatId].model = selectedModel;
-            delete chats[currentChatId].personality;
+            chats[currentChatId].model = selectedModel; // Update model for the chat
+            delete chats[currentChatId].personality; // Remove old field
             saveAllChats();
+            // Deactivate modes and re-initialize
             deactivateReasonMode();
             deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
             initializeAICurrentChat();
         } else if (!currentChatId && chatView && !chatView.classList.contains('hidden')) {
+            // If no chat active but in chat view, just deactivate modes
             deactivateReasonMode();
             deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
         }
     }
+
+    /** Handles the "Thinking" (Reason) button click. */
     function handleReasonButtonClick() {
-        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive) return;
-        isReasonModeActive = !isReasonModeActive;
+        // Prevent if busy or other generation modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive) return;
+        isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
             console.log("Thinking mode (Quen 3 Local) activated.");
              if(messageInput) messageInput.placeholder = "Enhanced thinking active...";
@@ -1639,12 +2047,14 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             console.log("Thinking mode (Quen 3 Local) deactivated.");
              if(messageInput) messageInput.placeholder = "Message Graxybot...";
         }
-        updateActionButtonsState();
+        updateActionButtonsState(); // Update button appearance
     }
 
+    /** Handles the "Create Image" button click. */
     function handleCreateImageButtonClick() {
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive) return;
-        isImageGenerationModeActive = !isImageGenerationModeActive;
+        // Prevent if busy or other modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive) return;
+        isImageGenerationModeActive = !isImageGenerationModeActive; // Toggle mode
         if (isImageGenerationModeActive) {
             console.log("Image Generation Mode ACTIVATED. Next message will be used as prompt.");
             if(messageInput) messageInput.placeholder = "Enter image prompt...";
@@ -1653,24 +2063,44 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if(messageInput) messageInput.placeholder = "Message Graxybot...";
         }
         updateActionButtonsState();
-        if(messageInput) messageInput.focus();
+        if(messageInput) messageInput.focus(); // Focus input
     }
 
-    // Added toggleSidebar function
+    /** Handles the "Animate Video" button click. */
+    function handleAnimateVideoButtonClick() {
+        // Prevent if busy or other modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive) return;
+        isAnimateVideoModeActive = !isAnimateVideoModeActive; // Toggle mode
+        if (isAnimateVideoModeActive) {
+            console.log("Animate Video Mode ACTIVATED. Next message will be used as prompt.");
+            if(messageInput) messageInput.placeholder = "Enter animation prompt...";
+        } else {
+            console.log("Animate Video Mode DEACTIVATED.");
+            if(messageInput) messageInput.placeholder = "Message Graxybot...";
+        }
+        updateActionButtonsState();
+        if(messageInput) messageInput.focus(); // Focus input
+    }
+
+
+    /** Toggles the visibility of the sidebar (for mobile). */
     function toggleSidebar() {
         if (sidebar) {
             sidebar.classList.toggle('visible');
         }
     }
 
-
+    /** Shows the update/welcome popup. */
     function showPopup() { if (popupOverlay) popupOverlay.classList.add('visible'); }
+    /** Hides the update/welcome popup. */
     function hidePopup() { if (popupOverlay) popupOverlay.classList.remove('visible'); }
 
 
     // --- Initialization Sequence ---
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOM Loaded. Initializing Graxybot UI...");
+
+        // Get all necessary DOM elements
         chatMessagesContainer = document.getElementById('chat-messages');
         messageInput = document.getElementById('message-input');
         sendButton = document.getElementById('send-button');
@@ -1680,12 +2110,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         chatView = document.getElementById('chat-view');
         initialMessageInput = document.getElementById('initial-message-input');
         initialSendButton = document.getElementById('initial-send-button');
-        sidebar = document.querySelector('.sidebar');
+        sidebar = document.querySelector('.sidebar'); // Use querySelector for class
         newChatBtn = document.getElementById('new-chat-btn');
         chatListUl = document.getElementById('chat-list');
         reasonButton = document.getElementById('reason-button');
         reasonUsageDisplay = document.getElementById('reason-usage-display');
         createImageButton = document.getElementById('create-image-button');
+        animateVideoButton = document.getElementById('animate-video-button');
         imageUploadButton = document.getElementById('image-upload-button');
         imageUploadInput = document.getElementById('image-upload-input');
         imagePreviewArea = document.getElementById('image-preview-area');
@@ -1696,46 +2127,61 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         closePopupButton = document.getElementById('closePopupButton');
         initialLoader = document.getElementById('initial-loader');
         chatLoader = document.getElementById('chat-loader');
-        menuToggleBtn = document.getElementById('menu-toggle'); // Get the menu toggle button
+        menuToggleBtn = document.getElementById('menu-toggle');
 
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn }; // Added menuToggleBtn
+        // Check if all essential elements were found
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn };
         if (Object.values(essentialElements).some(el => !el)) {
-            console.error("Fatal Error: One or more essential UI elements not found.");
-            document.body.innerHTML = "<p style='color: red; padding: 20px;'>Error: UI failed to load. Check console.</p>"; return;
+            console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
+            if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
+            document.body.innerHTML = "<p style='color: red; padding: 20px;'>Error: UI failed to load. Check console for missing element IDs.</p>";
+            return;
         }
         console.log("All essential DOM elements found.");
 
+        // Load data from localStorage
         chats = loadAllChats();
         currentChatId = loadCurrentChatId();
         const preferredModel = loadSelectedModelPreference();
         if(modelSelector) modelSelector.value = preferredModel;
+
+        // Set initial UI states
         updateActionButtonsState();
-        if(reasonButton) reasonButton.style.display = 'none';
+        if(reasonButton) reasonButton.style.display = 'none'; // Hide buttons initially if in initial view
         if(createImageButton) createImageButton.style.display = 'none';
+        if(animateVideoButton) animateVideoButton.style.display = 'none';
         if(reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if(modelNotificationDiv) modelNotificationDiv.style.display = 'none';
-        renderChatList();
+        renderChatList(); // Populate sidebar
 
 
+        // Check API Key and decide initial view
         if (!API_KEY || API_KEY === "YOUR_GOOGLE_AI_API_KEY" || (API_KEY.startsWith("AIzaSyB") && API_KEY.length < 30)) {
             console.warn("Google AI API Key missing/invalid. Graxybot (Google AI) features disabled.");
             const warningMsg = "Configure Google AI API Key in script for Graxybot to function.";
-            if(initialView && !initialView.classList.contains('hidden')) { if(initialMessageInput) initialMessageInput.placeholder = "Google API Key needed!"; }
-            else if (chatMessagesContainer) { displayMessage([{text: warningMsg}], 'bot', true); }
-             if (!currentChatId || !chats[currentChatId]) { switchToInitialView(); }
-             else { switchToChatView(); initializeAICurrentChat(); }
+            if(initialView && !initialView.classList.contains('hidden')) { // If on initial screen
+                if(initialMessageInput) initialMessageInput.placeholder = "Google API Key needed!";
+            } else if (chatMessagesContainer) { // If somehow in chat view
+                displayMessage([{text: warningMsg}], 'bot', true);
+            }
+             if (!currentChatId || !chats[currentChatId]) { switchToInitialView(); } // No valid chat, go to initial
+             else { switchToChatView(); initializeAICurrentChat(); } // Valid chat, initialize it
         } else {
-            console.log("Google API Key present. Proceeding.");
-            if (currentChatId && chats[currentChatId]) {
-                switchToChatView(); initializeAICurrentChat();
-            } else {
-                switchToInitialView(); if(initialMessageInput) initialMessageInput.focus();
+            console.log("Google API Key present. Proceeding with initialization.");
+            if (currentChatId && chats[currentChatId]) { // If there's a stored active chat
+                switchToChatView();
+                initializeAICurrentChat();
+            } else { // Otherwise, go to initial view
+                switchToInitialView();
+                if(initialMessageInput) initialMessageInput.focus();
             }
         }
+        // Set default placeholders
         if(initialMessageInput) initialMessageInput.placeholder = "Ask me anything...";
         if(messageInput) messageInput.placeholder = "Message Graxybot...";
 
 
+        // --- Add Event Listeners ---
         sendButton?.addEventListener('click', sendMessage);
         messageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!sendButton?.disabled&&!currentThinkingIndicatorElement) { e.preventDefault(); sendMessage(); }});
         initialSendButton?.addEventListener('click', handleInitialSendMessage);
@@ -1744,17 +2190,16 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         newChatBtn?.addEventListener('click', handleNewChat);
         reasonButton?.addEventListener('click', handleReasonButtonClick);
         createImageButton?.addEventListener('click', handleCreateImageButtonClick);
-
+        animateVideoButton?.addEventListener('click', handleAnimateVideoButtonClick);
         imageUploadButton?.addEventListener('click', () => { if (!imageUploadButton.disabled) imageUploadInput?.click(); });
         imageUploadInput?.addEventListener('change', handleImageSelection);
         removeImageButton?.addEventListener('click', removeSelectedImage);
         closePopupButton?.addEventListener('click', hidePopup);
-        popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); });
+        popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); }); // Close on overlay click
+        menuToggleBtn?.addEventListener('click', toggleSidebar); // For mobile menu
 
-        menuToggleBtn?.addEventListener('click', toggleSidebar); // Add event listener for the menu toggle
-
-        showPopup();
-        if(initialLoader) initialLoader.classList.add('hidden');
+        showPopup(); // Show welcome/update popup
+        if(initialLoader) initialLoader.classList.add('hidden'); // Hide initial page loader
         console.log("Graxybot initialization complete.");
     });
 </script>
