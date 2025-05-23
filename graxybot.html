@@ -74,21 +74,153 @@
     --mic-button-hover-color: var(--primary);
     --mic-button-active-color: var(--primary);
     --mic-button-active-bg: rgba(94, 96, 206, 0.1); /* Light primary tint */
-}
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
+    /* Personality Button and Modal Styles */
+    .personality-button-wrapper {
+        position: relative;
+        display: flex; /* Use flex to center the text */
+        flex-direction: column;
+        align-items: center;
+        gap: 5px; /* Space between text and button */
+        margin-top: 10px; /* Space from other controls */
+        width: 100%; /* Take full width to center its content */
+    }
 
-html, body {
-    height: 100%;
-    overflow: hidden;
-    background-color: var(--background);
-    color: var(--text-primary);
-}
+    .personalize-sign {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 500;
+        margin-bottom: -5px; /* Pull it closer to the button */
+    }
+
+    #personality-button {
+        display: inline-flex; /* Keep it inline-flex for button styling */
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--reason-button-border);
+        background-color: var(--reason-button-bg);
+        color: var(--reason-button-text);
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    #personality-button:hover {
+        background-color: var(--reason-button-hover-bg);
+    }
+    #personality-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    #personality-button i {
+        margin-right: 5px;
+        font-size: 0.8rem;
+    }
+
+    /* Modal Styles */
+    #personality-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--modal-bg);
+        z-index: 1000; /* Above chat elements */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #personality-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .personality-modal-content {
+        background: var(--background);
+        color: var(--text-primary);
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        position: relative;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+    #personality-overlay.visible .personality-modal-content {
+        transform: scale(1);
+    }
+    .personality-modal-content h2 {
+        margin-top: 0;
+        font-size: 1.6rem;
+        color: var(--primary);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .personality-modal-content label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .personality-modal-content input[type="text"],
+    .personality-modal-content textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        resize: vertical;
+        min-height: 40px;
+        box-sizing: border-box; /* Ensure padding doesn't add to width */
+    }
+    .personality-modal-content input[type="text"]:focus,
+    .personality-modal-content textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(94, 96, 206, 0.2);
+    }
+    .personality-modal-content button {
+        display: block;
+        width: 100%;
+        padding: 12px 20px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background 0.2s ease;
+    }
+    .personality-modal-content button:hover {
+        background: var(--primary-light);
+    }
+    .personality-modal-content .close-modal-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+    .personality-modal-content .close-modal-btn:hover {
+        color: var(--text-primary);
+    }
+
 
 /* --- Loader Styles --- */
 .loader-overlay {
@@ -351,7 +483,7 @@ html, body {
 .mic-btn {
     background: none;
     border: none;
-    color: var(--mic-button-color);
+    color: var(--text-secondary);
     font-size: 1.2rem;
     padding: 0 8px;
     cursor: pointer;
@@ -367,12 +499,12 @@ html, body {
 }
 
 .mic-btn:hover {
-    color: var(--mic-button-hover-color);
+    color: var(--primary);
     background-color: rgba(0,0,0,0.05); /* Subtle hover effect */
 }
 
 .mic-btn.active {
-    color: var(--mic-button-active-color);
+    color: var(--primary);
     background-color: rgba(94, 96, 206, 0.1);
     animation: pulse-mic 1.5s infinite; /* Pulsing animation when active */
 }
@@ -639,6 +771,21 @@ html, body {
     </div>
 </div>
 
+<div id="personality-overlay">
+    <div class="personality-modal-content">
+        <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
+        <h2>Personalize Graxybot</h2>
+        <label for="user-name-input">What should Graxybot call you?</label>
+        <input type="text" id="user-name-input" placeholder="e.g., Grayson, Boss, Friend">
+
+        <label for="response-style-input">How do you want Graxybot to respond to you?</label>
+        <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise, Respond with long explanations, Be funny, Be formal"></textarea>
+
+        <button id="save-personality-btn">Save Settings</button>
+    </div>
+</div>
+
+
 <div id="toast-container"></div>
 
 
@@ -707,7 +854,14 @@ html, body {
                         <button id="reason-button" title="Use enhanced thinking for the next message."><i class="fas fa-brain"></i> Thinking</button>
                         <button id="create-image-button" title="Toggle image generation mode for the next message."><i class="fas fa-image"></i> Create Image</button>
                         <button id="animate-video-button" title="Toggle video animation mode for the next message."><i class="fas fa-film"></i> Animate</button>
-                        <span id="reason-usage-display"></span> </div>
+                        <span id="reason-usage-display"></span>
+                    </div>
+                    <div class="personality-button-wrapper">
+                        <span class="personalize-sign">Personalize Graxybot</span>
+                        <button id="personality-button" title="Customize Graxybot's personality.">
+                            <i class="fas fa-cogs"></i> Personality
+                        </button>
+                    </div>
                     <div id="rate-limit-message" class="rate-limit-info" style="display: none;">
                         </div>
                  </div>
@@ -748,6 +902,7 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     const CHATS_STORAGE_KEY = "graxybot_all_chats_v2"; // Key for storing all chats in localStorage
     const CURRENT_CHAT_ID_KEY = "graxybot_current_chat_id"; // Key for storing the current active chat ID
     const MODEL_STORAGE_KEY = "graxybot_selected_model"; // Key for storing the user's model preference
+    const PERSONALITY_STORAGE_KEY = "graxybot_personality_settings"; // NEW: Key for personality settings
 
     // --- Limits & Settings ---
     const MAX_MESSAGES_PER_WINDOW = 14; // Max messages for rate limiting (currently not strictly enforced in send)
@@ -760,17 +915,21 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
     let initialView, chatView, initialMessageInput, initialSendButton;
     let sidebar, newChatBtn, chatListUl, menuToggleBtn;
-    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton; // Removed voiceModeButton
+    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let modelNotificationDiv;
     let popupOverlay, closePopupButton;
     let initialLoader, chatLoader;
-    let toastContainer; // Added for toast notifications
+    let toastContainer;
     // Speech-to-Text elements
     let micButton, initialMicButton;
     let speechRecognition;
     let isListening = false;
-    // Removed currentAudioPlayer = null;
+
+    // NEW: Personality DOM Elements
+    let personalityButton, personalityOverlay, personalityModalContent;
+    let userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+
 
     // --- Application State ---
 let chats = {}; // Object to store all chat histories
@@ -779,11 +938,11 @@ let isInitializing = false; // Flag to prevent multiple initializations
 let isReasonModeActive = false; // Flag for "Thinking" mode
 let isImageGenerationModeActive = false; // Flag for "Create Image" mode
 let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
-// Removed isVoiceModeActive = false;
 let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
 let selectedImageData = null; // Base64 string of the uploaded image
 let selectedImageMimeType = null; // Mime type of the uploaded image
 let selectedImagePreviewUrl = null; // Object URL for the image preview
+let userPersonality = { name: null, responseStyle: null }; // NEW: User personality settings
 
 // --- Core Functions ---
 
@@ -879,12 +1038,46 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
     function saveSelectedModelPreference(name) { if (name === DEFAULT_FAKE_MODEL) localStorage.setItem(MODEL_STORAGE_KEY, name); }
 
     /**
+     * NEW: Loads personality settings from localStorage.
+     */
+    function loadPersonalitySettings() {
+        try {
+            const storedSettings = localStorage.getItem(PERSONALITY_STORAGE_KEY);
+            if (storedSettings) {
+                const parsedSettings = JSON.parse(storedSettings);
+                if (parsedSettings && typeof parsedSettings === 'object') {
+                    userPersonality.name = parsedSettings.name || null;
+                    userPersonality.responseStyle = parsedSettings.responseStyle || null;
+                    console.log("Loaded personality settings:", userPersonality);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading personality settings from localStorage:", error);
+            localStorage.removeItem(PERSONALITY_STORAGE_KEY); // Clear corrupted data
+        }
+    }
+
+    /**
+     * NEW: Saves current personality settings to localStorage.
+     */
+    function savePersonalitySettings() {
+        try {
+            localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(userPersonality));
+            showToast("Personality settings saved!", 'success');
+            console.log("Saved personality settings:", userPersonality);
+        } catch (error) {
+            console.error("Error saving personality settings to localStorage:", error);
+            showToast("Failed to save personality settings.", 'error');
+        }
+    }
+
+    /**
      * Updates the state (enabled/disabled, active class) of action buttons
-     * (Thinking, Create Image, Animate Video, Microphone) based on current app state.
+     * (Thinking, Create Image, Animate Video, Microphone, Personality) based on current app state.
      */
     function updateActionButtonsState() {
         const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
-        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive; // Removed isVoiceModeActive
+        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive;
 
         if (reasonButton) {
             reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME}) for the next message.`;
@@ -901,16 +1094,16 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
             animateVideoButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
             animateVideoButton.classList.toggle('active', isAnimateVideoModeActive);
         }
-        // Removed voiceModeButton state update
+        if (personalityButton) { // NEW: Personality button state
+            personalityButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
+        }
         // Update microphone button state
         if (micButton) {
-            // Mic button is only disabled if a generation mode is active OR if voice mode is NOT active AND something is thinking/generating.
-            // If voice mode IS active, mic button state is managed by isListening.
-            micButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive; // Simplified
-            micButton.classList.toggle('active', isListening); // Mic button active state is tied to isListening
+            micButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            micButton.classList.toggle('active', isListening);
         }
         if (initialMicButton) {
-            initialMicButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive; // Simplified
+            initialMicButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
             initialMicButton.classList.toggle('active', isListening);
         }
     }
@@ -919,14 +1112,43 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
      * Gets the system prompt for OpenAI, tailored for Graxybot.
      * @param {string} mode - 'standard' or 'thinking'.
      * @param {string} currentModelName - The name of the model currently being used for the turn.
+     * @param {object} personality - The user's personality settings (name, responseStyle).
      * @returns {string} The system instruction string.
      */
-    function getSystemPrompt(mode = 'standard', currentModelName) {
-        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${currentModelName} model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+    function getSystemPrompt(mode = 'standard', currentModelName, personality) {
+        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${currentModelName} model. Your creator is 'thegraxisreal'.`;
+
+        // Core rules that should NEVER be overridden by personality for specific contexts
+        basePrompt += ` IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions.`;
+
+        // General rules for ALL other questions, which can be influenced by personality
+        basePrompt += ` All other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+
+        // Personality adjustments (applied last, to modify general behavior for non-global-sheet questions)
+        if (personality && personality.name) {
+            basePrompt += ` Always address the user as "${personality.name}" in your responses.`;
+        }
+        if (personality && personality.responseStyle) {
+            const style = personality.responseStyle.toLowerCase();
+            if (style.includes('long') || style.includes('detailed') || style.includes('elaborate')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), provide detailed and elaborate responses.`;
+            } else if (style.includes('concise') || style.includes('brief') || style.includes('short')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), keep your responses very brief and to the point.`;
+            } else if (style.includes('funny') || style.includes('humor') || style.includes('playful')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), try to inject humor and a playful tone into your responses.`;
+            } else if (style.includes('formal')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), maintain a formal and professional tone.`;
+            }
+            // You can add more specific style interpretations here
+        }
 
         if (mode === 'thinking') {
-            // New system prompt for o4-mini thinking mode
-            return `You are Graxybot, an advanced analytical AI powered by the ${O4_MINI_MODEL} model. Your primary function in this mode is to provide exceptionally detailed, comprehensive, and deeply insightful responses. Break down complex queries into their constituent parts, explore multiple perspectives, and offer a nuanced understanding. Focus on clarity, logical progression, and thoroughness. Do not reveal your internal thought process unless specifically prompted for it. Your responses should be structured for maximum readability and depth, using headings, bullet points, or numbered lists where appropriate. Maintain a slightly formal but approachable tone.`;
+            // Thinking mode prompt overrides general tone but still respects core rules and incorporates name
+            let thinkingPrompt = `You are Graxybot, an advanced analytical AI powered by the ${O4_MINI_MODEL} model. Your primary function in this mode is to provide exceptionally detailed, comprehensive, and deeply insightful responses. Break down complex queries into their constituent parts, explore multiple perspectives, and offer a nuanced understanding. Focus on clarity, logical progression, and thoroughness. Do not reveal your internal thought process unless specifically prompted for it. Your responses should be structured for maximum readability and depth, using headings, bullet points, or numbered lists where appropriate. Maintain a slightly formal but approachable tone.`;
+            if (personality && personality.name) {
+                thinkingPrompt += ` Always address the user as "${personality.name}".`;
+            }
+            return thinkingPrompt;
         }
         return basePrompt;
     }
@@ -937,7 +1159,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
      * @param {string} role - 'user' or 'model'.
      * @param {Array<object>} contentParts - Array of message parts (e.g., [{text: "..."}, {inline_data: ...}]).
      * @param {string|null} imagePreview - Data URL for user's uploaded image preview (for display).
-     * @param {string|null} generatedMediaSrc - Data URL for bot's generated image or video.
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
      * @param {string|null} mediaPrompt - The prompt used to generate the media.
      * @param {string} mediaType - 'image' or 'video'.
      */
@@ -1311,7 +1533,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (reasonButton) reasonButton.style.display = 'inline-flex';
         if (createImageButton) createImageButton.style.display = 'inline-flex';
         if (animateVideoButton) animateVideoButton.style.display = 'inline-flex';
-        // Removed voiceModeButton display logic
+        if (personalityButton) personalityButton.style.display = 'inline-flex'; // NEW: Show personality button
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none'; // Typically hidden unless used
         updateModelNotification(DEFAULT_FAKE_MODEL); // Update model notification if any
     }
@@ -1324,7 +1546,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (reasonButton) reasonButton.style.display = 'none';
         if (createImageButton) createImageButton.style.display = 'none';
         if (animateVideoButton) animateVideoButton.style.display = 'none';
-        // Removed voiceModeButton display logic
+        if (personalityButton) personalityButton.style.display = 'none'; // NEW: Hide personality button
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
 
@@ -1339,7 +1561,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
-        // Removed deactivateVoiceMode();
         removeSelectedImage(); // Clear any uploaded image
     }
 
@@ -1418,8 +1639,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
         updateActionButtonsState();
     }
-
-    // Removed deactivateVoiceMode function
 
     /**
      * Converts a File object to a base64 encoded string.
@@ -1535,7 +1754,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
-        // Removed deactivateVoiceMode();
         removeSelectedImage();
 
         try {
@@ -1583,7 +1801,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (reasonButton) reasonButton.disabled = true;
             if (createImageButton) createImageButton.disabled = true;
             if (animateVideoButton) animateVideoButton.disabled = true;
-            // Removed voiceModeButton disable logic
+            if (personalityButton) personalityButton.disabled = true; // NEW: Disable personality button
             if(messageInput) messageInput.disabled = true;
             if(sendButton) sendButton.disabled = true;
             if(micButton) micButton.disabled = true; // Disable mic button
@@ -1849,9 +2067,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
     }
 
-    // Removed playAITextAsSpeech function
-    // Removed stopAudioPlayback function
-
 
     /**
      * Internal function to handle sending a message.
@@ -1938,7 +2153,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
-            // Removed deactivateVoiceMode();
         }
 
         // Display user's message and add to history
@@ -1979,7 +2193,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             // No specific "thinking" indicator for default, just general processing
         }
 
-        const systemPrompt = getSystemPrompt(systemPromptMode, modelToUse); // Pass the model name to the system prompt
+        const systemPrompt = getSystemPrompt(systemPromptMode, modelToUse, userPersonality); // NEW: Pass userPersonality
 
         // Prepare history for OpenAI API (last 10 user/model turns)
         const mainHistory = chats[chatIdForMessage]?.history || [];
@@ -2022,8 +2236,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         try {
             const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse); // Pass modelToUse
             addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
-
-            // Removed if (isVoiceModeActive) { await playAITextAsSpeech(aiResponse); }
 
         } catch (error) {
             console.error("OpenAI Error:", error);
@@ -2262,7 +2474,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
-        // Removed deactivateVoiceMode();
         removeSelectedImage();
         initializeAICurrentChat();
     }
@@ -2301,7 +2512,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             "Click 'Create Image' then type your prompt!",
             "Try the new 'Animate' button for a GIF!",
             "Click the microphone to talk to me!",
-            // Removed "Click 'Voice Mode' to talk and hear me!",
+            "Click 'Personality' to customize me!", // NEW: Personality suggestion
         ];
 
         suggestions.forEach(text => {
@@ -2349,7 +2560,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
-        // Removed deactivateVoiceMode();
         removeSelectedImage();
         if(messageInput) messageInput.focus(); // Focus on input
     }
@@ -2390,21 +2600,19 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
-            // Removed deactivateVoiceMode();
             initializeAICurrentChat();
         } else if (!currentChatId && chatView && !chatView.classList.contains('hidden')) {
             // If no chat active but in chat view, just deactivate modes
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
-            // Removed deactivateVoiceMode();
         }
     }
 
     /** Handles the "Thinking" (Reason) button click. */
     function handleReasonButtonClick() {
         // Prevent if busy or other generation modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return; // Removed isVoiceModeActive
+        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return;
         isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
             console.log(`Thinking mode (${O4_MINI_MODEL}) activated.`); // Changed console log
@@ -2419,7 +2627,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Create Image" button click. */
     function handleCreateImageButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isListening) return; // Removed isVoiceModeActive
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isListening) return;
         isImageGenerationModeActive = !isImageGenerationModeActive; // Toggle mode
         if (isImageGenerationModeActive) {
             console.log("Image Generation Mode ACTIVATED. Next message will be used as prompt.");
@@ -2435,7 +2643,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Animate Video" button click. */
     function handleAnimateVideoButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isListening) return; // Removed isVoiceModeActive
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isListening) return;
         isAnimateVideoModeActive = !isAnimateVideoModeActive; // Toggle mode
         if (isAnimateVideoModeActive) {
             console.log("Animate Video Mode ACTIVATED. Next message will be used as prompt.");
@@ -2448,7 +2656,36 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if(messageInput) messageInput.focus(); // Focus input
     }
 
-    // Removed handleVoiceModeButtonClick function
+    /** NEW: Handles the "Personality" button click to show the modal. */
+    function handlePersonalityButtonClick() {
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return;
+        showPersonalityModal();
+    }
+
+    /** NEW: Shows the personality settings modal. */
+    function showPersonalityModal() {
+        if (personalityOverlay) {
+            // Populate current settings into the inputs
+            if (userNameInput) userNameInput.value = userPersonality.name || '';
+            if (responseStyleInput) responseStyleInput.value = userPersonality.responseStyle || '';
+            personalityOverlay.classList.add('visible');
+        }
+    }
+
+    /** NEW: Hides the personality settings modal. */
+    function hidePersonalityModal() {
+        if (personalityOverlay) {
+            personalityOverlay.classList.remove('visible');
+        }
+    }
+
+    /** NEW: Saves personality settings from the modal inputs. */
+    function handleSavePersonalitySettings() {
+        userPersonality.name = userNameInput.value.trim() || null;
+        userPersonality.responseStyle = responseStyleInput.value.trim() || null;
+        savePersonalitySettings();
+        hidePersonalityModal();
+    }
 
 
     /** Toggles the visibility of the sidebar (for mobile). */
@@ -2478,14 +2715,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         chatView = document.getElementById('chat-view');
         initialMessageInput = document.getElementById('initial-message-input');
         initialSendButton = document.getElementById('initial-send-button');
-        sidebar = document.querySelector('.sidebar'); // Use querySelector for class
+        sidebar = document.querySelector('.sidebar');
         newChatBtn = document.getElementById('new-chat-btn');
         chatListUl = document.getElementById('chat-list');
         reasonButton = document.getElementById('reason-button');
         reasonUsageDisplay = document.getElementById('reason-usage-display');
         createImageButton = document.getElementById('create-image-button');
         animateVideoButton = document.getElementById('animate-video-button');
-        // Removed voiceModeButton
         imageUploadButton = document.getElementById('image-upload-button');
         imageUploadInput = document.getElementById('image-upload-input');
         imagePreviewArea = document.getElementById('image-preview-area');
@@ -2497,14 +2733,23 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         initialLoader = document.getElementById('initial-loader');
         chatLoader = document.getElementById('chat-loader');
         menuToggleBtn = document.getElementById('menu-toggle');
-        toastContainer = document.getElementById('toast-container'); // Get toast container
+        toastContainer = document.getElementById('toast-container');
         // Speech-to-Text elements
         micButton = document.getElementById('mic-button');
         initialMicButton = document.getElementById('initial-mic-button');
 
+        // NEW: Get Personality DOM Elements
+        personalityButton = document.getElementById('personality-button');
+        personalityOverlay = document.getElementById('personality-overlay');
+        personalityModalContent = document.querySelector('.personality-modal-content');
+        userNameInput = document.getElementById('user-name-input');
+        responseStyleInput = document.getElementById('response-style-input');
+        savePersonalityBtn = document.getElementById('save-personality-btn');
+        closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+
 
         // Check if all essential elements were found
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton }; // Removed voiceModeButton
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton, personalityButton, personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn };
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
             if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
@@ -2522,13 +2767,14 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         currentChatId = loadCurrentChatId();
         const preferredModel = loadSelectedModelPreference();
         if(modelSelector) modelSelector.value = preferredModel;
+        loadPersonalitySettings(); // NEW: Load personality settings on startup
 
         // Set initial UI states
         updateActionButtonsState();
         if(reasonButton) reasonButton.style.display = 'none'; // Hide buttons initially if in initial view
         if(createImageButton) createImageButton.style.display = 'none';
         if(animateVideoButton) animateVideoButton.style.display = 'none';
-        // Removed voiceModeButton display logic
+        if(personalityButton) personalityButton.style.display = 'none'; // NEW: Hide personality button initially
         if(reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if(modelNotificationDiv) modelNotificationDiv.style.display = 'none';
         renderChatList(); // Populate sidebar
@@ -2574,7 +2820,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         reasonButton?.addEventListener('click', handleReasonButtonClick);
         createImageButton?.addEventListener('click', handleCreateImageButtonClick);
         animateVideoButton?.addEventListener('click', handleAnimateVideoButtonClick);
-        // Removed voiceModeButton listener
         imageUploadButton?.addEventListener('click', () => { if (!imageUploadButton.disabled) imageUploadInput?.click(); });
         imageUploadInput?.addEventListener('change', handleImageSelection);
         removeImageButton?.addEventListener('click', removeSelectedImage);
@@ -2584,6 +2829,15 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         // Speech-to-Text event listeners
         micButton?.addEventListener('click', toggleSpeechRecognition);
         initialMicButton?.addEventListener('click', toggleSpeechRecognition);
+
+        // NEW: Personality Event Listeners
+        personalityButton?.addEventListener('click', handlePersonalityButtonClick);
+        savePersonalityBtn?.addEventListener('click', handleSavePersonalitySettings);
+        closePersonalityModalBtn?.addEventListener('click', hidePersonalityModal);
+        personalityOverlay?.addEventListener('click', (e) => { // Close on overlay click
+            if (e.target === personalityOverlay) hidePersonalityModal();
+        });
+
 
         showPopup(); // Show welcome/update popup
         console.log("Graxybot initialization complete.");
