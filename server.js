@@ -145,7 +145,8 @@ app.post('/elevenlabs-tts', async (req, res) => {
                     similarity_boost: 0.75 // Adjust for more or less similarity to the original voice
                 }
             },
-            responseType: 'stream' // Crucial for streaming audio directly
+            responseType: 'stream', // Crucial for streaming audio directly
+            decompress: true // ADDED: Tell axios to decompress the response automatically
         });
 
         // Set headers for audio playback
