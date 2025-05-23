@@ -68,6 +68,12 @@
     --toast-success: #28a745;
     --toast-error: #dc3545;
     --toast-info: #17a2b8;
+
+    /* Speech-to-Text Button Styles */
+    --mic-button-color: var(--text-secondary);
+    --mic-button-hover-color: var(--primary);
+    --mic-button-active-color: var(--primary);
+    --mic-button-active-bg: rgba(94, 96, 206, 0.1); /* Light primary tint */
 }
 
 * {
@@ -341,6 +347,50 @@ html, body {
 .btn:hover { background-color: var(--primary-light); }
 .btn:disabled { background-color: var(--text-secondary); opacity: 0.7; cursor: not-allowed; }
 
+/* Microphone button specific styles */
+.mic-btn {
+    background: none;
+    border: none;
+    color: var(--mic-button-color);
+    font-size: 1.2rem;
+    padding: 0 8px;
+    cursor: pointer;
+    transition: color var(--transition), background-color var(--transition);
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 0px; /* Align with paperclip button */
+    border-radius: 50%; /* Make it round */
+}
+
+.mic-btn:hover {
+    color: var(--mic-button-hover-color);
+    background-color: rgba(0,0,0,0.05); /* Subtle hover effect */
+}
+
+.mic-btn.active {
+    color: var(--mic-button-active-color);
+    background-color: var(--mic-button-active-bg);
+    animation: pulse-mic 1.5s infinite; /* Pulsing animation when active */
+}
+
+.mic-btn:disabled {
+    color: var(--text-secondary);
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: none;
+    animation: none;
+}
+
+@keyframes pulse-mic {
+    0% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(94, 96, 206, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0); }
+}
+
 
 #image-upload-button {
     background: none; border: none; color: var(--text-secondary); font-size: 1.2rem;
@@ -609,6 +659,9 @@ html, body {
             <h1>Graxybot</h1>
             <div class="initial-input-area">
                 <input type="text" id="initial-message-input" placeholder="Ask me anything...">
+                <button id="initial-mic-button" class="mic-btn" title="Start Speech Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
                 <button id="initial-send-button" class="btn" title="Send Message">
                     <i class="fas fa-arrow-up"></i>
                 </button>
@@ -639,6 +692,9 @@ html, body {
                     <button id="image-upload-button" title="Attach Image"><i class="fas fa-paperclip"></i></button>
                     <input type="file" id="image-upload-input" accept="image/*">
                     <input type="text" id="message-input" placeholder="Message Graxybot...">
+                    <button id="mic-button" class="mic-btn" title="Start Speech Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
                     <button id="send-button" class="btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
                  </div>
                  <div id="image-preview-area" class="image-preview-container" style="display: none;">
@@ -706,6 +762,10 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let popupOverlay, closePopupButton;
     let initialLoader, chatLoader;
     let toastContainer; // Added for toast notifications
+    // Speech-to-Text elements
+    let micButton, initialMicButton;
+    let speechRecognition;
+    let isListening = false;
 
     // --- Application State ---
 let chats = {}; // Object to store all chat histories
@@ -771,7 +831,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
             if (storedChats) {
                 const parsedChats = JSON.parse(storedChats);
                 if (typeof parsedChats === 'object' && parsedChats !== null) {
-                    // Basic data integrity check and migration for older chat formats
+                    // Basic data integrity check and migration if needed for older chat formats
                     Object.keys(parsedChats).forEach(id => {
                         if (!parsedChats[id]) return; // Skip if chat data is somehow null
                         if (!Array.isArray(parsedChats[id].history)) { parsedChats[id].history = []; }
@@ -814,24 +874,35 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
 
     /**
      * Updates the state (enabled/disabled, active class) of action buttons
-     * (Thinking, Create Image, Animate Video) based on current app state.
+     * (Thinking, Create Image, Animate Video, Microphone) based on current app state.
      */
     function updateActionButtonsState() {
         const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
+        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive;
+
         if (reasonButton) {
             reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME}) for the next message.`;
-            reasonButton.disabled = thinkingOrGenerating || isImageGenerationModeActive || isAnimateVideoModeActive;
+            reasonButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
             reasonButton.classList.toggle('active', isReasonModeActive);
         }
         if (createImageButton) {
             createImageButton.title = "Toggle image generation mode for the next message.";
-            createImageButton.disabled = thinkingOrGenerating || isReasonModeActive || isAnimateVideoModeActive;
+            createImageButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
             createImageButton.classList.toggle('active', isImageGenerationModeActive);
         }
         if (animateVideoButton) {
             animateVideoButton.title = "Toggle video animation mode for the next message.";
-            animateVideoButton.disabled = thinkingOrGenerating || isReasonModeActive || isImageGenerationModeActive;
+            animateVideoButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
             animateVideoButton.classList.toggle('active', isAnimateVideoModeActive);
+        }
+        // Update microphone button state
+        if (micButton) {
+            micButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            micButton.classList.toggle('active', isListening);
+        }
+        if (initialMicButton) {
+            initialMicButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            initialMicButton.classList.toggle('active', isListening);
         }
     }
 
@@ -1240,7 +1311,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (chatView) chatView.classList.add('hidden');
         // Hide action buttons in initial view
         if (reasonButton) reasonButton.style.display = 'none';
-        if (createImageButton) createImageButton.style.display = 'none';
+        if (createImageButton) createImage.style.display = 'none';
         if (animateVideoButton) animateVideoButton.style.display = 'none';
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
@@ -1445,6 +1516,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         // Disable inputs during initialization
         if(messageInput) messageInput.disabled = true;
         if(sendButton) sendButton.disabled = true;
+        if(micButton) micButton.disabled = true; // Disable mic button
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
@@ -1477,6 +1549,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             // Re-enable inputs
             if(messageInput) messageInput.disabled = false;
             if(sendButton) sendButton.disabled = false;
+            if(micButton) micButton.disabled = false; // Re-enable mic button
             if(messageInput) messageInput.focus(); // Focus on input field
             updateActionButtonsState();
 
@@ -1496,6 +1569,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (animateVideoButton) animateVideoButton.disabled = true;
             if(messageInput) messageInput.disabled = true;
             if(sendButton) sendButton.disabled = true;
+            if(micButton) micButton.disabled = true; // Disable mic button
         } finally {
             isInitializing = false; // Reset initialization flag
         }
@@ -1589,6 +1663,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (sendButton) sendButton.disabled = false;
             if (initialSendButton) initialSendButton.disabled = false;
             if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
             updateActionButtonsState();
             if (messageInput && !messageInput.disabled) messageInput.focus();
         }
@@ -1669,6 +1745,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (sendButton) sendButton.disabled = false;
             if (initialSendButton) initialSendButton.disabled = false;
             if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
             updateActionButtonsState();
             if (messageInput && !messageInput.disabled) messageInput.focus();
         }
@@ -1853,6 +1931,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (messageInput) messageInput.disabled = true;
         if (sendButton) sendButton.disabled = true;
         if (initialSendButton) initialSendButton.disabled = true;
+        if (micButton) micButton.disabled = true; // Disable mic button
+        if (initialMicButton) initialMicButton.disabled = true; // Disable initial mic button
         updateActionButtonsState();
         if (imageUploadButton) imageUploadButton.disabled = true;
 
@@ -1892,6 +1972,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 if (sendButton) sendButton.disabled = false;
                 if (initialSendButton) initialSendButton.disabled = false;
                 if (imageUploadButton) imageUploadButton.disabled = false;
+                if (micButton) micButton.disabled = false; // Re-enable mic button
+                if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
                 updateActionButtonsState();
                 return;
             }
@@ -1941,6 +2023,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 if (sendButton) sendButton.disabled = false;
                 if (initialSendButton) initialSendButton.disabled = false;
                 if (imageUploadButton) imageUploadButton.disabled = false;
+                if (micButton) micButton.disabled = false; // Re-enable mic button
+                if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
                 updateActionButtonsState();
                 return;
             }
@@ -1962,6 +2046,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (sendButton) sendButton.disabled = false;
         if (initialSendButton) initialSendButton.disabled = false;
         if (imageUploadButton) imageUploadButton.disabled = false;
+        if (micButton) micButton.disabled = false; // Re-enable mic button
+        if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
         updateActionButtonsState();
         if (messageInput && !messageInput.disabled) messageInput.focus(); // Focus input
     }
@@ -1971,7 +2057,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
      */
     function sendMessage() {
          // Prevent sending if an operation is in progress, unless it's for an active generation mode with text
-         if (isInitializing || currentThinkingIndicatorElement) {
+         if (isInitializing || currentThinkingIndicatorElement || isListening) { // Added isListening
              if ((isImageGenerationModeActive && messageInput.value.trim()) || (isAnimateVideoModeActive && messageInput.value.trim())) {
                  // Allow sending if in image/animate mode and there's text (for prompt)
              } else if (currentThinkingIndicatorElement) {
@@ -1979,6 +2065,11 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 return;
              } else if (isInitializing) {
                 console.log("Send prevented: AI is initializing.");
+                return;
+             } else if (isListening) { // If listening, stop it and then send
+                stopSpeechRecognition();
+                // The recognized text will be put into the input field, and then the user can manually send.
+                // Or, if speech recognition auto-sends, this branch won't be hit.
                 return;
              }
          }
@@ -2003,7 +2094,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
      */
     async function handleInitialSendMessage() {
          // Similar prevention logic as sendMessage
-         if (isInitializing || currentThinkingIndicatorElement) {
+         if (isInitializing || currentThinkingIndicatorElement || isListening) { // Added isListening
              if ((isImageGenerationModeActive && initialMessageInput.value.trim()) || (isAnimateVideoModeActive && initialMessageInput.value.trim())) {
                  // Allow sending
              } else if (currentThinkingIndicatorElement) {
@@ -2011,6 +2102,9 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 return;
              } else if (isInitializing) {
                 console.log("Send prevented: AI is initializing.");
+                return;
+             } else if (isListening) { // If listening, stop it and then send
+                stopSpeechRecognition();
                 return;
              }
          }
@@ -2028,11 +2122,135 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         await sendMessageInternal(messageText, true); // Then send message
     }
 
+    // --- Speech-to-Text Functions ---
+
+    /** Initializes the SpeechRecognition object. */
+    function initializeSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showToast("Speech recognition not supported in this browser.", 'error', 5000);
+            console.warn("SpeechRecognition API not supported.");
+            if (micButton) micButton.style.display = 'none'; // Hide button if not supported
+            if (initialMicButton) initialMicButton.style.display = 'none';
+            return null;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false; // Listen for a single utterance
+        recognition.interimResults = true; // Get interim results
+        recognition.lang = 'en-US'; // Set language
+
+        recognition.onstart = () => {
+            isListening = true;
+            updateActionButtonsState();
+            showToast("Listening...", 'info', 2000);
+            console.log('Speech recognition started.');
+            // Clear input field when starting to listen
+            if (messageInput) messageInput.value = '';
+            if (initialMessageInput) initialMessageInput.value = '';
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            // Update the relevant input field based on active view
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.value = finalTranscript || interimTranscript;
+                // Keep cursor at the end
+                activeInput.selectionStart = activeInput.selectionEnd = activeInput.value.length;
+            }
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            updateActionButtonsState();
+            console.log('Speech recognition ended.');
+            // If there's final text, automatically send it
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput && activeInput.value.trim().length > 0) {
+                // Trigger send if there's content after speech ends
+                if (chatView.classList.contains('hidden')) { // Initial view
+                    handleInitialSendMessage();
+                } else { // Chat view
+                    sendMessage();
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            isListening = false;
+            updateActionButtonsState();
+            console.error('Speech recognition error:', event.error);
+            let errorMessage = "Speech recognition error.";
+            if (event.error === 'not-allowed') {
+                errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
+            } else if (event.error === 'no-speech') {
+                errorMessage = "No speech detected. Please try again.";
+            } else if (event.error === 'audio-capture') {
+                errorMessage = "Could not access microphone. Ensure it's connected and not in use.";
+            }
+            showToast(errorMessage, 'error', 5000);
+        };
+
+        return recognition;
+    }
+
+    /** Toggles speech recognition on/off. */
+    function toggleSpeechRecognition() {
+        if (!speechRecognition) {
+            speechRecognition = initializeSpeechRecognition();
+            if (!speechRecognition) return; // If API not supported, stop here
+        }
+
+        if (isListening) {
+            speechRecognition.stop();
+        } else {
+            // Stop any ongoing operations before starting speech recognition
+            if (currentThinkingIndicatorElement) {
+                showToast("Cannot start speech input while AI is processing.", 'info');
+                return;
+            }
+            if (isImageGenerationModeActive) {
+                showToast("Cannot start speech input in image generation mode.", 'info');
+                return;
+            }
+            if (isAnimateVideoModeActive) {
+                showToast("Cannot start speech input in video animation mode.", 'info');
+                return;
+            }
+            if (isReasonModeActive) {
+                showToast("Cannot start speech input in thinking mode.", 'info');
+                return;
+            }
+
+            speechRecognition.start();
+        }
+    }
+
+    /** Stops speech recognition explicitly. */
+    function stopSpeechRecognition() {
+        if (speechRecognition && isListening) {
+            speechRecognition.stop();
+        }
+    }
+
+
     // --- Event Handlers ---
 
     /** Handles selection of a chat from the sidebar. */
     function handleSelectChat(chatId) {
-         if (chatId === currentChatId || isInitializing || currentThinkingIndicatorElement) { return; } // No change or busy
+         if (chatId === currentChatId || isInitializing || currentThinkingIndicatorElement || isListening) { return; } // No change or busy
         console.log(`Selecting chat: ${chatId}`);
         currentChatId = chatId;
         saveCurrentChatId();
@@ -2042,6 +2260,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
+        removeSelectedImage();
         initializeAICurrentChat();
     }
 
@@ -2078,6 +2297,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             "Write a short story about a robot who dreams.",
             "Click 'Create Image' then type your prompt!",
             "Try the new 'Animate' button for a GIF!",
+            "Click the microphone to talk to me!", // Added new suggestion
         ];
 
         suggestions.forEach(text => {
@@ -2100,7 +2320,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "New Chat" button click. */
     function handleNewChat() {
         console.log("New chat requested via button.");
-        if (isInitializing || currentThinkingIndicatorElement) return; // Prevent if busy
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return; // Prevent if busy
 
         currentChatId = null; // No active chat ID for a new chat yet
         saveCurrentChatId(); // Clear stored ID
@@ -2115,6 +2335,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             messageInput.placeholder = "Message Graxybot...";
         }
         if(sendButton) sendButton.disabled = false;
+        if(micButton) micButton.disabled = false; // Re-enable mic button
+        if(initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
         const preferredModel = DEFAULT_FAKE_MODEL; // Reset to default model
         if(modelSelector) modelSelector.value = preferredModel;
         updateModelNotification(preferredModel);
@@ -2129,7 +2351,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
     /** Handles deletion of a chat. */
     function handleDeleteChat(chatIdToDelete) {
-        if (!chats[chatIdToDelete] || isInitializing || currentThinkingIndicatorElement) return; // Invalid ID or busy
+        if (!chats[chatIdToDelete] || isInitializing || currentThinkingIndicatorElement || isListening) return; // Invalid ID or busy
         const chatTitle = chats[chatIdToDelete].title || `Chat ${chatIdToDelete.substring(chatIdToDelete.length - 5)}`;
         if (!confirm(`Are you sure you want to delete the chat "${chatTitle}"?`)) { return; } // Confirm deletion
 
@@ -2148,7 +2370,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
     /** Handles changes to the model selector dropdown (currently limited functionality). */
     function handleModelChange(event) {
-        if (isInitializing || currentThinkingIndicatorElement) return; // Prevent if busy
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return; // Prevent if busy
         const selectedModel = event.target.value;
         console.log(`Model selected via UI: ${selectedModel}`);
         saveSelectedModelPreference(selectedModel); // Save preference
@@ -2175,7 +2397,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Thinking" (Reason) button click. */
     function handleReasonButtonClick() {
         // Prevent if busy or other generation modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive) return;
+        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return;
         isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
             console.log("Thinking mode (OpenAI) activated.");
@@ -2190,7 +2412,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Create Image" button click. */
     function handleCreateImageButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive) return;
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isListening) return;
         isImageGenerationModeActive = !isImageGenerationModeActive; // Toggle mode
         if (isImageGenerationModeActive) {
             console.log("Image Generation Mode ACTIVATED. Next message will be used as prompt.");
@@ -2206,7 +2428,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Animate Video" button click. */
     function handleAnimateVideoButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive) return;
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isListening) return;
         isAnimateVideoModeActive = !isAnimateVideoModeActive; // Toggle mode
         if (isAnimateVideoModeActive) {
             console.log("Animate Video Mode ACTIVATED. Next message will be used as prompt.");
@@ -2266,9 +2488,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         chatLoader = document.getElementById('chat-loader');
         menuToggleBtn = document.getElementById('menu-toggle');
         toastContainer = document.getElementById('toast-container'); // Get toast container
+        // Speech-to-Text elements
+        micButton = document.getElementById('mic-button');
+        initialMicButton = document.getElementById('initial-mic-button');
+
 
         // Check if all essential elements were found
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer };
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton };
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
             if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
@@ -2325,9 +2551,9 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
         // --- Add Event Listeners ---
         sendButton?.addEventListener('click', sendMessage);
-        messageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!sendButton?.disabled&&!currentThinkingIndicatorElement) { e.preventDefault(); sendMessage(); }});
+        messageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!sendButton?.disabled&&!currentThinkingIndicatorElement&&!isListening) { e.preventDefault(); sendMessage(); }}); // Added !isListening
         initialSendButton?.addEventListener('click', handleInitialSendMessage);
-        initialMessageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!initialSendButton?.disabled&&!currentThinkingIndicatorElement) { e.preventDefault(); handleInitialSendMessage(); }});
+        initialMessageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!initialSendButton?.disabled&&!currentThinkingIndicatorElement&&!isListening) { e.preventDefault(); handleInitialSendMessage(); }}); // Added !isListening
         modelSelector?.addEventListener('change', handleModelChange);
         newChatBtn?.addEventListener('click', handleNewChat);
         reasonButton?.addEventListener('click', handleReasonButtonClick);
@@ -2339,6 +2565,9 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         closePopupButton?.addEventListener('click', hidePopup);
         popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); }); // Close on overlay click
         menuToggleBtn?.addEventListener('click', toggleSidebar); // For mobile menu
+        // Speech-to-Text event listeners
+        micButton?.addEventListener('click', toggleSpeechRecognition);
+        initialMicButton?.addEventListener('click', toggleSpeechRecognition);
 
         showPopup(); // Show welcome/update popup
         if(initialLoader) initialLoader.classList.add('hidden'); // Hide initial page loader
