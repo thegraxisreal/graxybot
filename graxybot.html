@@ -465,84 +465,6 @@ html, body {
     padding: 5px;
 }
 
-/* --- Code Preview Modal Styles --- */
-#code-preview-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Dark overlay */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Above chat content, below main popup */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-#code-preview-modal-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.code-preview-modal-content {
-    background: var(--background);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    width: 90%;
-    max-width: 800px;
-    height: 80%;
-    max-height: 600px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: translateY(50px); /* Start slightly below center */
-    opacity: 0;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-}
-
-#code-preview-modal-overlay.visible .code-preview-modal-content {
-    transform: translateY(0); /* Slide up to center */
-    opacity: 1;
-}
-
-.code-preview-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--background-secondary);
-}
-
-.code-preview-modal-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.code-preview-close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.code-preview-close-btn:hover {
-    color: var(--primary);
-}
-
-#code-preview-iframe {
-    flex-grow: 1;
-    width: 100%;
-    border: none;
-    background-color: white; /* Ensure iframe background is white */
-}
-
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 768px) {
@@ -568,14 +490,6 @@ html, body {
     .popup-content button { padding: 10px 20px; font-size: 15px; }
     .welcome-title { font-size: 2.2rem; }
     .suggested-prompts-grid { grid-template-columns: 1fr; }
-
-    /* Code Preview Modal for smaller screens */
-    .code-preview-modal-content {
-        width: 95%;
-        height: 90%;
-        max-width: none; /* Remove max-width on mobile */
-        max-height: none; /* Remove max-height on mobile */
-    }
 }
 
 @media (max-width: 600px) {
@@ -677,18 +591,6 @@ html, body {
 </div>
 
 <div id="toast-container"></div>
-
-<div id="code-preview-modal-overlay">
-    <div class="code-preview-modal-content">
-        <div class="code-preview-modal-header">
-            <h3>Code Preview</h3>
-            <button id="code-preview-close-btn" class="code-preview-close-btn" title="Close Preview">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <iframe id="code-preview-iframe" sandbox="allow-scripts allow-popups allow-forms"></iframe>
-    </div>
-</div>
 
 
 <div class="chat-app">
@@ -807,10 +709,6 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let initialLoader, chatLoader;
     let toastContainer; // Added for toast notifications
 
-    // New DOM elements for code preview modal
-    let codePreviewModalOverlay, codePreviewModalContent, codePreviewIframe, codePreviewCloseBtn;
-
-
     // --- Application State ---
 let chats = {}; // Object to store all chat histories
 let currentChatId = null; // ID of the currently active chat
@@ -875,28 +773,30 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
             if (storedChats) {
                 const parsedChats = JSON.parse(storedChats);
                 if (typeof parsedChats === 'object' && parsedChats !== null) {
-                    // Basic data integrity check and migration if needed
+                    // Basic data integrity check and migration for older chat formats
                     Object.keys(parsedChats).forEach(id => {
-                        if (!parsedChats[id]) return;
+                        if (!parsedChats[id]) return; // Skip if chat data is somehow null
                         if (!Array.isArray(parsedChats[id].history)) { parsedChats[id].history = []; }
+                        // Ensure message parts are in the correct array format
                         parsedChats[id].history.forEach(msg => {
                             if (typeof msg.parts === 'string') {
                                 msg.parts = [{ text: msg.parts }];
                             } else if (!Array.isArray(msg.parts)) {
-                                msg.parts = [{ text: String(msg.parts) }];
+                                msg.parts = [{ text: String(msg.parts) }]; // Convert to string if not array/object
                             }
                         });
-                        parsedChats[id].model = DEFAULT_FAKE_MODEL;
-                        delete parsedChats[id].personality;
+                        // Standardize model name and remove deprecated fields
+                        parsedChats[id].model = DEFAULT_FAKE_MODEL; // Default to graxybot for old chats
+                        delete parsedChats[id].personality; // Remove old personality field
                     });
                     return parsedChats;
                 }
             }
         } catch (error) {
             console.error("Error loading chats from localStorage:", error);
-            localStorage.removeItem(CHATS_STORAGE_KEY);
+            localStorage.removeItem(CHATS_STORAGE_KEY); // Clear corrupted data
         }
-        return {};
+        return {}; // Return empty object if no chats or error
        }
 
     /** Saves all chats to localStorage. */
@@ -909,7 +809,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
     function saveCurrentChatId() { if (currentChatId) localStorage.setItem(CURRENT_CHAT_ID_KEY, currentChatId); else localStorage.removeItem(CURRENT_CHAT_ID_KEY); }
 
     /** Loads the selected model preference (currently defaults to DEFAULT_FAKE_MODEL). */
-    function loadSelectedModelPreference() { return DEFAULT_FAKE_MODEL; }
+    function loadSelectedModelPreference() { return DEFAULT_FAKE_MODEL; /* localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_FAKE_MODEL; */ }
 
     /** Saves the selected model preference (currently only saves if it's DEFAULT_FAKE_MODEL). */
     function saveSelectedModelPreference(name) { if (name === DEFAULT_FAKE_MODEL) localStorage.setItem(MODEL_STORAGE_KEY, name); }
@@ -1288,12 +1188,13 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
     }
 
     /**
-     * "Runs" HTML or JavaScript code by displaying it in an in-app iframe modal.
+     * "Runs" HTML or JavaScript code by opening it in a new tab.
+     * Provides user feedback using custom toast messages instead of alerts.
      * @param {string} codeContent - The code to run.
      * @param {string} language - The language of the code ('html', 'javascript', 'js').
      */
     function handleRunCode(codeContent, language) {
-         console.log(`Attempting to "run" ${language} code in modal...`);
+         console.log(`Attempting to "run" ${language} code...`);
         try {
             let htmlToRun = '';
             if (language === 'html') {
@@ -1307,44 +1208,21 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 showToast(`Running code directly is not supported for ${language}.`, 'info');
                 return;
             }
-
-            // Set the iframe's srcdoc and show the modal
-            if (codePreviewIframe) {
-                codePreviewIframe.srcdoc = htmlToRun;
-                showCodePreviewModal();
-                showToast("Code preview loaded!", 'success');
+            const newTab = window.open('about:blank', '_blank');
+            if (newTab) {
+                newTab.document.open();
+                newTab.document.write(htmlToRun);
+                newTab.document.close();
+                console.log("Code execution tab opened.");
+                showToast("Code running in a new tab!", 'success');
             } else {
-                showToast("Error: Code preview element not found.", 'error');
+                showToast("Could not open new tab. Please check if pop-ups are blocked.", 'error');
             }
-
         } catch (error) {
             console.error("Error preparing or running code:", error);
             showToast("An error occurred while trying to run the code.", 'error');
         }
     }
-
-    /** Shows the code preview modal. */
-    function showCodePreviewModal() {
-        if (codePreviewModalOverlay) {
-            codePreviewModalOverlay.classList.add('visible');
-            // Optional: Disable main scroll when modal is open
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    /** Hides the code preview modal. */
-    function hideCodePreviewModal() {
-        if (codePreviewModalOverlay) {
-            codePreviewModalOverlay.classList.remove('visible');
-            // Clear iframe content when hidden to prevent lingering scripts
-            if (codePreviewIframe) {
-                codePreviewIframe.srcdoc = ''; // Clear content
-            }
-            // Re-enable main scroll
-            document.body.style.overflow = '';
-        }
-    }
-
 
     /** Switches the UI from the initial welcome view to the chat view. */
     function switchToChatView() {
@@ -2143,7 +2021,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (!messageText && !isImageGenerationModeActive && !isAnimateVideoModeActive && !selectedImageData) return; // No text, no image, no active mode
 
         // Clear input field (similar logic to sendMessage)
-        if (!isImageGenerationModeActive && !isAnimateVideoActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !selectedImageData)) {
+        if (!isImageGenerationModeActive && !isAnimateVideoModeActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !selectedImageData)) {
             if (!((isImageGenerationModeActive || isAnimateVideoModeActive) && (messageText || selectedImageData))) {
                 initialMessageInput.value = '';
             }
@@ -2391,15 +2269,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         menuToggleBtn = document.getElementById('menu-toggle');
         toastContainer = document.getElementById('toast-container'); // Get toast container
 
-        // New DOM elements for code preview modal
-        codePreviewModalOverlay = document.getElementById('code-preview-modal-overlay');
-        codePreviewModalContent = codePreviewModalOverlay?.querySelector('.code-preview-modal-content');
-        codePreviewIframe = document.getElementById('code-preview-iframe');
-        codePreviewCloseBtn = document.getElementById('code-preview-close-btn');
-
-
         // Check if all essential elements were found
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, codePreviewModalOverlay, codePreviewIframe, codePreviewCloseBtn };
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer };
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
             if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
@@ -2470,14 +2341,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         closePopupButton?.addEventListener('click', hidePopup);
         popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); }); // Close on overlay click
         menuToggleBtn?.addEventListener('click', toggleSidebar); // For mobile menu
-
-        // Event listeners for the new code preview modal
-        codePreviewCloseBtn?.addEventListener('click', hideCodePreviewModal);
-        codePreviewModalOverlay?.addEventListener('click', (e) => { // Close when clicking outside content
-            if (e.target === codePreviewModalOverlay) {
-                hideCodePreviewModal();
-            }
-        });
 
         showPopup(); // Show welcome/update popup
         if(initialLoader) initialLoader.classList.add('hidden'); // Hide initial page loader
