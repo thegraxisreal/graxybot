@@ -1948,17 +1948,18 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             modelToUse = O4_MINI_MODEL;
             systemPromptMode = 'thinking';
             console.log(`Thinking mode active. Using OpenAI model: ${modelToUse}.`);
+            showThinkingIndicator('reason'); // ONLY show thinking indicator here
         } else if (messageText.toLowerCase().includes("code")) { // Check for "code" keyword
             modelToUse = GPT_4_1_MODEL;
             systemPromptMode = 'standard';
             console.log(`"Code" keyword detected. Using OpenAI model: ${modelToUse}.`);
+            // No specific "thinking" indicator for code, just general processing (buttons disabled)
         } else { // Default
             modelToUse = OPENAI_MODEL;
             systemPromptMode = 'standard';
             console.log(`Standard Graxybot call. Using OpenAI model: ${modelToUse}.`);
+            // No specific "thinking" indicator for default, just general processing
         }
-
-        showThinkingIndicator('reason'); // Show thinking indicator for all text-based AI calls
 
         const systemPrompt = getSystemPrompt(systemPromptMode, modelToUse); // Pass the model name to the system prompt
 
@@ -2008,18 +2009,19 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
             addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
             showToast(`Graxybot error: ${error.message}`, 'error');
+        } finally {
+            // Cleanup and re-enable UI after processing
+            deactivateReasonMode(); // Ensure reason mode is off
+            removeThinkingIndicator(); // This will remove any active indicator (reason, image, video)
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            if (messageInput && !messageInput.disabled) messageInput.focus(); // Focus input
         }
-        // Cleanup and re-enable UI after processing
-        deactivateReasonMode(); // Ensure reason mode is off
-        removeThinkingIndicator();
-        if (messageInput) messageInput.disabled = false;
-        if (sendButton) sendButton.disabled = false;
-        if (initialSendButton) initialSendButton.disabled = false;
-        if (imageUploadButton) imageUploadButton.disabled = false;
-        if (micButton) micButton.disabled = false; // Re-enable mic button
-        if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
-        updateActionButtonsState();
-        if (messageInput && !messageInput.disabled) messageInput.focus(); // Focus input
     }
 
     /**
