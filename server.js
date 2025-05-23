@@ -110,7 +110,7 @@ app.post('/openai/chat', async (req, res) => {
   }
 });
 
-// NEW: ElevenLabs Text-to-Speech Proxy Endpoint
+// ElevenLabs Text-to-Speech Proxy Endpoint
 app.post('/elevenlabs-tts', async (req, res) => {
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
     // Default voice ID for ElevenLabs. You can change this to any voice ID you prefer.
@@ -139,14 +139,14 @@ app.post('/elevenlabs-tts', async (req, res) => {
             },
             data: {
                 text: textToSpeak,
-                model_id: "eleven_multilingual_v2", // Or "eleven_monolingual_v1" depending on your needs
+                model_id: "eleven_multilingual_v2",
                 voice_settings: {
-                    stability: 0.75, // Adjust for more stable or varied output
-                    similarity_boost: 0.75 // Adjust for more or less similarity to the original voice
+                    stability: 0.75,
+                    similarity_boost: 0.75
                 }
             },
-            responseType: 'stream', // Crucial for streaming audio directly
-            decompress: true // ADDED: Tell axios to decompress the response automatically
+            // CHANGE: Request as ArrayBuffer instead of stream and remove decompress
+            responseType: 'arraybuffer' // Get the full response as a binary buffer
         });
 
         // Set headers for audio playback
@@ -154,29 +154,34 @@ app.post('/elevenlabs-tts', async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        // Pipe the audio stream directly to the client
-        elevenLabsResponse.data.pipe(res);
+        // Send the entire audio buffer
+        res.end(elevenLabsResponse.data); // This sends the binary data and closes the response
 
-        elevenLabsResponse.data.on('end', () => {
-            console.log('ElevenLabs audio stream to client ended successfully.');
-        });
-
-        elevenLabsResponse.data.on('error', (err) => {
-            console.error('Error during ElevenLabs audio stream to client:', err);
-            if (!res.headersSent) {
-                res.status(500).send('Error streaming audio from ElevenLabs.');
-            } else {
-                res.end();
-            }
-        });
+        console.log('ElevenLabs audio response sent to client successfully.');
 
     } catch (error) {
-        console.error('Error proxying ElevenLabs TTS request:', error.response?.data || error.message);
+        // Axios errors for non-streaming responses contain error.response.data
+        console.error('Error proxying ElevenLabs TTS request:', error.response?.data ? error.response.data.toString() : error.message);
         if (!res.headersSent) {
-            res.status(error.response?.status || 500).json({
-                error: 'Failed to communicate with ElevenLabs API',
-                details: error.response?.data || error.message
-            });
+            // Check if error.response exists and has a data buffer
+            if (error.response && error.response.data) {
+                // Attempt to parse error message if it's JSON from ElevenLabs
+                try {
+                    const errorDetails = JSON.parse(error.response.data.toString('utf8'));
+                    res.status(error.response.status || 500).json({
+                        error: 'Failed to communicate with ElevenLabs API',
+                        details: errorDetails.detail || errorDetails.message || 'Unknown error'
+                    });
+                } catch (parseError) {
+                    // If not JSON, send raw error data
+                    res.status(error.response.status || 500).send(error.response.data);
+                }
+            } else {
+                res.status(error.response?.status || 500).json({
+                    error: 'Failed to communicate with ElevenLabs API',
+                    details: error.message
+                });
+            }
         } else {
             res.end();
         }
