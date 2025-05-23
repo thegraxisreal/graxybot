@@ -1188,7 +1188,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
             const pre = document.createElement('pre');
             pre.className = 'line-numbers'; // Enable line numbers plugin
             const codeEl = document.createElement('code');
-            codeEl.className = `language-${lang}`;
+codeEl.className = `language-${lang}`;
             codeEl.textContent = code;
             pre.appendChild(codeEl);
             codeContainer.appendChild(pre);
@@ -1311,7 +1311,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (chatView) chatView.classList.add('hidden');
         // Hide action buttons in initial view
         if (reasonButton) reasonButton.style.display = 'none';
-        if (createImageButton) createImage.style.display = 'none';
+        if (createImageButton) createImageButton.style.display = 'none';
         if (animateVideoButton) animateVideoButton.style.display = 'none';
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
@@ -2503,6 +2503,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
         console.log("All essential DOM elements found.");
 
+        // Hide initial page loader immediately after essential elements are found
+        if(initialLoader) initialLoader.classList.add('hidden');
+        console.log("Initial loader hidden.");
+
         // Load data from localStorage
         chats = loadAllChats();
         currentChatId = loadCurrentChatId();
@@ -2570,7 +2574,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         initialMicButton?.addEventListener('click', toggleSpeechRecognition);
 
         showPopup(); // Show welcome/update popup
-        if(initialLoader) initialLoader.classList.add('hidden'); // Hide initial page loader
         console.log("Graxybot initialization complete.");
     });
 </script>
