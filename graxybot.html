@@ -74,6 +74,33 @@
     --mic-button-hover-color: var(--primary);
     --mic-button-active-color: var(--primary);
     --mic-button-active-bg: rgba(94, 96, 206, 0.1); /* Light primary tint */
+
+    /* New button specific styles */
+    .action-button-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .new-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #FF4500; /* Orange-red for "NEW" */
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        z-index: 10;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        animation: pulse-new 1.5s infinite;
+    }
+
+    @keyframes pulse-new {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
 }
 
 * {
@@ -412,13 +439,13 @@ html, body {
 .input-controls-area { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 10px; }
 .action-buttons-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-#reason-button, #create-image-button, #animate-video-button { /* Combined styles */
+#reason-button, #create-image-button, #animate-video-button, #voice-mode-button { /* Combined styles */
     display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 8px;
     font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid var(--reason-button-border);
     background-color: var(--reason-button-bg); color: var(--reason-button-text);
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
-#reason-button:hover, #create-image-button:hover, #animate-video-button:hover { background-color: var(--reason-button-hover-bg); }
+#reason-button:hover, #create-image-button:hover, #animate-video-button:hover, #voice-mode-button:hover { background-color: var(--reason-button-hover-bg); }
 
 #reason-button.active, #create-image-button.active { /* Active state for Thinking and Create Image */
     background-color: var(--reason-button-active-bg); border-color: var(--reason-button-active-border); color: var(--reason-button-active-text);
@@ -429,9 +456,17 @@ html, body {
     animation: pulse-button 0.5s ease-out; /* Optional: use pulse or a different animation */
     box-shadow: 0 0 8px var(--animate-button-active-bg); /* Green glow */
 }
+#voice-mode-button.active { /* Specific active state for Voice Mode */
+    background-color: #007bff; /* Blue for active voice mode */
+    border-color: #0056b3;
+    color: white;
+    animation: pulse-button 0.5s ease-out;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Blue glow */
+}
 
-#reason-button:disabled, #create-image-button:disabled, #animate-video-button:disabled { opacity: 0.6; cursor: not-allowed; }
-#reason-button i, #create-image-button i, #animate-video-button i { margin-right: 5px; font-size: 0.8rem; }
+
+#reason-button:disabled, #create-image-button:disabled, #animate-video-button:disabled, #voice-mode-button:disabled { opacity: 0.6; cursor: not-allowed; }
+#reason-button i, #create-image-button i, #animate-video-button i, #voice-mode-button i { margin-right: 5px; font-size: 0.8rem; }
 #reason-usage-display { display: none; }
 
 @keyframes pulse-button { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -452,7 +487,7 @@ html, body {
 #popupOverlay.visible .popup-content { transform: scale(1); }
 .popup-content h2 { margin-top: 0; font-size: 24px; color: #F3E8FF; margin-bottom: 15px; }
 .popup-content p { font-size: 16px; color: #E9D8FD; line-height: 1.5; margin-bottom: 10px; }
-.popup-content ul { list-style-type: disc; padding-left: 25px; margin-bottom: 25px; font-size: 16px; color: #E9D8FD; }
+.popup-content ul { list-style-type: disc; padding: 0 0 0 25px; margin-bottom: 25px; font-size: 16px; color: #E9D8FD; }
 .popup-content ul li { margin-bottom: 8px; }
 .popup-content ul li strong { color: #fff; }
 .popup-content button {
@@ -532,7 +567,7 @@ html, body {
     #message-input { font-size: 0.95rem; }
     .btn { width: 38px; height: 38px; }
     #initial-send-button { width: 38px; height: 38px; }
-    #reason-button, #create-image-button, #animate-video-button { font-size: 0.8rem; padding: 5px 10px; }
+    #reason-button, #create-image-button, #animate-video-button, #voice-mode-button { font-size: 0.8rem; padding: 5px 10px; }
     .image-preview-container { max-width: 80px; }
     #model-notification { font-size: 0.75rem; padding: 3px 8px;}
     .popup-content h2 { font-size: 20px; }
@@ -579,7 +614,7 @@ html, body {
     #message-input { padding: 8px 0; }
     .btn { width: 36px; height: 36px; }
     #initial-send-button { width: 36px; height: 36px; }
-    #reason-button, #create-image-button, #animate-video-button { font-size: 0.75rem; padding: 4px 8px; }
+    #reason-button, #create-image-button, #animate-video-button, #voice-mode-button { font-size: 0.75rem; padding: 4px 8px; }
     .action-buttons-area { gap: 6px; }
     .image-preview-container { max-width: 60px; }
     #image-upload-button { padding: 0 8px; font-size: 1.1rem;}
@@ -704,6 +739,10 @@ html, body {
                  <div class="input-controls-area">
                     <div class="action-buttons-area">
                         <button id="reason-button" title="Use enhanced thinking for the next message."><i class="fas fa-brain"></i> Thinking</button>
+                        <div class="action-button-wrapper">
+                            <span class="new-badge">NEW</span>
+                            <button id="voice-mode-button" title="Toggle voice input and output."><i class="fas fa-volume-up"></i> Voice Mode</button>
+                        </div>
                         <button id="create-image-button" title="Toggle image generation mode for the next message."><i class="fas fa-image"></i> Create Image</button>
                         <button id="animate-video-button" title="Toggle video animation mode for the next message."><i class="fas fa-film"></i> Animate</button>
                         <span id="reason-usage-display"></span> </div>
@@ -733,6 +772,8 @@ const ANIMATEDIFF_API_URL = "https://discussion-republicans-lab-marijuana.tryclo
 
 // This URL now points to your own server's proxy endpoint
 const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat'; // Changed to absolute URL
+// New ElevenLabs proxy endpoint (YOU NEED TO IMPLEMENT THIS ON YOUR SERVER.JS)
+const ELEVENLABS_PROXY_ENDPOINT = window.location.origin + '/elevenlabs-tts';
 
 
 // --- Model Definitions ---
@@ -758,7 +799,7 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
     let initialView, chatView, initialMessageInput, initialSendButton;
     let sidebar, newChatBtn, chatListUl, menuToggleBtn;
-    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton;
+    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton, voiceModeButton; // Added voiceModeButton
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let modelNotificationDiv;
     let popupOverlay, closePopupButton;
@@ -768,6 +809,7 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let micButton, initialMicButton;
     let speechRecognition;
     let isListening = false;
+    let currentAudioPlayer = null; // To manage audio playback
 
     // --- Application State ---
 let chats = {}; // Object to store all chat histories
@@ -776,6 +818,7 @@ let isInitializing = false; // Flag to prevent multiple initializations
 let isReasonModeActive = false; // Flag for "Thinking" mode
 let isImageGenerationModeActive = false; // Flag for "Create Image" mode
 let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
+let isVoiceModeActive = false; // NEW: Flag for "Voice Mode"
 let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
 let selectedImageData = null; // Base64 string of the uploaded image
 let selectedImageMimeType = null; // Mime type of the uploaded image
@@ -876,11 +919,11 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
 
     /**
      * Updates the state (enabled/disabled, active class) of action buttons
-     * (Thinking, Create Image, Animate Video, Microphone) based on current app state.
+     * (Thinking, Create Image, Animate Video, Voice Mode, Microphone) based on current app state.
      */
     function updateActionButtonsState() {
         const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
-        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive;
+        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive || isVoiceModeActive; // Added isVoiceModeActive
 
         if (reasonButton) {
             reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME}) for the next message.`;
@@ -897,13 +940,20 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
             animateVideoButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
             animateVideoButton.classList.toggle('active', isAnimateVideoModeActive);
         }
+        if (voiceModeButton) { // NEW: Voice Mode button state
+            voiceModeButton.title = "Toggle voice input and output.";
+            voiceModeButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening; // Disable if other modes are active or listening
+            voiceModeButton.classList.toggle('active', isVoiceModeActive);
+        }
         // Update microphone button state
         if (micButton) {
-            micButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
-            micButton.classList.toggle('active', isListening);
+            // Mic button is only disabled if a generation mode is active OR if voice mode is NOT active AND something is thinking/generating.
+            // If voice mode IS active, mic button state is managed by isListening.
+            micButton.disabled = (isVoiceModeActive ? false : (thinkingOrGenerating || isAnyGenerationModeActive));
+            micButton.classList.toggle('active', isListening); // Mic button active state is tied to isListening
         }
         if (initialMicButton) {
-            initialMicButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            initialMicButton.disabled = (isVoiceModeActive ? false : (thinkingOrGenerating || isAnyGenerationModeActive));
             initialMicButton.classList.toggle('active', isListening);
         }
     }
@@ -930,7 +980,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
      * @param {string} role - 'user' or 'model'.
      * @param {Array<object>} contentParts - Array of message parts (e.g., [{text: "..."}, {inline_data: ...}]).
      * @param {string|null} imagePreview - Data URL for user's uploaded image preview (for display).
-     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated image or video.
      * @param {string|null} mediaPrompt - The prompt used to generate the media.
      * @param {string} mediaType - 'image' or 'video'.
      */
@@ -1304,6 +1354,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (reasonButton) reasonButton.style.display = 'inline-flex';
         if (createImageButton) createImageButton.style.display = 'inline-flex';
         if (animateVideoButton) animateVideoButton.style.display = 'inline-flex';
+        if (voiceModeButton) voiceModeButton.style.display = 'inline-flex'; // NEW: Show voice mode button
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none'; // Typically hidden unless used
         updateModelNotification(DEFAULT_FAKE_MODEL); // Update model notification if any
     }
@@ -1316,6 +1367,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (reasonButton) reasonButton.style.display = 'none';
         if (createImageButton) createImageButton.style.display = 'none';
         if (animateVideoButton) animateVideoButton.style.display = 'none';
+        if (voiceModeButton) voiceModeButton.style.display = 'none'; // NEW: Hide voice mode button
         if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
 
@@ -1330,6 +1382,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
+        deactivateVoiceMode(); // NEW: Deactivate voice mode
         removeSelectedImage(); // Clear any uploaded image
     }
 
@@ -1406,6 +1459,15 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if(messageInput && messageInput.placeholder === "Enter animation prompt...") {
             messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
         }
+        updateActionButtonsState();
+    }
+
+    /** NEW: Deactivates the "Voice Mode" and stops any ongoing speech. */
+    function deactivateVoiceMode() {
+        isVoiceModeActive = false;
+        stopSpeechRecognition(); // Stop listening if active
+        stopAudioPlayback(); // Stop playing if active
+        if(messageInput) messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
         updateActionButtonsState();
     }
 
@@ -1523,6 +1585,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
+        deactivateVoiceMode(); // NEW: Deactivate voice mode on chat init
         removeSelectedImage();
 
         try {
@@ -1570,6 +1633,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (reasonButton) reasonButton.disabled = true;
             if (createImageButton) createImageButton.disabled = true;
             if (animateVideoButton) animateVideoButton.disabled = true;
+            if (voiceModeButton) voiceModeButton.disabled = true; // NEW: Disable voice mode button
             if(messageInput) messageInput.disabled = true;
             if(sendButton) sendButton.disabled = true;
             if(micButton) micButton.disabled = true; // Disable mic button
@@ -1835,6 +1899,66 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
     }
 
+    /**
+     * NEW: Plays text as speech using ElevenLabs API via backend proxy.
+     * @param {string} textToSpeak - The text to convert to speech.
+     */
+    async function playAITextAsSpeech(textToSpeak) {
+        if (!textToSpeak.trim()) {
+            console.log("No text to speak for ElevenLabs.");
+            return;
+        }
+
+        stopAudioPlayback(); // Stop any current audio before playing new one
+
+        try {
+            showToast("Speaking...", 'info', 2000);
+            // Call your backend ElevenLabs TTS proxy
+            const response = await fetch(ELEVENLABS_PROXY_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: textToSpeak })
+            });
+
+            if (!response.ok) {
+                const errorMsg = await response.text();
+                throw new Error(`ElevenLabs TTS API error: ${response.status} - ${errorMsg}`);
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudioPlayer = new Audio(audioUrl);
+            currentAudioPlayer.play();
+
+            currentAudioPlayer.onended = () => {
+                URL.revokeObjectURL(audioUrl); // Clean up the object URL after playing
+                currentAudioPlayer = null;
+                console.log("ElevenLabs audio playback ended.");
+            };
+            currentAudioPlayer.onerror = (e) => {
+                console.error("ElevenLabs audio playback error:", e);
+                showToast("Error playing audio.", 'error');
+                URL.revokeObjectURL(audioUrl);
+                currentAudioPlayer = null;
+            };
+
+        } catch (error) {
+            console.error('Error playing AI speech with ElevenLabs:', error);
+            showToast(`Voice output failed: ${error.message}`, 'error');
+            currentAudioPlayer = null;
+        }
+    }
+
+    /** NEW: Stops any currently playing audio. */
+    function stopAudioPlayback() {
+        if (currentAudioPlayer) {
+            currentAudioPlayer.pause();
+            currentAudioPlayer.currentTime = 0;
+            currentAudioPlayer = null;
+            console.log("Audio playback stopped.");
+        }
+    }
+
 
     /**
      * Internal function to handle sending a message.
@@ -1921,6 +2045,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
+            deactivateVoiceMode(); // NEW: Deactivate voice mode on new chat
         }
 
         // Display user's message and add to history
@@ -2004,6 +2129,11 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         try {
             const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse); // Pass modelToUse
             addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
+
+            if (isVoiceModeActive) { // NEW: If voice mode is active, play the AI response
+                await playAITextAsSpeech(aiResponse);
+            }
+
         } catch (error) {
             console.error("OpenAI Error:", error);
             displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
@@ -2118,8 +2248,11 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             showToast("Listening...", 'info', 2000);
             console.log('Speech recognition started.');
             // Clear input field when starting to listen
-            if (messageInput) messageInput.value = '';
-            if (initialMessageInput) initialMessageInput.value = '';
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.value = ''; // Clear input field
+                activeInput.placeholder = "Listening...";
+            }
         };
 
         recognition.onresult = (event) => {
@@ -2148,15 +2281,22 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             isListening = false;
             updateActionButtonsState();
             console.log('Speech recognition ended.');
-            // If there's final text, automatically send it
             const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
-            if (activeInput && activeInput.value.trim().length > 0) {
+            if (activeInput) {
+                activeInput.placeholder = isVoiceModeActive ? "Voice mode active..." : "Message Graxybot...";
+            }
+
+            // If there's final text, automatically send it if voice mode is active
+            if (isVoiceModeActive && activeInput && activeInput.value.trim().length > 0) {
                 // Trigger send if there's content after speech ends
                 if (chatView.classList.contains('hidden')) { // Initial view
                     handleInitialSendMessage();
                 } else { // Chat view
                     sendMessage();
                 }
+            } else if (!isVoiceModeActive && activeInput && activeInput.value.trim().length > 0) {
+                // If not in voice mode, but mic was used, don't auto-send, let user manually send
+                showToast("Speech transcribed. Press send to send message.", 'info');
             }
         };
 
@@ -2173,6 +2313,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 errorMessage = "Could not access microphone. Ensure it's connected and not in use.";
             }
             showToast(errorMessage, 'error', 5000);
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.placeholder = isVoiceModeActive ? "Voice mode active..." : "Message Graxybot...";
+            }
+            if (isVoiceModeActive) { // If voice mode was active and error, deactivate it
+                deactivateVoiceMode();
+            }
         };
 
         return recognition;
@@ -2232,6 +2379,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
+        deactivateVoiceMode(); // NEW: Deactivate voice mode on chat selection
         removeSelectedImage();
         initializeAICurrentChat();
     }
@@ -2270,6 +2418,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             "Click 'Create Image' then type your prompt!",
             "Try the new 'Animate' button for a GIF!",
             "Click the microphone to talk to me!", // Added new suggestion
+            "Click 'Voice Mode' to talk and hear me!", // NEW: Voice mode suggestion
         ];
 
         suggestions.forEach(text => {
@@ -2317,6 +2466,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateReasonMode();
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
+        deactivateVoiceMode(); // NEW: Deactivate voice mode on new chat
         removeSelectedImage();
         if(messageInput) messageInput.focus(); // Focus on input
     }
@@ -2357,19 +2507,21 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
+            deactivateVoiceMode(); // NEW: Deactivate voice mode on model change
             initializeAICurrentChat();
         } else if (!currentChatId && chatView && !chatView.classList.contains('hidden')) {
             // If no chat active but in chat view, just deactivate modes
             deactivateReasonMode();
             deactivateImageGenerationMode();
             deactivateAnimateVideoMode();
+            deactivateVoiceMode(); // NEW: Deactivate voice mode
         }
     }
 
     /** Handles the "Thinking" (Reason) button click. */
     function handleReasonButtonClick() {
         // Prevent if busy or other generation modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return;
+        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isVoiceModeActive || isListening) return; // Added isVoiceModeActive
         isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
             console.log(`Thinking mode (${O4_MINI_MODEL}) activated.`); // Changed console log
@@ -2384,7 +2536,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Create Image" button click. */
     function handleCreateImageButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isListening) return;
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isVoiceModeActive || isListening) return; // Added isVoiceModeActive
         isImageGenerationModeActive = !isImageGenerationModeActive; // Toggle mode
         if (isImageGenerationModeActive) {
             console.log("Image Generation Mode ACTIVATED. Next message will be used as prompt.");
@@ -2400,7 +2552,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /** Handles the "Animate Video" button click. */
     function handleAnimateVideoButtonClick() {
         // Prevent if busy or other modes are active
-        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isListening) return;
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isVoiceModeActive || isListening) return; // Added isVoiceModeActive
         isAnimateVideoModeActive = !isAnimateVideoModeActive; // Toggle mode
         if (isAnimateVideoModeActive) {
             console.log("Animate Video Mode ACTIVATED. Next message will be used as prompt.");
@@ -2408,6 +2560,28 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         } else {
             console.log("Animate Video Mode DEACTIVATED.");
             if(messageInput) messageInput.placeholder = "Message Graxybot...";
+        }
+        updateActionButtonsState();
+        if(messageInput) messageInput.focus(); // Focus input
+    }
+
+    /** NEW: Handles the "Voice Mode" button click. */
+    function handleVoiceModeButtonClick() {
+        // Prevent if busy or other modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isAnimateVideoModeActive) return;
+
+        isVoiceModeActive = !isVoiceModeActive; // Toggle mode
+        if (isVoiceModeActive) {
+            console.log("Voice Mode ACTIVATED. Starting speech recognition.");
+            showToast("Voice Mode Activated. Speak now!", 'info');
+            if(messageInput) messageInput.placeholder = "Voice mode active. Speak...";
+            toggleSpeechRecognition(); // Start listening
+        } else {
+            console.log("Voice Mode DEACTIVATED. Stopping speech recognition and audio.");
+            showToast("Voice Mode Deactivated.", 'info');
+            if(messageInput) messageInput.placeholder = "Message Graxybot...";
+            stopSpeechRecognition(); // Stop listening
+            stopAudioPlayback(); // Stop any playing audio
         }
         updateActionButtonsState();
         if(messageInput) messageInput.focus(); // Focus input
@@ -2448,6 +2622,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         reasonUsageDisplay = document.getElementById('reason-usage-display');
         createImageButton = document.getElementById('create-image-button');
         animateVideoButton = document.getElementById('animate-video-button');
+        voiceModeButton = document.getElementById('voice-mode-button'); // NEW: Get voice mode button
         imageUploadButton = document.getElementById('image-upload-button');
         imageUploadInput = document.getElementById('image-upload-input');
         imagePreviewArea = document.getElementById('image-preview-area');
@@ -2466,7 +2641,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
 
         // Check if all essential elements were found
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton };
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, voiceModeButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton };
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
             if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
@@ -2490,6 +2665,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if(reasonButton) reasonButton.style.display = 'none'; // Hide buttons initially if in initial view
         if(createImageButton) createImageButton.style.display = 'none';
         if(animateVideoButton) animateVideoButton.style.display = 'none';
+        if(voiceModeButton) voiceModeButton.style.display = 'none'; // NEW: Hide voice mode button initially
         if(reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
         if(modelNotificationDiv) modelNotificationDiv.style.display = 'none';
         renderChatList(); // Populate sidebar
@@ -2535,6 +2711,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         reasonButton?.addEventListener('click', handleReasonButtonClick);
         createImageButton?.addEventListener('click', handleCreateImageButtonClick);
         animateVideoButton?.addEventListener('click', handleAnimateVideoButtonClick);
+        voiceModeButton?.addEventListener('click', handleVoiceModeButtonClick); // NEW: Voice Mode button listener
         imageUploadButton?.addEventListener('click', () => { if (!imageUploadButton.disabled) imageUploadInput?.click(); });
         imageUploadInput?.addEventListener('change', handleImageSelection);
         removeImageButton?.addEventListener('click', removeSelectedImage);
