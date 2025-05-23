@@ -520,8 +520,6 @@ html, body {
     .menu-toggle {
         display: block;
     }
-}
-
 </style>
 </head>
 <body>
@@ -618,31 +616,24 @@ html, body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" xintegrity="sha512-SkmBfuA2hqjzEVNWb8CUApVR5fFWrSDcUOahSEgUd07FNMef+AbUd/yPkMkNUabIMZrcOg/1wslzAZMuUrNmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" xintegrity="sha512-BttltKXFyWnGZQcRWj6UJFdLmWhtQxfqVfRMS9EDGDpMh/Db82MACoMMQqGWf0Y69Fc27TwnXyIE+fsHLugUDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<script type="importmap">
-{
-    "imports": {
-        "@google/generative-ai": "https://esm.run/@google/generative-ai"
-    }
-}
-</script>
+
 
 <script type="module">
-    import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-
     // --- Configuration ---
-    const API_KEY = "AIzaSyCwhUuUNTUYtZkAVO3aJMBOb5L3VNCauUk"; // Your actual Google AI API key
-    const LOCAL_MODEL_URL = "https://launch-machine-yields-tobacco.trycloudflare.com"; // Your local model server URL
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://necklace-qualifications-adrian-advertisements.trycloudflare.com"; // Your Stable Diffusion server URL
-    // This URL should point to your AnimateDiff backend
-    const ANIMATEDIFF_API_URL = "https://amend-scientist-remote-aruba.trycloudflare.com/generate_video"; //LINKS
+// Removed hardcoded OPENAI_API_KEY. It will be accessed via the proxy endpoint on your server.js.
+const OPENAI_MODEL = "gpt-4.1-mini"; // Using gpt-4.1-mini as requested
+// Removed LOCAL_MODEL_URL as Quen 3 is no longer used
+const DEFAULT_STABLE_DIFFUSION_API_URL = "https://maritime-appointments-beef-live.trycloudflare.com"; // Your Stable Diffusion server URL
+const ANIMATEDIFF_API_URL = "https://discussion-republicans-lab-marijuana.trycloudflare.com"; //LINKS
+
+// This URL now points to your own server's proxy endpoint
+const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat'; // Changed to absolute URL
 
 
-    // --- Model Definitions ---
-    const QUEN_3_LOCAL_MODEL_NAME = "quen-3"; // Name for your local model (used with REASON_MODE)
-    const modelMapping = { "graxybot": "gemini-2.0-flash-lite" }; // Mapping for Google AI models
-    const REASON_MODE_MODEL_FOR_THINKING_BUTTON = QUEN_3_LOCAL_MODEL_NAME;
-    const REASON_MODE_DISPLAY_NAME = "Graxybot Quen 3"; // Display name for thinking mode
-    const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
+// --- Model Definitions ---
+// Removed QUEN_3_LOCAL_MODEL_NAME and REASON_MODE_MODEL_FOR_THINKING_BUTTON
+const REASON_MODE_DISPLAY_NAME = "OpenAI GPT-4.1-mini"; // Display name for thinking mode
+const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
 
     // --- UI & Storage Keys ---
     const BOT_ICON_SRC = "graxybot.png"; // Path to your bot's icon
@@ -654,15 +645,9 @@ html, body {
     // --- Limits & Settings ---
     const MAX_MESSAGES_PER_WINDOW = 14; // Max messages for rate limiting (currently not strictly enforced in send)
     const TIME_WINDOW_MS = 60 * 1000; // Time window for rate limiting (1 minute)
-    const MIN_REASON_DELAY_MS = 1000; // Min simulated delay for local model thinking
-    const MAX_REASON_DELAY_MS = 3000; // Max simulated delay for local model thinking
+    // Removed MIN_REASON_DELAY_MS and MAX_REASON_DELAY_MS as local model simulation is gone.
     let messageTimestamps = []; // Array to track message timestamps for rate limiting
-    const safetySettings = [ // Google AI safety settings
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    ];
+    // Removed Google AI safety settings as they are not applicable to OpenAI
 
     // --- DOM Element References ---
     let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
@@ -675,21 +660,18 @@ html, body {
     let initialLoader, chatLoader;
 
     // --- Application State ---
-    let genAI; // Google AI client instance
-    let currentChatSession = null; // Stores the current Google AI chat session (not heavily used with streaming)
-    let chats = {}; // Object to store all chat histories
-    let currentChatId = null; // ID of the currently active chat
-    let isInitializing = false; // Flag to prevent multiple initializations
-    let isReasonModeActive = false; // Flag for "Thinking" mode
-    let isImageGenerationModeActive = false; // Flag for "Create Image" mode
-    let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
-    let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
-    let selectedImageData = null; // Base64 string of the uploaded image
-    let selectedImageMimeType = null; // Mime type of the uploaded image
-    let selectedImagePreviewUrl = null; // Object URL for the image preview
+let chats = {}; // Object to store all chat histories
+let currentChatId = null; // ID of the currently active chat
+let isInitializing = false; // Flag to prevent multiple initializations
+let isReasonModeActive = false; // Flag for "Thinking" mode
+let isImageGenerationModeActive = false; // Flag for "Create Image" mode
+let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
+let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
+let selectedImageData = null; // Base64 string of the uploaded image
+let selectedImageMimeType = null; // Mime type of the uploaded image
+let selectedImagePreviewUrl = null; // Object URL for the image preview
 
-
-    // --- Core Functions ---
+// --- Core Functions ---
 
     /**
      * Generates a unique ID for a new chat.
@@ -756,7 +738,7 @@ html, body {
     function updateActionButtonsState() {
         const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
         if (reasonButton) {
-            reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME} - Local) for the next message.`;
+            reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME}) for the next message.`;
             reasonButton.disabled = thinkingOrGenerating || isImageGenerationModeActive || isAnimateVideoModeActive;
             reasonButton.classList.toggle('active', isReasonModeActive);
         }
@@ -773,13 +755,18 @@ html, body {
     }
 
     /**
-     * Gets the system prompt for Google AI, tailored for Graxybot.
-     * @param {string} fakeModelName - The display name of the model (currently unused in prompt generation).
+     * Gets the system prompt for OpenAI, tailored for Graxybot.
+     * @param {string} mode - 'standard' or 'thinking'.
      * @returns {string} The system instruction string.
      */
-    function getSystemPrompt(fakeModelName) {
-        // This prompt guides the AI's persona and response style.
-        return `You are Graxybot, a helpful AI assistant. You are currently running on the Graxybot model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+    function getSystemPrompt(mode = 'standard') {
+        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${OPENAI_MODEL} model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+
+        if (mode === 'thinking') {
+            // Add instructions for enhanced thinking
+            basePrompt += `\n\nFor this query, engage in a deeper, more analytical thought process. Provide a more detailed, comprehensive, and insightful response, thoroughly exploring the topic. Break down complex ideas and offer a nuanced perspective.`;
+        }
+        return basePrompt;
     }
 
     /**
@@ -827,7 +814,7 @@ html, body {
 
     /**
      * Displays a "thinking" or "generating" indicator in the chat.
-     * @param {string} type - 'local' (for Quen 3), 'image', 'video', or 'reason' (default Gemini).
+     * @param {string} type - 'image', 'video', or 'reason' (for OpenAI thinking).
      * @param {string} message - Custom message for the indicator (e.g., the prompt).
      */
     function showThinkingIndicator(type = 'reason', message = '') {
@@ -835,11 +822,6 @@ html, body {
         let indicatorClass, indicatorText, iconClass;
 
         switch(type) {
-            case 'local':
-                indicatorClass = 'local-thinking-indicator';
-                indicatorText = `Thinking (${REASON_MODE_DISPLAY_NAME} - Local)...`;
-                iconClass = 'fa-robot';
-                break;
             case 'image':
                 indicatorClass = 'image-generating-indicator';
                 indicatorText = message || 'Generating image...';
@@ -850,11 +832,11 @@ html, body {
                 indicatorText = message || 'Generating animation...';
                 iconClass = 'fa-film';
                 break;
-            case 'reason': // Default for Gemini API calls
+            case 'reason': // Now used for OpenAI thinking
             default:
                 indicatorClass = 'reason-thinking-indicator';
-                indicatorText = 'Thinking...';
-                iconClass = 'fa-brain';
+                indicatorText = 'Thinking...'; // Generic thinking message
+                iconClass = 'fa-brain'; // Brain icon for thinking
                 break;
         }
 
@@ -878,7 +860,7 @@ html, body {
             finally { currentThinkingIndicatorElement = null; }
         }
         // Fallback to remove any stragglers by class name
-        document.querySelectorAll('.reason-thinking-indicator, .local-thinking-indicator, .image-generating-indicator, .video-generating-indicator').forEach(el => {
+        document.querySelectorAll('.reason-thinking-indicator, .image-generating-indicator, .video-generating-indicator').forEach(el => {
             try { el.parentNode?.removeChild(el); } catch (e) { /* ignore */ }
         });
         updateActionButtonsState(); // Re-enable buttons
@@ -1155,7 +1137,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         // Reset chat state
         currentChatId = null;
         saveCurrentChatId();
-        currentChatSession = null; // Reset Google AI session
         if (chatMessagesContainer) chatMessagesContainer.innerHTML = ''; // Clear messages
         updateActiveChatListItem(); // Update sidebar
         if (modelSelector) modelSelector.value = loadSelectedModelPreference(); // Reset model selector
@@ -1318,7 +1299,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
     /**
      * Initializes the AI for the current chat.
-     * Loads history, sets up the Google AI model instance, and displays messages.
+     * Loads history and displays messages.
      */
     async function initializeAICurrentChat() {
          if (isInitializing) { console.warn("AI Initialization already in progress."); return; }
@@ -1357,19 +1338,8 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         deactivateImageGenerationMode();
         deactivateAnimateVideoMode();
         removeSelectedImage();
-        currentChatSession = null; // Reset Google AI session
 
         try {
-            // Validate API Key
-            if (!API_KEY || API_KEY === "YOUR_GOOGLE_AI_API_KEY" || (API_KEY.startsWith("AIzaSyB") && API_KEY.length < 30)) {
-                throw new Error("Google AI API Key is missing, invalid, or a placeholder. Graxybot (Google AI) features will not work.");
-            }
-            // Initialize Google AI client if not already done
-             if (!genAI) {
-                genAI = new GoogleGenerativeAI(API_KEY);
-                console.log("GoogleGenerativeAI client initialized.");
-            }
-
             // Hide loader and remove it from messages
             if (chatLoader) chatLoader.style.display = 'none';
             if (chatMessagesContainer.contains(chatLoader)) {
@@ -1407,7 +1377,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             if (chatMessagesContainer.contains(chatLoader)) {
                  chatMessagesContainer.removeChild(chatLoader);
             }
-            displayMessage([{text: `AI Initialization Error: ${error.message}. Please check the API Key and console for details.`}], 'bot', true);
+            displayMessage([{text: `AI Initialization Error: ${error.message}. Please check Render environment variables and console for details.`}], 'bot', true);
             if(sendButton) sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; // Indicate error on send button
             // Disable all action buttons and inputs on critical error
             if (reasonButton) reasonButton.disabled = true;
@@ -1588,6 +1558,84 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         }
     }
 
+    /**
+     * Sends a message to the OpenAI API via the backend proxy and streams the response.
+     * @param {Array<object>} messages - Array of message objects in OpenAI chat format.
+     * @returns {Promise<string>} A promise that resolves with the full response text.
+     */
+    async function sendMessageToOpenAI(messages) {
+        let fullResponseText = "";
+        let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
+
+        try {
+            // Create an empty bot message element to stream into
+            botMessageElement = displayMessage([], 'bot');
+            if (botMessageElement) {
+                botMessageBubble = botMessageElement.querySelector('.message-bubble');
+                botMessageParagraph = botMessageBubble?.querySelector('p[data-stream-target="true"]');
+            }
+            if (!botMessageParagraph) throw new Error("Target paragraph for streaming not found in DOM.");
+
+            // Send request to your backend proxy
+            const response = await fetch(OPENAI_PROXY_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: messages // Send the messages array to the proxy
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Backend Proxy error: ${errorData.error || response.statusText}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                // The proxy will stream raw chunks from OpenAI, so parse them as such
+                chunk.split('\n').forEach(line => {
+                    if (line.startsWith('data: ')) {
+                        const data = line.substring(6);
+                        if (data === '[DONE]') return;
+                        try {
+                            const json = JSON.parse(data);
+                            const content = json.choices[0]?.delta?.content || '';
+                            if (content) {
+                                fullResponseText += content;
+                                botMessageParagraph.innerHTML += content.replace(/\n/g, '<br>'); // Append chunk
+                                chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' }); // Scroll with content
+                            }
+                        } catch (e) {
+                            console.error("Error parsing OpenAI stream chunk from proxy:", e, data);
+                        }
+                    }
+                });
+            }
+
+            // After stream, re-process the full text for code blocks
+            if (fullResponseText && botMessageParagraph) {
+                processAndAppendText(fullResponseText, botMessageParagraph);
+            }
+            return fullResponseText;
+
+        } catch (error) {
+            console.error("OpenAI Streaming Error (via proxy):", error);
+            // If an empty message element was created but not filled, remove it
+            if (botMessageElement && botMessageElement.parentNode && !fullResponseText.trim()) {
+                botMessageElement.parentNode.removeChild(botMessageElement);
+            }
+            throw error; // Re-throw to be caught by sendMessageInternal
+        }
+    }
+
 
     /**
      * Internal function to handle sending a message.
@@ -1596,11 +1644,26 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
      * @param {boolean} isInitialMessage - True if sent from the initial welcome screen input.
      */
     async function sendMessageInternal(messageText, isInitialMessage = false) {
+        // Construct user message payload parts
+        let userMessagePayloadParts = [];
+        let localSelectedImageData = selectedImageData; // Use a local copy for this send operation
+        let localSelectedImageMimeType = selectedImageMimeType;
+        let localSelectedImagePreviewUrl = selectedImagePreviewUrl;
+
+        if (messageText) {
+            userMessagePayloadParts.push({ text: messageText });
+        }
+        // For OpenAI text models, image data is not directly sent as inline_data.
+        // If image is selected, it's primarily for user's visual context.
+        // If a vision model (like gpt-4-vision-preview) were used, this would be different.
+        // For now, we'll just display the image for the user but not send it to the text-only OpenAI model.
+        // The image generation mode uses the text prompt, not the uploaded image.
+
         // Prevent sending if an operation is in progress or if input is invalid for active mode
-        if ((!messageText && !selectedImageData && !isImageGenerationModeActive && !isAnimateVideoModeActive) ||
+        if ((!messageText && !localSelectedImageData && !isImageGenerationModeActive && !isAnimateVideoModeActive) ||
             (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText) && !(isAnimateVideoModeActive && messageText))
            ) {
-            if (isImageGenerationModeActive && !messageText && !selectedImageData) {
+            if (isImageGenerationModeActive && !messageText && !localSelectedImageData) {
                 displayMessage([{text:"Image generation mode is active. Please type a prompt or attach an image to describe."}], 'bot', true);
                 return;
             }
@@ -1610,45 +1673,21 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             }
             if (currentThinkingIndicatorElement) {
                  console.log("Send prevented: thinking/generation indicator active.");
-                 return;
-            }
-            if (!messageText && !selectedImageData) {
-                console.log("Send prevented: Empty message and no image selected.");
                 return;
             }
+            return;
         }
 
-        // Store current image data locally as it might be cleared by removeSelectedImage()
-        const localSelectedImageData = selectedImageData;
-        const localSelectedImageMimeType = selectedImageMimeType;
-        const localSelectedImagePreviewUrl = selectedImagePreviewUrl;
+        // If user is sending an animation
+        if (isAnimateVideoModeActive && messageText) {
+            displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
+            addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
+            if (messageInput) messageInput.value = '';
+            if (initialMessageInput) initialMessageInput.value = '';
+            removeSelectedImage();
 
-        // Construct user message payload for Google AI (if applicable)
-        const userMessagePayloadParts = [];
-        if (messageText) {
-            userMessagePayloadParts.push({ text: messageText });
-        }
-        if (localSelectedImageData && localSelectedImageMimeType) { // Add image data if present
-            userMessagePayloadParts.push({ inline_data: { mime_type: localSelectedImageMimeType, data: localSelectedImageData } });
-        }
-
-
-        // --- Mode-Specific Logic ---
-
-        if (isAnimateVideoModeActive) { // Highest priority if active
-            if (messageText) { // Animation needs a text prompt
-                displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl); // Display user's prompt
-                addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
-                if (messageInput) messageInput.value = '';
-                if (initialMessageInput) initialMessageInput.value = '';
-                removeSelectedImage(); // Animation currently doesn't use uploaded image as input
-
-                await triggerAnimateDiffGeneration(messageText); // Call animation backend
-                return; // Exit after handling animation
-            } else {
-                displayMessage([{text:"Animation mode is active. Please type a prompt."}], 'bot', true);
-                return;
-            }
+            await triggerAnimateDiffGeneration(messageText);
+            return; // Exit after handling animation
         } else if (isImageGenerationModeActive) {
             if (messageText) { // Image generation needs a text prompt
                 displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
@@ -1702,48 +1741,84 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (imageUploadButton) imageUploadButton.disabled = true;
 
 
-        if (isReasonModeActive) { // Handle "Thinking" (Local Quen 3) mode
-            console.log(`Thinking mode active. Using local model: ${REASON_MODE_MODEL_FOR_THINKING_BUTTON}.`);
-            showThinkingIndicator('local');
-            try {
-                const delay = Math.random() * (MAX_REASON_DELAY_MS - MIN_REASON_DELAY_MS) + MIN_REASON_DELAY_MS;
-                console.log(`Local Quen 3: Simulating thinking for ${Math.round(delay / 1000)}s...`);
-                await new Promise(resolve => setTimeout(resolve, delay)); // Simulate delay
-                if (!currentThinkingIndicatorElement) { console.log("Local Quen 3 call aborted (indicator removed)."); return; }
+        if (isReasonModeActive) { // Handle "Thinking" (now OpenAI) mode
+            console.log(`Thinking mode active. Using OpenAI model: ${OPENAI_MODEL}.`);
+            showThinkingIndicator('reason'); // Use 'reason' type for OpenAI thinking indicator
 
-                const promptForLocalQuen3 = `User query: ${messageText || (localSelectedImageData ? "Describe the image." : "...")}\n\n(Respond directly to the user's query with a detailed and insightful answer. Do not explain your thought process. Do not introduce yourself or mention your capabilities unless specifically asked.)`;
-                const requestBody = { message: promptForLocalQuen3, model: REASON_MODE_MODEL_FOR_THINKING_BUTTON };
+            const systemPromptForThinking = getSystemPrompt('thinking'); // Get specific thinking prompt
 
-                const response = await fetch(`${LOCAL_MODEL_URL}/chat`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
+            // Prepare history for OpenAI API (last 10 user/model turns)
+            const mainHistory = chats[chatIdForMessage]?.history || [];
+            const messagesForOpenAI = [
+                { role: "system", content: systemPromptForThinking } // Use the thinking system prompt
+            ];
+
+            mainHistory
+                .slice(-10) // Take last 10 messages
+                .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
+                .forEach(msg => {
+                    const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
+                    if (content) {
+                        messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
+                    }
                 });
+
+            // Add the current user message
+            const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
+            if (currentUserMessageContent) {
+                messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
+            } else if (localSelectedImageData) {
+                messagesForOpenAI.push({ role: "user", content: "User has uploaded an image. Please provide a detailed analysis or creative interpretation." });
+            } else {
+                console.warn("No content for OpenAI Thinking mode. Aborting send.");
                 removeThinkingIndicator();
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Local Quen 3 server request failed: ${response.status} ${errorText || response.statusText}`);
-                }
-                const data = await response.json();
-                if (data && data.response) {
-                    displayMessage([{text: data.response}], 'bot');
-                    addMessageToCurrentChatHistory('model', [{ text: data.response }]);
-                } else { throw new Error(`Invalid response from local Quen 3 server.`); }
-            } catch (error) {
-                console.error(`Error with local Quen 3:`, error);
-                removeThinkingIndicator();
-                displayMessage([{text: `Error with Quen 3: ${error.message}`}], 'bot', true);
-                addMessageToCurrentChatHistory('model', [{ text: `[Error with Quen 3: ${error.message}]` }]);
+                if (messageInput) messageInput.disabled = false;
+                if (sendButton) sendButton.disabled = false;
+                if (initialSendButton) initialSendButton.disabled = false;
+                if (imageUploadButton) imageUploadButton.disabled = false;
+                updateActionButtonsState();
+                return;
             }
-        } else { // Standard Graxybot (Google AI Gemini Flash) call
-            console.log("Standard Graxybot call (Google AI Flash).");
-            const modelToUseGoogle = modelMapping[DEFAULT_FAKE_MODEL];
-            const systemPromptForSendGoogle = getSystemPrompt(DEFAULT_FAKE_MODEL);
 
-            const contentPartsForGoogleAI = [...userMessagePayloadParts]; // Use the parts constructed earlier
+            try {
+                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI); // Call the OpenAI function
+                addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
+            } catch (error) {
+                console.error(`Error with OpenAI Thinking mode:`, error);
+                displayMessage([{text: `Graxybot Thinking Error: ${error.message}`}], 'bot', true);
+                addMessageToCurrentChatHistory('model', [{ text: `[Error with OpenAI Thinking: ${error.message}]` }]);
+            }
+        } else { // Standard Graxybot (OpenAI) call
+            console.log("Standard Graxybot call (OpenAI).");
+            const systemPromptForSend = getSystemPrompt('standard'); // Get standard system prompt
 
-            if (contentPartsForGoogleAI.length === 0) { // Should not happen if validation above is correct
-                console.warn("No content parts for Google AI. Aborting send.");
-                removeThinkingIndicator(); // Ensure no stale indicator
-                deactivateReasonMode(); // Should already be off
+            // Prepare history for OpenAI API (last 10 user/model turns)
+            const mainHistory = chats[chatIdForMessage]?.history || [];
+            const messagesForOpenAI = [
+                { role: "system", content: systemPromptForSend }
+            ];
+
+            mainHistory
+                .slice(-10) // Take last 10 messages
+                .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
+                .forEach(msg => {
+                    const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
+                    if (content) {
+                        // Crucial fix: Map 'model' role to 'assistant' for OpenAI API
+                        messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
+                    }
+                });
+
+            // Add the current user message
+            const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
+            if (currentUserMessageContent) {
+                messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
+            } else if (localSelectedImageData) {
+                // If only an image was uploaded, send a generic message about it to the model
+                messagesForOpenAI.push({ role: "user", content: "User has uploaded an image." });
+            } else {
+                console.warn("No content for OpenAI. Aborting send.");
+                removeThinkingIndicator();
                 // Re-enable inputs
                 if (messageInput) messageInput.disabled = false;
                 if (sendButton) sendButton.disabled = false;
@@ -1753,68 +1828,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 return;
             }
 
-            let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
-            let fullResponseText = "";
             try {
-                if (!genAI) throw new Error("Graxybot Error. Please Reload the Page.");
-                const modelInstance = genAI.getGenerativeModel({ model: modelToUseGoogle, safetySettings });
-                const mainHistory = chats[chatIdForMessage]?.history || [];
-
-                // Prepare history for Google AI API (last 10 user/model turns)
-                const historyForAPI = mainHistory
-                    .slice(-10) // Take last 10 messages
-                    .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
-                    .map(msg => ({ // Map to API format
-                        role: msg.role,
-                        parts: msg.parts.map(part => { // Ensure parts are in correct format
-                            if (part.text !== undefined) return { text: part.text };
-                            if (part.inline_data) return { inline_data: { mime_type: part.inline_data.mime_type, data: part.inline_data.data }};
-                            return null; // Should not happen if parts are well-formed
-                        }).filter(p => p !== null)
-                    }))
-                    .filter(msg => msg.parts.length > 0); // Ensure messages have parts
-
-
-                // Stream the response from Google AI
-                const streamResult = await modelInstance.generateContentStream({
-                    contents: [...historyForAPI, { role: "user", parts: contentPartsForGoogleAI }], // Add current user message
-                    systemInstruction: { role: "system", parts: [{ text: systemPromptForSendGoogle }] }
-                });
-
-                // Create an empty bot message element to stream into
-                botMessageElement = displayMessage([], 'bot');
-                if (botMessageElement) {
-                    botMessageBubble = botMessageElement.querySelector('.message-bubble');
-                    botMessageParagraph = botMessageBubble?.querySelector('p[data-stream-target="true"]');
-                }
-                if (!botMessageParagraph) throw new Error("Target paragraph for streaming not found in DOM.");
-
-                // Process the stream
-                for await (const chunk of streamResult.stream) {
-                    const blockReason = chunk.promptFeedback?.blockReason;
-                    if (blockReason) { // Handle blocked responses
-                        fullResponseText = `[Response blocked by safety settings: ${blockReason}]`;
-                        console.warn("Google AI response blocked:", blockReason);
-                        break; // Stop processing stream
-                    }
-                    const chunkText = chunk.text();
-                    fullResponseText += chunkText;
-                    botMessageParagraph.innerHTML += chunkText.replace(/\n/g, '<br>'); // Append chunk to paragraph
-                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' }); // Scroll with content
-                }
-                // After stream, re-process the full text for code blocks
-                if (fullResponseText && botMessageParagraph) {
-                    processAndAppendText(fullResponseText, botMessageParagraph);
-                }
-                addMessageToCurrentChatHistory('model', [{ text: fullResponseText }]); // Add complete response to history
+                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI); // Call the new OpenAI function
+                addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
             } catch (error) {
-                console.error("Google AI Error:", error);
-                // If an empty message element was created but not filled, remove it
-                if (botMessageElement && botMessageElement.parentNode && !fullResponseText.trim()) {
-                    botMessageElement.parentNode.removeChild(botMessageElement);
-                }
+                console.error("OpenAI Error:", error);
                 displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
-                addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown Google AI error'}]` }]);
+                addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
             }
         }
         // Cleanup and re-enable UI after processing
@@ -1966,7 +1986,6 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
 
         currentChatId = null; // No active chat ID for a new chat yet
         saveCurrentChatId(); // Clear stored ID
-        currentChatSession = null; // Reset Google AI session
         switchToChatView(); // Ensure chat view is active
         updateActiveChatListItem(); // Update sidebar (no item will be active)
         displayNewChatWelcome(chatMessagesContainer); // Show welcome screen in message area
@@ -2041,10 +2060,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive) return;
         isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
-            console.log("Thinking mode (Quen 3 Local) activated.");
-             if(messageInput) messageInput.placeholder = "Enhanced thinking active...";
+            console.log("Thinking mode (OpenAI) activated.");
+             if(messageInput) messageInput.placeholder = "Thinking with OpenAI...";
         } else {
-            console.log("Thinking mode (Quen 3 Local) deactivated.");
+            console.log("Thinking mode (OpenAI) deactivated.");
              if(messageInput) messageInput.placeholder = "Message Graxybot...";
         }
         updateActionButtonsState(); // Update button appearance
@@ -2155,19 +2174,23 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         renderChatList(); // Populate sidebar
 
 
-        // Check API Key and decide initial view
-        if (!API_KEY || API_KEY === "YOUR_GOOGLE_AI_API_KEY" || (API_KEY.startsWith("AIzaSyB") && API_KEY.length < 30)) {
-            console.warn("Google AI API Key missing/invalid. Graxybot (Google AI) features disabled.");
-            const warningMsg = "Configure Google AI API Key in script for Graxybot to function.";
+        // Check if the OpenAI proxy endpoint is accessible (basic check)
+        // This is a minimal check; a more robust check would involve a dedicated /health endpoint on the server.
+        // The check should just ensure the proxy endpoint is not the default local dev URL.
+        const isProxyConfigured = (OPENAI_PROXY_ENDPOINT === window.location.origin + '/openai/chat');
+
+        if (!isProxyConfigured) {
+            console.warn("OpenAI Proxy Endpoint might not be configured correctly. Graxybot (OpenAI) features may not work.");
+            const warningMsg = "OpenAI API proxy not configured. Ensure server.js is running and OPENAI_PROXY_ENDPOINT is correct.";
             if(initialView && !initialView.classList.contains('hidden')) { // If on initial screen
-                if(initialMessageInput) initialMessageInput.placeholder = "Google API Key needed!";
+                if(initialMessageInput) initialMessageInput.placeholder = "Proxy needed!";
             } else if (chatMessagesContainer) { // If somehow in chat view
                 displayMessage([{text: warningMsg}], 'bot', true);
             }
              if (!currentChatId || !chats[currentChatId]) { switchToInitialView(); } // No valid chat, go to initial
              else { switchToChatView(); initializeAICurrentChat(); } // Valid chat, initialize it
         } else {
-            console.log("Google API Key present. Proceeding with initialization.");
+            console.log("OpenAI Proxy Endpoint seems configured. Proceeding with initialization.");
             if (currentChatId && chats[currentChatId]) { // If there's a stored active chat
                 switchToChatView();
                 initializeAICurrentChat();
