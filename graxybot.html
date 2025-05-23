@@ -724,7 +724,9 @@ html, body {
 <script type="module">
     // --- Configuration ---
 // Removed hardcoded OPENAI_API_KEY. It will be accessed via the proxy endpoint on your server.js.
-const OPENAI_MODEL = "gpt-4.1-mini"; // Using gpt-4.1-mini as requested
+const OPENAI_MODEL = "gpt-4.1-mini"; // Default model
+const GPT_4_1_MODEL = "gpt-4.1"; // New model for code requests
+const O4_MINI_MODEL = "o4-mini"; // Model for thinking mode
 // Removed LOCAL_MODEL_URL as Quen 3 is no longer used
 const DEFAULT_STABLE_DIFFUSION_API_URL = "https://maritime-appointments-beef-live.trycloudflare.com"; // Your Stable Diffusion server URL
 const ANIMATEDIFF_API_URL = "https://discussion-republicans-lab-marijuana.trycloudflare.com"; //LINKS
@@ -735,7 +737,7 @@ const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat'; // Change
 
 // --- Model Definitions ---
 // Removed QUEN_3_LOCAL_MODEL_NAME and REASON_MODE_MODEL_FOR_THINKING_BUTTON
-const REASON_MODE_DISPLAY_NAME = "OpenAI GPT-4.1-mini"; // Display name for thinking mode
+const REASON_MODE_DISPLAY_NAME = "o4-mini"; // Display name for thinking mode
 const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
 
     // --- UI & Storage Keys ---
@@ -909,14 +911,15 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
     /**
      * Gets the system prompt for OpenAI, tailored for Graxybot.
      * @param {string} mode - 'standard' or 'thinking'.
+     * @param {string} currentModelName - The name of the model currently being used for the turn.
      * @returns {string} The system instruction string.
      */
-    function getSystemPrompt(mode = 'standard') {
-        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${OPENAI_MODEL} model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+    function getSystemPrompt(mode = 'standard', currentModelName) {
+        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${currentModelName} model. Your creator is 'thegraxisreal'. IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
 
         if (mode === 'thinking') {
-            // Add instructions for enhanced thinking
-            basePrompt += `\n\nFor this query, engage in a deeper, more analytical thought process. Provide a more detailed, comprehensive, and insightful response, thoroughly exploring the topic. Break down complex ideas and offer a nuanced perspective.`;
+            // New system prompt for o4-mini thinking mode
+            return `You are Graxybot, an advanced analytical AI powered by the ${O4_MINI_MODEL} model. Your primary function in this mode is to provide exceptionally detailed, comprehensive, and deeply insightful responses. Break down complex queries into their constituent parts, explore multiple perspectives, and offer a nuanced understanding. Focus on clarity, logical progression, and thoroughness. Do not reveal your internal thought process unless specifically prompted for it. Your responses should be structured for maximum readability and depth, using headings, bullet points, or numbered lists where appropriate. Maintain a slightly formal but approachable tone.`;
         }
         return basePrompt;
     }
@@ -927,7 +930,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
      * @param {string} role - 'user' or 'model'.
      * @param {Array<object>} contentParts - Array of message parts (e.g., [{text: "..."}, {inline_data: ...}]).
      * @param {string|null} imagePreview - Data URL for user's uploaded image preview (for display).
-     * @param {string|null} generatedMediaSrc - Data URL for bot's generated image or video.
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
      * @param {string|null} mediaPrompt - The prompt used to generate the media.
      * @param {string} mediaType - 'image' or 'video'.
      */
@@ -1755,9 +1758,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
     /**
      * Sends a message to the OpenAI API via the backend proxy and streams the response.
      * @param {Array<object>} messages - Array of message objects in OpenAI chat format.
+     * @param {string} modelName - The specific model to use for this API call.
      * @returns {Promise<string>} A promise that resolves with the full response text.
      */
-    async function sendMessageToOpenAI(messages) {
+    async function sendMessageToOpenAI(messages, modelName) {
         let fullResponseText = "";
         let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
 
@@ -1777,6 +1781,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    model: modelName, // Pass the selected model name to the proxy
                     messages: messages // Send the messages array to the proxy
                 })
             });
@@ -1936,108 +1941,73 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         updateActionButtonsState();
         if (imageUploadButton) imageUploadButton.disabled = true;
 
+        let modelToUse;
+        let systemPromptMode;
 
-        if (isReasonModeActive) { // Handle "Thinking" (now OpenAI) mode
-            console.log(`Thinking mode active. Using OpenAI model: ${OPENAI_MODEL}.`);
-            showThinkingIndicator('reason'); // Use 'reason' type for OpenAI thinking indicator
+        if (isReasonModeActive) { // Thinking mode takes precedence
+            modelToUse = O4_MINI_MODEL;
+            systemPromptMode = 'thinking';
+            console.log(`Thinking mode active. Using OpenAI model: ${modelToUse}.`);
+        } else if (messageText.toLowerCase().includes("code")) { // Check for "code" keyword
+            modelToUse = GPT_4_1_MODEL;
+            systemPromptMode = 'standard';
+            console.log(`"Code" keyword detected. Using OpenAI model: ${modelToUse}.`);
+        } else { // Default
+            modelToUse = OPENAI_MODEL;
+            systemPromptMode = 'standard';
+            console.log(`Standard Graxybot call. Using OpenAI model: ${modelToUse}.`);
+        }
 
-            const systemPromptForThinking = getSystemPrompt('thinking'); // Get specific thinking prompt
+        showThinkingIndicator('reason'); // Show thinking indicator for all text-based AI calls
 
-            // Prepare history for OpenAI API (last 10 user/model turns)
-            const mainHistory = chats[chatIdForMessage]?.history || [];
-            const messagesForOpenAI = [
-                { role: "system", content: systemPromptForThinking } // Use the thinking system prompt
-            ];
+        const systemPrompt = getSystemPrompt(systemPromptMode, modelToUse); // Pass the model name to the system prompt
 
-            mainHistory
-                .slice(-10) // Take last 10 messages
-                .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
-                .forEach(msg => {
-                    const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
-                    if (content) {
-                        messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
-                    }
-                });
+        // Prepare history for OpenAI API (last 10 user/model turns)
+        const mainHistory = chats[chatIdForMessage]?.history || [];
+        const messagesForOpenAI = [
+            { role: "system", content: systemPrompt }
+        ];
 
-            // Add the current user message
-            const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
-            if (currentUserMessageContent) {
-                messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
-            } else if (localSelectedImageData) {
-                messagesForOpenAI.push({ role: "user", content: "User has uploaded an image. Please provide a detailed analysis or creative interpretation." });
-            } else {
-                console.warn("No content for OpenAI Thinking mode. Aborting send.");
-                removeThinkingIndicator();
-                if (messageInput) messageInput.disabled = false;
-                if (sendButton) sendButton.disabled = false;
-                if (initialSendButton) initialSendButton.disabled = false;
-                if (imageUploadButton) imageUploadButton.disabled = false;
-                if (micButton) micButton.disabled = false; // Re-enable mic button
-                if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
-                updateActionButtonsState();
-                return;
-            }
+        mainHistory
+            .slice(-10) // Take last 10 messages
+            .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
+            .forEach(msg => {
+                const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
+                if (content) {
+                    // Crucial fix: Map 'model' role to 'assistant' for OpenAI API
+                    messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
+                }
+            });
 
-            try {
-                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI); // Call the OpenAI function
-                addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
-            } catch (error) {
-                console.error(`Error with OpenAI Thinking mode:`, error);
-                displayMessage([{text: `Graxybot Thinking Error: ${error.message}`}], 'bot', true);
-                addMessageToCurrentChatHistory('model', [{ text: `[Error with OpenAI Thinking: ${error.message}]` }]);
-                showToast(`Thinking mode error: ${error.message}`, 'error');
-            }
-        } else { // Standard Graxybot (OpenAI) call
-            console.log("Standard Graxybot call (OpenAI).");
-            const systemPromptForSend = getSystemPrompt('standard'); // Get standard system prompt
+        // Add the current user message
+        const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
+        if (currentUserMessageContent) {
+            messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
+        } else if (localSelectedImageData) {
+            // If only an image was uploaded, send a generic message about it to the model
+            messagesForOpenAI.push({ role: "user", content: "User has uploaded an image." });
+        } else {
+            console.warn("No content for OpenAI. Aborting send.");
+            removeThinkingIndicator();
+            // Re-enable inputs
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            return;
+        }
 
-            // Prepare history for OpenAI API (last 10 user/model turns)
-            const mainHistory = chats[chatIdForMessage]?.history || [];
-            const messagesForOpenAI = [
-                { role: "system", content: systemPromptForSend }
-            ];
-
-            mainHistory
-                .slice(-10) // Take last 10 messages
-                .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
-                .forEach(msg => {
-                    const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
-                    if (content) {
-                        // Crucial fix: Map 'model' role to 'assistant' for OpenAI API
-                        messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
-                    }
-                });
-
-            // Add the current user message
-            const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
-            if (currentUserMessageContent) {
-                messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
-            } else if (localSelectedImageData) {
-                // If only an image was uploaded, send a generic message about it to the model
-                messagesForOpenAI.push({ role: "user", content: "User has uploaded an image." });
-            } else {
-                console.warn("No content for OpenAI. Aborting send.");
-                removeThinkingIndicator();
-                // Re-enable inputs
-                if (messageInput) messageInput.disabled = false;
-                if (sendButton) sendButton.disabled = false;
-                if (initialSendButton) initialSendButton.disabled = false;
-                if (imageUploadButton) imageUploadButton.disabled = false;
-                if (micButton) micButton.disabled = false; // Re-enable mic button
-                if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
-                updateActionButtonsState();
-                return;
-            }
-
-            try {
-                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI); // Call the new OpenAI function
-                addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
-            } catch (error) {
-                console.error("OpenAI Error:", error);
-                displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
-                addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
-                showToast(`Graxybot error: ${error.message}`, 'error');
-            }
+        try {
+            const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse); // Pass modelToUse
+            addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
+        } catch (error) {
+            console.error("OpenAI Error:", error);
+            displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
+            addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
+            showToast(`Graxybot error: ${error.message}`, 'error');
         }
         // Cleanup and re-enable UI after processing
         deactivateReasonMode(); // Ensure reason mode is off
@@ -2400,10 +2370,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return;
         isReasonModeActive = !isReasonModeActive; // Toggle mode
         if (isReasonModeActive) {
-            console.log("Thinking mode (OpenAI) activated.");
-             if(messageInput) messageInput.placeholder = "Thinking with OpenAI...";
+            console.log(`Thinking mode (${O4_MINI_MODEL}) activated.`); // Changed console log
+             if(messageInput) messageInput.placeholder = `Thinking with ${O4_MINI_MODEL}...`; // Changed placeholder
         } else {
-            console.log("Thinking mode (OpenAI) deactivated.");
+            console.log(`Thinking mode (${O4_MINI_MODEL}) deactivated.`); // Changed console log
              if(messageInput) messageInput.placeholder = "Message Graxybot...";
         }
         updateActionButtonsState(); // Update button appearance
