@@ -62,6 +62,12 @@
     --prompt-button-text: #333;
     --loader-color: var(--primary);
     --modal-bg: rgba(0, 0, 0, 0.6); /* For general popup */
+    /* New styles for custom alert/toast */
+    --toast-bg: #333;
+    --toast-text: white;
+    --toast-success: #28a745;
+    --toast-error: #dc3545;
+    --toast-info: #17a2b8;
 }
 
 * {
@@ -405,6 +411,45 @@ html, body {
 }
 .popup-content button:hover { background: #805AD5; }
 
+/* --- Custom Toast/Message Box Styles --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none; /* Allow clicks through */
+}
+
+.toast-message {
+    background-color: var(--toast-bg);
+    color: var(--toast-text);
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    transform: translateY(20px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto; /* Re-enable pointer events for the toast itself */
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-message.success { background-color: var(--toast-success); }
+.toast-message.error { background-color: var(--toast-error); }
+.toast-message.info { background-color: var(--toast-info); }
+
 /* --- Mobile Menu Toggle (Hidden by default) --- */
 .menu-toggle {
     display: none; /* Hidden by default, shown in mobile media query */
@@ -442,6 +487,7 @@ html, body {
     #model-notification { font-size: 0.75rem; padding: 3px 8px;}
     .popup-content h2 { font-size: 20px; }
     .popup-content p, .popup-content ul { font-size: 15px; }
+    .popup-content button { padding: 10px 20px; font-size: 15px; }
     .welcome-title { font-size: 2.2rem; }
     .suggested-prompts-grid { grid-template-columns: 1fr; }
 }
@@ -520,6 +566,7 @@ html, body {
     .menu-toggle {
         display: block;
     }
+}
 </style>
 </head>
 <body>
@@ -542,6 +589,8 @@ html, body {
         <button id="closePopupButton">Close</button>
     </div>
 </div>
+
+<div id="toast-container"></div>
 
 
 <div class="chat-app">
@@ -658,6 +707,7 @@ const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
     let modelNotificationDiv;
     let popupOverlay, closePopupButton;
     let initialLoader, chatLoader;
+    let toastContainer; // Added for toast notifications
 
     // --- Application State ---
 let chats = {}; // Object to store all chat histories
@@ -672,6 +722,39 @@ let selectedImageMimeType = null; // Mime type of the uploaded image
 let selectedImagePreviewUrl = null; // Object URL for the image preview
 
 // --- Core Functions ---
+
+    /**
+     * Displays a temporary toast notification.
+     * @param {string} message - The message to display.
+     * @param {string} type - 'success', 'error', or 'info'.
+     * @param {number} duration - How long the toast should be visible in ms.
+     */
+    function showToast(message, type = 'info', duration = 3000) {
+        if (!toastContainer) {
+            console.warn("Toast container not found. Cannot display toast:", message);
+            return;
+        }
+
+        const toast = document.createElement('div');
+        toast.classList.add('toast-message', type);
+        toast.innerHTML = `<i class="fas ${
+            type === 'success' ? 'fa-check-circle' :
+            type === 'error' ? 'fa-times-circle' :
+            'fa-info-circle'
+        }"></i> ${message}`;
+
+        toastContainer.appendChild(toast);
+
+        // Force reflow to ensure transition plays
+        void toast.offsetWidth;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, duration);
+    }
 
     /**
      * Generates a unique ID for a new chat.
@@ -1057,27 +1140,56 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
     }
 
     /**
-     * Copies code content to the clipboard and provides user feedback on the button.
+     * Copies code content to the clipboard using document.execCommand('copy')
+     * and provides user feedback on the button.
      * @param {string} codeContent - The code to copy.
      * @param {HTMLElement} buttonElement - The button that was clicked.
      */
     function handleCopyCode(codeContent, buttonElement) {
-        navigator.clipboard.writeText(codeContent).then(() => {
-            console.log("Code copied to clipboard");
-            const originalText = buttonElement.innerHTML;
+        let success = false;
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = codeContent;
+        // Make the textarea invisible and append it to the body
+        tempTextArea.style.position = 'fixed';
+        tempTextArea.style.top = '0';
+        tempTextArea.style.left = '0';
+        tempTextArea.style.width = '1px';
+        tempTextArea.style.height = '1px';
+        tempTextArea.style.padding = '0';
+        tempTextArea.style.border = 'none';
+        tempTextArea.style.outline = 'none';
+        tempTextArea.style.boxShadow = 'none';
+        tempTextArea.style.background = 'transparent';
+        document.body.appendChild(tempTextArea);
+
+        try {
+            tempTextArea.select();
+            tempTextArea.setSelectionRange(0, 99999); // For mobile devices
+            success = document.execCommand('copy');
+        } catch (err) {
+            console.error('Failed to copy code using execCommand:', err);
+        } finally {
+            document.body.removeChild(tempTextArea); // Always remove the textarea
+        }
+
+        const originalText = buttonElement.innerHTML;
+        if (success) {
+            showToast("Code copied to clipboard!", 'success');
             buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            buttonElement.disabled = true;
-            setTimeout(() => { buttonElement.innerHTML = originalText; buttonElement.disabled = false; }, 1500);
-        }).catch(err => {
-            console.error('Failed to copy code: ', err);
-            const originalText = buttonElement.innerHTML;
+        } else {
+            showToast("Failed to copy code.", 'error');
             buttonElement.innerHTML = '<i class="fas fa-times"></i> Error';
-            setTimeout(() => { buttonElement.innerHTML = originalText; buttonElement.disabled = false; }, 2000);
-        });
+        }
+        buttonElement.disabled = true;
+        setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+        }, 1500);
     }
 
     /**
      * "Runs" HTML or JavaScript code by opening it in a new tab.
+     * Provides user feedback using custom toast messages instead of alerts.
      * @param {string} codeContent - The code to run.
      * @param {string} language - The language of the code ('html', 'javascript', 'js').
      */
@@ -1093,7 +1205,7 @@ let selectedImagePreviewUrl = null; // Object URL for the image preview
 const outputElement=document.getElementById("output"),originalConsoleLog=console.log,originalConsoleError=console.error,logHistory=[];const formatArg=e=>{if(e instanceof Error)return\`Error: \${e.message}\n\${e.stack}\`;if("object"==typeof e&&null!==e)try{return JSON.stringify(e,null,2)}catch{return String(e)}return String(e)};console.log=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry">\${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleLog.apply(console,e)},console.error=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry error">ERROR: \${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleError.apply(console,e)},window.addEventListener("unhandledrejection",e=>{console.error("Unhandled Promise Rejection:",e.reason)}),window.addEventListener("error",e=>{console.error("Script Error:",e.message,"at",e.filename,":",e.lineno)});try{${codeContent}}catch(e){console.error("Execution Error:",e)}<\/script></body></html>`;
             } else {
                 console.warn("Run action not supported for language:", language);
-                alert(`Running code directly is not supported for ${language}.`);
+                showToast(`Running code directly is not supported for ${language}.`, 'info');
                 return;
             }
             const newTab = window.open('about:blank', '_blank');
@@ -1102,12 +1214,13 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 newTab.document.write(htmlToRun);
                 newTab.document.close();
                 console.log("Code execution tab opened.");
+                showToast("Code running in a new tab!", 'success');
             } else {
-                alert("Could not open new tab. Please check if pop-ups are blocked.");
+                showToast("Could not open new tab. Please check if pop-ups are blocked.", 'error');
             }
         } catch (error) {
             console.error("Error preparing or running code:", error);
-            alert("An error occurred while trying to run the code.");
+            showToast("An error occurred while trying to run the code.", 'error');
         }
     }
 
@@ -1253,14 +1366,14 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert("Please select a valid image file (JPEG, PNG, GIF, WebP).");
+            showToast("Please select a valid image file (JPEG, PNG, GIF, WebP).", 'error');
             imageUploadInput.value = ''; // Reset file input
             return;
         }
         // Validate file size
         const maxSizeMB = 4; // Max 4MB
         if (file.size > maxSizeMB * 1024 * 1024) {
-            alert(`Image size exceeds ${maxSizeMB}MB limit.`);
+            showToast(`Image size exceeds ${maxSizeMB}MB limit.`, 'error');
             imageUploadInput.value = ''; // Reset file input
             return;
         }
@@ -1273,7 +1386,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             displayImagePreview(selectedImagePreviewUrl);
         } catch (error) {
             console.error("Error processing image:", error);
-            alert("Error processing image. Please try again.");
+            showToast("Error processing image. Please try again.", 'error');
             removeSelectedImage(); // Clear selection on error
         }
     }
@@ -1461,6 +1574,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 // Display generated image and add to history
                 displayMessage([{text: promptText}], 'bot', false, null, imageSrc, 'fa-palette', promptText, 'image');
                 addMessageToCurrentChatHistory('model', [{text: promptText}], null, imageSrc, promptText, 'image');
+                showToast("Image generated successfully!", 'success');
             } else {
                 throw new Error('No images found in the API response.');
             }
@@ -1470,6 +1584,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             removeThinkingIndicator();
             displayMessage([{text: `Stable Diffusion Error: ${error.message}. Check console.`}], 'bot', true);
             addMessageToCurrentChatHistory('model', [{ text: `[Stable Diffusion Error: ${error.message}]` }]);
+            showToast(`Image generation failed: ${error.message}`, 'error');
         } finally { // Cleanup and re-enable UI
             deactivateImageGenerationMode();
             if (messageInput) messageInput.disabled = false;
@@ -1495,6 +1610,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             console.error("AnimateDiff API URL is not configured correctly. Current value:", ANIMATEDIFF_API_URL);
             displayMessage([{text: "Animation service is not configured. Please check the setup."}], 'bot', true);
             deactivateAnimateVideoMode();
+            showToast("Animation service not configured.", 'error');
             return;
         }
 
@@ -1538,6 +1654,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 const videoSrc = `data:image/gif;base64,${data.videoBase64}`; // GIFs are displayed with <img>
                 displayMessage([{text: promptText}], 'bot', false, null, videoSrc, 'fa-film', promptText, 'video');
                 addMessageToCurrentChatHistory('model', [{text: promptText}], null, videoSrc, promptText, 'video');
+                showToast("Animation generated successfully!", 'success');
             } else {
                 throw new Error(data.error || 'No video found in the API response or generation failed.');
             }
@@ -1547,6 +1664,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             removeThinkingIndicator();
             displayMessage([{text: `Animation Error: ${error.message}. Check console.`}], 'bot', true);
             addMessageToCurrentChatHistory('model', [{ text: `[Animation Error: ${error.message}]` }]);
+            showToast(`Animation generation failed: ${error.message}`, 'error');
         } finally {
             deactivateAnimateVideoMode();
             if (messageInput) messageInput.disabled = false;
@@ -1664,11 +1782,11 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
             (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText) && !(isAnimateVideoModeActive && messageText))
            ) {
             if (isImageGenerationModeActive && !messageText && !localSelectedImageData) {
-                displayMessage([{text:"Image generation mode is active. Please type a prompt or attach an image to describe."}], 'bot', true);
+                showToast("Image generation mode is active. Please type a prompt or attach an image to describe.", 'info');
                 return;
             }
             if (isAnimateVideoModeActive && !messageText) {
-                displayMessage([{text:"Animation mode is active. Please type a prompt."}], 'bot', true);
+                showToast("Animation mode is active. Please type a prompt.", 'info');
                 return;
             }
             if (currentThinkingIndicatorElement) {
@@ -1699,7 +1817,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 await triggerStableDiffusionGeneration(messageText); // Call image backend
                 return; // Exit after handling image generation
             } else {
-                displayMessage([{text:"Image generation mode is active. Please type a prompt."}], 'bot', true);
+                showToast("Image generation mode is active. Please type a prompt.", 'info');
                 return;
             }
         }
@@ -1787,6 +1905,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 console.error(`Error with OpenAI Thinking mode:`, error);
                 displayMessage([{text: `Graxybot Thinking Error: ${error.message}`}], 'bot', true);
                 addMessageToCurrentChatHistory('model', [{ text: `[Error with OpenAI Thinking: ${error.message}]` }]);
+                showToast(`Thinking mode error: ${error.message}`, 'error');
             }
         } else { // Standard Graxybot (OpenAI) call
             console.log("Standard Graxybot call (OpenAI).");
@@ -1835,6 +1954,7 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
                 console.error("OpenAI Error:", error);
                 displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
                 addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
+                showToast(`Graxybot error: ${error.message}`, 'error');
             }
         }
         // Cleanup and re-enable UI after processing
@@ -2147,9 +2267,10 @@ const outputElement=document.getElementById("output"),originalConsoleLog=console
         initialLoader = document.getElementById('initial-loader');
         chatLoader = document.getElementById('chat-loader');
         menuToggleBtn = document.getElementById('menu-toggle');
+        toastContainer = document.getElementById('toast-container'); // Get toast container
 
         // Check if all essential elements were found
-        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn };
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer };
         if (Object.values(essentialElements).some(el => !el)) {
             console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
             if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
