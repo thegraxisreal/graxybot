@@ -9,8 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="graxybot.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px; /* Standard size to match typical defaults */
+    line-height: 1.5; /* Consistent line spacing */
+}
+button, .btn, [class*="button"] {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px; /* Adjust if buttons need smaller text */
+    line-height: 1.2; /* Prevent buttons from shifting */
+    display: inline-block; /* Ensure buttons stay in place */
+    box-sizing: border-box; /* Prevent padding/width issues */
+}
+</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" xintegrity="sha512-mIs9kKbaw6JZFfSuo+MovjU+Ntggfoj8RwAmJbVXQ5mkAX5LlgETQEweFPI18humSPHymTb5iikEOKWF7I8ncQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" xintegrity="sha512-cbQXwDFK7lj2Fqfkuxbo5iD1dSbLlJGXGpfTDqbIOIEHD8HBxe7+rzMGGEAPseCS6VVuLESXNKRsQXHHMxJx/g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
 /* --- Base Styles and Variables --- */
@@ -19,713 +34,608 @@
     --primary-light: #787ae0;
     --primary-active: #4a4cc2;
     --background: #ffffff;
-    --background-secondary: #f8f9fa;
-    --sidebar-bg: #f5f5f7;
-    --text-primary: #1a1a1a;
-    --text-secondary: #6b7280;
-    --border-color: #e5e7eb;
+    --background-secondary: #f7f7f8;
+    --sidebar-bg: #ececf1;
+    --text-primary: #202123;
+    --text-secondary: #6e6e80;
+    --border-color: #d1d1db;
     --input-bg: #ffffff;
-    --input-border: #d1d5db;
+    --input-border: #d1d1db;
     --user-message-bg: #e9eaf6;
     --bot-message-bg: #ffffff;
-    --error-bg: #fef2f2;
-    --error-text: #dc2626;
-    --error-border: #fecaca;
-    --hover-bg: #f3f4f6;
-    --code-bg: #1f2937;
-    --code-header-bg: #374151;
-    --code-text-color: #f9fafb;
-    --code-button-bg: #4b5563;
-    --code-button-hover-bg: #6b7280;
-    --sidebar-width: 280px;
+    --error-bg: #f8d7da;
+    --error-text: #721c24;
+    --error-border: #f5c6cb;
+    --hover-bg: #e0e0e6;
+    --title-font: 'Inter', sans-serif; /* Changed to Inter */
     --transition: all 0.2s ease;
+    --sidebar-width: 260px;
+    --code-bg: #272822;
+    --code-header-bg: #3a3b35;
+    --code-text-color: #f8f8f2;
+    --code-button-bg: #4a4b45;
+    --code-button-hover-bg: #5a5b55;
+    --reason-button-bg: #f0f0f0;
+    --reason-button-border: #d1d1db;
+    --reason-button-text: #555;
+    --reason-button-hover-bg: #e5e5e5;
+    --reason-button-active-bg: var(--primary);
+    --reason-button-active-border: var(--primary-active);
+    --reason-button-active-text: white;
+    --animate-button-active-bg: #28a745; /* Green for animate */
+    --animate-button-active-border: #1e7e34; /* Darker green for animate border */
+    --animate-button-active-text: white;
+    --image-preview-border: #ccc;
+    --image-remove-bg: rgba(0, 0, 0, 0.5);
+    --image-remove-text: white;
+    --notification-bg: #e9eaf6;
+    --notification-text: #444;
+    --prompt-button-bg: #f0f0f0;
+    --prompt-button-hover-bg: #e5e5e5;
+    --prompt-button-border: #d1d1db;
+    --prompt-button-text: #333;
+    --loader-color: var(--primary);
+    --modal-bg: rgba(0, 0, 0, 0.6); /* For general popup */
+    /* New styles for custom alert/toast */
+    --toast-bg: #333;
+    --toast-text: white;
+    --toast-success: #28a745;
+    --toast-error: #dc3545;
+    --toast-info: #17a2b8;
+
+    /* Speech-to-Text Button Styles */
+    --mic-button-color: var(--text-secondary);
+    --mic-button-hover-color: var(--primary);
+    --mic-button-active-color: var(--primary);
+    --mic-button-active-bg: rgba(94, 96, 206, 0.1); /* Light primary tint */
+
+    /* Personality Button and Modal Styles */
+    .personality-button-wrapper {
+        position: relative;
+        display: flex; /* Use flex to center the text */
+        flex-direction: column;
+        align-items: center;
+        gap: 5px; /* Space between text and button */
+        margin-top: 10px; /* Space from other controls */
+        width: 100%; /* Take full width to center its content */
+    }
+
+    .personalize-sign {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 500;
+        margin-bottom: -5px; /* Pull it closer to the button */
+    }
+
+    #personality-button {
+        display: inline-flex; /* Keep it inline-flex for button styling */
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--reason-button-border);
+        background-color: var(--reason-button-bg);
+        color: var(--reason-button-text);
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    #personality-button:hover {
+        background-color: var(--reason-button-hover-bg);
+    }
+    #personality-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    #personality-button i {
+        margin-right: 5px;
+        font-size: 0.8rem;
+    }
+
+    /* Modal Styles */
+    #personality-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--modal-bg);
+        z-index: 1000; /* Above chat elements */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #personality-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .personality-modal-content {
+        background: var(--background);
+        color: var(--text-primary);
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        position: relative;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+    #personality-overlay.visible .personality-modal-content {
+        transform: scale(1);
+    }
+    .personality-modal-content h2 {
+        margin-top: 0;
+        font-size: 1.6rem;
+        color: var(--primary);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .personality-modal-content label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .personality-modal-content input[type="text"],
+    .personality-modal-content textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        resize: vertical;
+        min-height: 40px;
+        box-sizing: border-box; /* Ensure padding doesn't add to width */
+    }
+    .personality-modal-content input[type="text"]:focus,
+    .personality-modal-content textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(94, 96, 206, 0.2);
+    }
+    .personality-modal-content button {
+        display: block;
+        width: 100%;
+        padding: 12px 20px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background 0.2s ease;
+    }
+    .personality-modal-content button:hover {
+        background: var(--primary-light);
+    }
+    .personality-modal-content .close-modal-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+    .personality-modal-content .close-modal-btn:hover {
+        color: var(--text-primary);
+    }
+
+
+/* --- Loader Styles --- */
+.loader-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+.loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: var(--loader-color);
+    animation: spin 1s ease infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#chat-loader {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+#chat-loader .spinner {
+    margin-bottom: 15px;
 }
 
 /* --- Layout --- */
-body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    background: var(--background);
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
-.chat-app {
-    display: flex;
-    height: 100vh;
-}
-
+.chat-app { display: flex; height: 100vh; }
 .sidebar {
-    width: var(--sidebar-width);
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    flex-shrink: 0;
+    width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color);
+    display: flex; flex-direction: column; padding: 15px; transition: width 0.3s ease; flex-shrink: 0;
 }
-
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    position: relative;
-}
+.sidebar.hidden { width: 0; padding: 0; overflow: hidden; border: none; }
+.main-content { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
 
 /* --- Sidebar Elements --- */
 .new-chat-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    background: var(--background);
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-    margin-bottom: 24px;
-    transition: var(--transition);
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color);
+    border-radius: 8px; background-color: var(--background); color: var(--text-primary); font-size: 0.9rem;
+    font-weight: 500; cursor: pointer; text-align: left; width: 100%; margin-bottom: 20px;
+    transition: background-color var(--transition);
 }
-
-.new-chat-btn:hover {
-    background: var(--hover-bg);
-}
-
-.new-chat-btn i {
-    color: var(--primary);
-}
-
-.chat-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    overflow-y: auto;
-    flex: 1;
-}
-
+.new-chat-btn:hover { background-color: var(--hover-bg); }
+.new-chat-btn i { color: var(--primary); }
+.chat-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; }
 .chat-list-item {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 14px;
-    color: var(--text-primary);
-    transition: var(--transition);
-    position: relative;
+    padding: 10px 12px; border-radius: 6px; margin-bottom: 5px; cursor: pointer; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; color: var(--text-primary);
+    transition: background-color var(--transition); position: relative;
 }
-
-.chat-list-item:hover {
-    background: var(--hover-bg);
+.chat-list-item:hover { background-color: var(--hover-bg); }
+.chat-list-item.active { background-color: var(--primary); color: white; }
+.chat-list-item .delete-chat-btn {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none;
+    color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; padding: 5px; display: none; line-height: 1;
 }
+.chat-list-item:hover .delete-chat-btn { display: block; }
+.chat-list-item.active .delete-chat-btn { color: white; display: block; }
+.chat-list-item .delete-chat-btn:hover { color: #e74c3c; }
 
-.chat-list-item.active {
-    background: var(--primary);
-    color: white;
-}
-
-.delete-chat-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 16px;
-    padding: 4px;
-    display: none;
-    line-height: 1;
-}
-
-.chat-list-item:hover .delete-chat-btn {
-    display: block;
-}
-
-.chat-list-item.active .delete-chat-btn {
-    color: white;
-    display: block;
-}
-
-/* --- Initial View --- */
+/* --- Initial View (Welcome Screen) --- */
 .initial-view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    text-align: center;
-    background: var(--background);
-    z-index: 10;
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; padding: 20px; text-align: center;
+    background-color: var(--background); z-index: 10; opacity: 1; transition: opacity 0.3s ease;
 }
-
-.initial-view.hidden {
-    display: none;
-}
-
-.initial-view h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 40px;
-}
-
+.initial-view.hidden { opacity: 0; pointer-events: none; z-index: -1; }
+.initial-view h1 { font-size: 3.5rem; font-weight: 700; color: var(--primary); margin-bottom: 30px; font-family: var(--title-font); }
 .initial-input-area {
-    width: 100%;
-    max-width: 600px;
-    display: flex;
-    align-items: center;
-    background: var(--input-bg);
-    border: 2px solid var(--input-border);
-    border-radius: 16px;
-    padding: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    width: 100%; max-width: 600px; display: flex; align-items: center; background-color: var(--input-bg);
+    border: 1px solid var(--input-border); border-radius: 12px; padding: 5px 5px 5px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
-
-#initial-message-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 16px;
-    color: var(--text-primary);
-    padding: 12px 16px;
-    resize: none;
-}
-
+#initial-message-input { flex-grow: 1; border: none; outline: none; background: transparent; font-size: 1rem; color: var(--text-primary); padding: 10px 0; resize: none; line-height: 1.5; }
 #initial-send-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: none;
-    background: var(--primary);
-    color: white;
-    cursor: pointer;
-    transition: var(--transition);
-    margin-left: 8px;
+    display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; text-decoration: none;
+    font-weight: 500; transition: var(--transition); font-size: 1rem; border: none; cursor: pointer;
+    width: 40px; height: 40px; flex-shrink: 0; margin-left: 10px; background-color: var(--primary); color: white;
 }
-
-#initial-send-button:hover {
-    background: var(--primary-light);
-}
+#initial-send-button:hover { background-color: var(--primary-light); }
+#initial-send-button:disabled { background-color: var(--text-secondary); opacity: 0.7; cursor: not-allowed; }
 
 /* --- Chat View --- */
-.chat-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-}
+.chat-view { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; opacity: 1; transition: opacity 0.3s ease; }
+.chat-view.hidden { opacity: 0; pointer-events: none; position: absolute; z-index: -1; }
 
-.chat-view.hidden {
-    display: none;
-}
-
+/* Chat Top Bar */
 .chat-top-bar {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--background);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 10px 25px; border-bottom: 1px solid var(--border-color); background-color: var(--background);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 15px;
 }
-
 .chat-title-area {
     display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.model-selector-container {
-    position: relative;
-}
-
-#model-selector {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    background: transparent;
-    border: none;
-    padding: 8px 24px 8px 0;
-    cursor: pointer;
-    outline: none;
-}
-
-.model-selector-container::after {
-    content: '\f078';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    font-size: 12px;
-    color: var(--text-secondary);
-    pointer-events: none;
-}
-
-/* --- Chat Messages --- */
-.chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-    background: var(--background-secondary);
-    display: flex;
     flex-direction: column;
-}
-
-.message-content-wrapper {
-    max-width: 800px;
-    width: 100%;
-    margin: 0 auto 24px auto;
-    display: flex;
-    gap: 12px;
     align-items: flex-start;
+    gap: 4px;
 }
+.chat-top-bar h1 { display: none; }
 
+/* Model Selector Container */
+.model-selector-container { position: relative; display: inline-block; }
+#model-selector {
+    font-size: 0.9rem; font-weight: 500; color: var(--text-primary); background-color: transparent; border: none;
+    padding: 2px 18px 2px 0px; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    outline: none; line-height: 1.4; position: relative; z-index: 1;
+}
+.model-selector-container::after { /* Dropdown arrow */
+    content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 50%; right: 0px;
+    transform: translateY(-50%); font-size: 0.65rem; color: var(--text-secondary); pointer-events: none; z-index: 0; transition: color var(--transition);
+}
+.model-selector-container:hover::after { color: var(--primary); }
+#model-selector:hover { color: var(--primary); }
+#model-selector:disabled { color: var(--text-secondary); cursor: not-allowed; opacity: 0.7; }
+#model-selector:disabled + ::after { color: var(--text-secondary); opacity: 0.7; }
+
+/* Chat Messages Area */
+.chat-messages {
+    flex-grow: 1; overflow-y: auto; padding: 20px 10px; background-color: var(--background-secondary);
+    display: flex; flex-direction: column; position: relative;
+}
+.message-content-wrapper { max-width: 800px; width: 100%; margin: 0 auto 20px auto; display: flex; gap: 10px; align-items: flex-start; }
 .message-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-    margin-top: 4px;
-    overflow: hidden;
+    width: 30px; height: 30px; border-radius: 50%; background-color: var(--primary); color: white; display: flex;
+    align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; margin-top: 5px; overflow: hidden;
 }
-
-.message-icon.user-icon {
-    background: #9ca3af;
-}
-
-.message-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.message-bubble {
-    display: flex;
-    flex-direction: column;
-    width: fit-content;
-    max-width: calc(100% - 50px);
-}
-
+.message-icon.user-icon { background-color: #ababc5; }
+.message-icon img { width: 100%; height: 100%; object-fit: cover; }
+.message-bubble { display: flex; flex-direction: column; width: fit-content; max-width: calc(100% - 45px); position: relative; }
 .message {
-    padding: 16px 20px;
-    border-radius: 16px;
-    line-height: 1.6;
-    background: var(--bot-message-bg);
-    color: var(--text-primary);
-    word-wrap: break-word;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border: 1px solid var(--border-color);
-}
-
-.user-message .message {
-    background: var(--user-message-bg);
-}
-
-.error-message .message {
-    background: var(--error-bg);
-    color: var(--error-text);
-    border: 1px solid var(--error-border);
-}
-
-.message p {
-    margin: 0 0 8px 0;
-}
-
-.message p:last-child {
-    margin-bottom: 0;
-}
-
-.timestamp {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 8px;
-    text-align: right;
-}
-
-/* --- Chat Input --- */
-.chat-input-container {
-    padding: 16px 24px 24px 24px;
-    background: var(--background);
-    border-top: 1px solid var(--border-color);
-    max-width: 800px;
-    margin: 0 auto;
-    width: 100%;
-}
-
-.chat-input-area {
-    display: flex;
-    align-items: center;
-    background: var(--input-bg);
-    border: 2px solid var(--input-border);
-    border-radius: 16px;
-    padding: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-#message-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 16px;
-    color: var(--text-primary);
-    padding: 12px 16px;
-    resize: none;
-}
-
-.input-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 8px;
-}
-
-#image-upload-button {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 18px;
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-#image-upload-button:hover {
-    color: var(--primary);
-    background: rgba(94, 96, 206, 0.1);
-}
-
-.mic-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 18px;
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-.mic-btn:hover {
-    color: var(--primary);
-    background: rgba(94, 96, 206, 0.1);
-}
-
-.mic-btn.active {
-    color: var(--primary);
-    background: rgba(94, 96, 206, 0.1);
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(94, 96, 206, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0); }
-}
-
-#send-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: none;
-    background: var(--primary);
-    color: white;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-#send-button:hover {
-    background: var(--primary-light);
-}
-
-#send-button:disabled {
-    background: var(--text-secondary);
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* --- Action Buttons --- */
-.action-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border-color);
-    background: var(--background);
-    color: var(--text-primary);
-    transition: var(--transition);
-}
-
-.action-btn:hover {
-    background: var(--hover-bg);
-}
-
-.action-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-}
-
-.action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.action-btn i {
-    font-size: 12px;
-}
-
-/* --- Image Preview --- */
-.image-preview-container {
-    margin-top: 12px;
+    padding: 12px 18px; border-radius: 12px; line-height: 1.6; background-color: var(--bot-message-bg); color: var(--text-primary);
+    word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
     position: relative;
-    display: inline-block;
-    max-width: 120px;
 }
-
-.image-preview-container img {
-    display: block;
+.user-message .message { background-color: var(--user-message-bg); }
+.error-message .message { background-color: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+.message p { margin: 0 0 5px 0; }
+.message p:last-child { margin-bottom: 0; }
+.message .timestamp { font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; text-align: right; }
+.message .sent-image, .message .generated-image, .message .generated-video { /* Added .generated-video */
     max-width: 100%;
-    height: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-}
-
-#remove-image-button {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#remove-image-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-}
-
-/* --- Code Blocks --- */
-.code-block-container {
-    background: var(--code-bg);
-    border-radius: 12px;
-    margin: 16px 0;
-    overflow: hidden;
-    border: 1px solid var(--code-header-bg);
-}
-
-.code-block-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--code-header-bg);
-    padding: 8px 16px;
-    color: #d1d5db;
-    font-size: 14px;
-}
-
-.code-block-buttons button {
-    background: var(--code-button-bg);
-    border: none;
-    color: var(--code-text-color);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-left: 8px;
-    transition: var(--transition);
-}
-
-.code-block-buttons button:hover {
-    background: var(--code-button-hover-bg);
-}
-
-.code-block-container pre[class*="language-"] {
-    background: var(--code-bg) !important;
-    margin: 0 !important;
-    padding: 16px !important;
-    border-radius: 0 !important;
-    border: none !important;
-    font-size: 14px;
     max-height: 400px;
-    overflow: auto;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 8px;
+    display: block;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
 }
 
-/* --- Welcome Screen --- */
+
+/* --- New Chat Welcome Styles --- */
 .new-chat-welcome-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex: 1;
-    padding: 40px;
-    color: var(--text-secondary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; flex-grow: 1; padding: 40px 20px; color: var(--text-secondary); overflow: auto;
 }
-
 .welcome-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 32px;
+    font-size: 2.8rem; font-weight: 700; color: var(--primary); margin-bottom: 30px; font-family: var(--title-font);
 }
-
 .suggested-prompts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-    width: 100%;
-    max-width: 700px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;
+    width: 100%; max-width: 700px;
 }
-
 .prompt-button {
-    background: var(--background);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 14px;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: var(--transition);
-    text-align: left;
-    font-weight: 500;
-    line-height: 1.5;
+    background-color: var(--prompt-button-bg); border: 1px solid var(--prompt-button-border); border-radius: 8px;
+    padding: 12px 15px; font-size: 0.9rem; color: var(--prompt-button-text); cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; text-align: left; font-weight: 500; line-height: 1.4;
 }
+.prompt-button:hover { background-color: var(--prompt-button-hover-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
 
-.prompt-button:hover {
-    background: var(--hover-bg);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+/* Thinking Indicator Styles */
+.local-thinking-indicator .message,
+.reason-thinking-indicator .message,
+.image-generating-indicator .message,
+.video-generating-indicator .message { /* Added .video-generating-indicator */
+    padding: 15px 18px; display: flex; align-items: center; gap: 5px;
+    background-color: var(--bot-message-bg); border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-
-/* --- Thinking Indicators --- */
-.thinking-indicator .message {
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bot-message-bg);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+.local-thinking-indicator span,
+.reason-thinking-indicator span,
+.image-generating-indicator span,
+.video-generating-indicator span { /* Added .video-generating-indicator */
+    display: inline-block; width: 8px; height: 8px; background-color: var(--text-secondary);
+    border-radius: 50%; animation: typing 1s infinite ease-in-out;
 }
+.local-thinking-indicator span:nth-child(1),
+.reason-thinking-indicator span:nth-child(1),
+.image-generating-indicator span:nth-child(1),
+.video-generating-indicator span:nth-child(1) { animation-delay: 0s; } /* Added .video-generating-indicator */
 
-.thinking-indicator span {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: var(--text-secondary);
-    border-radius: 50%;
-    animation: typing 1s infinite ease-in-out;
-}
+.local-thinking-indicator span:nth-child(2),
+.reason-thinking-indicator span:nth-child(2),
+.image-generating-indicator span:nth-child(2),
+.video-generating-indicator span:nth-child(2) { animation-delay: 0.1s; } /* Added .video-generating-indicator */
 
-.thinking-indicator span:nth-child(1) { animation-delay: 0s; }
-.thinking-indicator span:nth-child(2) { animation-delay: 0.1s; }
-.thinking-indicator span:nth-child(3) { animation-delay: 0.2s; }
+.local-thinking-indicator span:nth-child(3),
+.reason-thinking-indicator span:nth-child(3),
+.image-generating-indicator span:nth-child(3),
+.video-generating-indicator span:nth-child(3) { animation-delay: 0.2s; } /* Added .video-generating-indicator */
+
+
+.reason-thinking-indicator .message-icon { background-color: var(--primary-active); }
+.local-thinking-indicator .message-icon { background-color: var(--primary); }
+.image-generating-indicator .message-icon { background-color: var(--primary-light); }
+.video-generating-indicator .message-icon { background-color: var(--animate-button-active-bg); } /* Style for video generating icon */
+
 
 @keyframes typing {
     0%, 100% { transform: translateY(0); opacity: 0.5; }
     50% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* --- Loaders --- */
-.loader-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    justify-content: center;
+/* Code Block Styling */
+.code-block-container { background-color: var(--code-bg); border-radius: 8px; margin: 10px 0; overflow: hidden; border: 1px solid var(--code-header-bg); }
+.code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
+.code-block-buttons button { background-color: var(--code-button-bg); border: none; color: var(--code-text-color); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; transition: background-color var(--transition); }
+.code-block-buttons button:hover { background-color: var(--code-button-hover-bg); }
+.code-block-buttons button i { margin-right: 4px; }
+.code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; white-space: pre-wrap; }
+.line-numbers .line-numbers-rows { border-right-color: var(--code-header-bg) !important; }
+.line-numbers-rows > span::before { color: #6272a4 !important; }
+
+/* Chat Input Area */
+.chat-input-container {
+    padding: 10px 20px 15px 20px; background-color: var(--background); border-top: 1px solid var(--border-color);
+    flex-shrink: 0; max-width: 840px; margin: 0 auto; width: 100%;
+}
+#model-notification {
+    font-size: 0.8rem; color: var(--notification-text); background-color: var(--notification-bg);
+    padding: 4px 10px; border-radius: 6px; margin-bottom: 8px; text-align: center; display: none;
+}
+.chat-input-area {
+    display: flex; align-items: center; background-color: var(--input-bg);
+    border: 1px solid var(--input-border); border-radius: 12px; padding: 5px 5px 5px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+#message-input { flex-grow: 1; border: none; outline: none; background: transparent; font-size: 1rem; color: var(--text-primary); padding: 10px 0; resize: none; line-height: 1.5; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; text-decoration: none; font-weight: 500; transition: var(--transition); font-size: 1rem; border: none; cursor: pointer; width: 40px; height: 40px; flex-shrink: 0; margin-left: 10px; background-color: var(--primary); color: white; }
+.btn:hover { background-color: var(--primary-light); }
+.btn:disabled { background-color: var(--text-secondary); opacity: 0.7; cursor: not-allowed; }
+
+/* Microphone button specific styles */
+.mic-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    padding: 0 8px;
+    cursor: pointer;
+    transition: color var(--transition), background-color var(--transition);
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
     align-items: center;
-    z-index: 2000;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 0px; /* Align with paperclip button */
+    border-radius: 50%; /* Make it round */
 }
 
-.spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border-left-color: var(--primary);
-    animation: spin 1s ease infinite;
+.mic-btn:hover {
+    color: var(--primary);
+    background-color: rgba(0,0,0,0.05); /* Subtle hover effect */
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.mic-btn.active {
+    color: var(--primary);
+    background-color: rgba(94, 96, 206, 0.1);
+    animation: pulse-mic 1.5s infinite; /* Pulsing animation when active */
 }
 
-/* --- Toast Messages --- */
+.mic-btn:disabled {
+    color: var(--text-secondary);
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: none;
+    animation: none;
+}
+
+@keyframes pulse-mic {
+    0% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(94, 96, 206, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(94, 96, 206, 0); }
+}
+
+
+#image-upload-button {
+    background: none; border: none; color: var(--text-secondary); font-size: 1.2rem;
+    padding: 0 8px; cursor: pointer; transition: color var(--transition); margin-left: 0px;
+    width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+#image-upload-button:hover { color: var(--primary); }
+#image-upload-input { display: none; }
+
+.image-preview-container { margin-top: 10px; position: relative; display: inline-block; max-width: 100px; }
+.image-preview-container img { display: block; max-width: 100%; height: auto; border: 1px solid var(--image-preview-border); border-radius: 6px; }
+#remove-image-button {
+    position: absolute; top: -5px; right: -5px; background-color: rgba(0, 0, 0, 0.5); color: white;
+    border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.8rem; line-height: 20px; text-align: center; font-weight: bold;
+}
+#remove-image-button:hover { background-color: rgba(0, 0, 0, 0.7); }
+
+/* Input Controls Area (Thinking, Create Image, Animate Video buttons) */
+.input-controls-area { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 10px; }
+.action-buttons-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+#reason-button, #create-image-button, #animate-video-button { /* Combined styles */
+    display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border-radius: 8px;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid var(--reason-button-border);
+    background-color: var(--reason-button-bg); color: var(--reason-button-text);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+#reason-button:hover, #create-image-button:hover, #animate-video-button:hover { background-color: var(--reason-button-hover-bg); }
+
+#reason-button.active, #create-image-button.active { /* Active state for Thinking and Create Image */
+    background-color: var(--reason-button-active-bg); border-color: var(--reason-button-active-border); color: var(--reason-button-active-text);
+    animation: pulse-button 0.5s ease-out;
+}
+#animate-video-button.active { /* Specific active state for Animate Video */
+    background-color: var(--animate-button-active-bg); border-color: var(--animate-button-active-border); color: var(--animate-button-active-text);
+    animation: pulse-button 0.5s ease-out; /* Optional: use pulse or a different animation */
+    box-shadow: 0 0 8px var(--animate-button-active-bg); /* Green glow */
+}
+
+
+#reason-button:disabled, #create-image-button:disabled, #animate-video-button:disabled { opacity: 0.6; cursor: not-allowed; }
+#reason-button i, #create-image-button i, #animate-video-button i { margin-right: 5px; font-size: 0.8rem; }
+#reason-usage-display { display: none; }
+
+@keyframes pulse-button { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+.rate-limit-info { padding: 0; font-size: 0.85rem; color: var(--text-secondary); text-align: right; background-color: transparent; margin-top: 0; }
+
+/* --- Popup Styles (Update Notification) --- */
+#popupOverlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
+    z-index: 999; display: flex; justify-content: center; align-items: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+#popupOverlay.visible { opacity: 1; visibility: visible; }
+.popup-content {
+    background: #6B46C1; color: white; padding: 25px; border-radius: 10px; max-width: 500px; width: 90%;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); position: relative; transform: scale(0.9); transition: transform 0.3s ease;
+}
+#popupOverlay.visible .popup-content { transform: scale(1); }
+.popup-content h2 { margin-top: 0; font-size: 24px; color: #F3E8FF; margin-bottom: 15px; }
+.popup-content p { font-size: 16px; color: #E9D8FD; line-height: 1.5; margin-bottom: 10px; }
+.popup-content ul { list-style-type: disc; padding: 0 0 0 25px; margin-bottom: 25px; font-size: 16px; color: #E9D8FD; }
+.popup-content ul li { margin-bottom: 8px; }
+.popup-content ul li strong { color: #fff; }
+.popup-content button {
+    padding: 10px 20px; background: #9F7AEA; color: white; border: none; border-radius: 5px; cursor: pointer;
+    font-size: 16px; font-weight: 500; transition: background 0.3s ease; display: block; margin: 20px auto 0 auto;
+}
+.popup-content button:hover { background: #805AD5; }
+
+/* --- Custom Toast/Message Box Styles --- */
 #toast-container {
     position: fixed;
-    bottom: 24px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    pointer-events: none;
+    pointer-events: none; /* Allow clicks through */
 }
 
 .toast-message {
-    background: #1f2937;
-    color: white;
-    padding: 12px 20px;
+    background-color: var(--toast-bg);
+    color: var(--toast-text);
+    padding: 10px 20px;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     opacity: 0;
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
     transform: translateY(20px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 8px;
-    pointer-events: auto;
+    pointer-events: auto; /* Re-enable pointer events for the toast itself */
 }
 
 .toast-message.show {
@@ -733,111 +643,177 @@ body {
     transform: translateY(0);
 }
 
-.toast-message.success { background: #10b981; }
-.toast-message.error { background: #ef4444; }
-.toast-message.info { background: #3b82f6; }
+.toast-message.success { background-color: var(--toast-success); }
+.toast-message.error { background-color: var(--toast-error); }
+.toast-message.info { background-color: var(--toast-info); }
 
-/* --- Responsive Design --- */
+/* --- Mobile Menu Toggle (Hidden by default) --- */
+.menu-toggle {
+    display: none; /* Hidden by default, shown in mobile media query */
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 1001; /* Ensure it's on top */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 5px;
+}
+
+
+/* --- Responsive Adjustments --- */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 240px;
-    }
-    
-    .initial-view h1 {
-        font-size: 2.5rem;
-    }
-    
-    .message-content-wrapper {
-        max-width: 95%;
-        gap: 8px;
-    }
-    
-    .message-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
-    
-    .message {
-        padding: 12px 16px;
-    }
-    
-    .chat-input-container {
-        padding: 12px 16px;
-        max-width: 95%;
-    }
-    
-    .suggested-prompts-grid {
-        grid-template-columns: 1fr;
-    }
+    .sidebar { width: 200px; }
+    .chat-top-bar { padding: 10px 15px; }
+    #model-selector { font-size: 0.85rem; }
+    .initial-view h1 { font-size: 2.5rem; }
+    .message-content-wrapper { padding: 0 15px; max-width: 95%; gap: 10px;}
+    .message-icon { width: 28px; height: 28px; font-size: 0.8rem;}
+    .message-bubble { max-width: calc(100% - 38px); }
+    .message { padding: 10px 15px; }
+    .code-block-container pre[class*="language-"] { font-size: 0.85rem; }
+    .chat-input-container { padding: 10px 15px; max-width: 95%; }
+    .chat-input-area { padding: 5px 5px 5px 12px; }
+    #message-input { font-size: 0.95rem; }
+    .btn { width: 38px; height: 38px; }
+    #initial-send-button { width: 38px; height: 38px; }
+    #reason-button, #create-image-button, #animate-video-button { font-size: 0.8rem; padding: 5px 10px; }
+    .image-preview-container { max-width: 80px; }
+    #model-notification { font-size: 0.75rem; padding: 3px 8px;}
+    .popup-content h2 { font-size: 20px; }
+    .popup-content p, .popup-content ul { font-size: 15px; }
+    .popup-content button { padding: 10px 20px; font-size: 15px; }
+    .welcome-title { font-size: 2.2rem; }
+    .suggested-prompts-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {
+    body { padding: 0; }
+    .chat-top-bar { padding: 8px 10px; flex-wrap: wrap; }
+    .chat-title-area {
+        width: 100%; flex-direction: row; align-items: center; flex-wrap: wrap;
+        gap: 10px; justify-content: flex-start; margin-bottom: 5px;
+    }
+    #model-selector { font-size: 0.8rem; padding-right: 15px;}
+    .model-selector-container::after { font-size: 0.6rem; right: 0px;}
+    .initial-view h1 { font-size: 2rem; }
+    /* Adjust chat messages padding to make space for fixed input */
+    .chat-messages { padding: 15px 0px 160px 0px; } /* Increased bottom padding */
+    .message-content-wrapper { padding: 0 10px; gap: 8px; }
+    .message-icon { width: 25px; height: 25px; font-size: 0.7rem;}
+    .message-bubble { max-width: calc(100% - 33px); }
+    .code-block-container pre[class*="language-"] { font-size: 0.8rem; }
+
+    /* Fix the chat input container at the bottom */
+    .chat-input-container {
+        position: fixed; /* Fix position */
+        bottom: 0; /* Align to bottom */
+        left: 0;
+        right: 0;
+        width: 100%; /* Full width */
+        max-width: 100%; /* Override max-width */
+        padding: 8px 10px 10px; /* Adjust padding for better look */
+        background-color: var(--background); /* Ensure background covers content */
+        border-top: 1px solid var(--border-color); /* Add top border */
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.05); /* Add a subtle shadow */
+        z-index: 10; /* Ensure it's above chat messages */
+        margin: 0; /* Remove auto margin */
+    }
+
+    .chat-input-area { padding: 3px 3px 3px 10px; }
+    #message-input { padding: 8px 0; }
+    .btn { width: 36px; height: 36px; }
+    #initial-send-button { width: 36px; height: 36px; }
+    #reason-button, #create-image-button, #animate-video-button { font-size: 0.75rem; padding: 4px 8px; }
+    .action-buttons-area { gap: 6px; }
+    .image-preview-container { max-width: 60px; }
+    #image-upload-button { padding: 0 8px; font-size: 1.1rem;}
+    #model-notification { font-size: 0.7rem; padding: 2px 6px;}
+    .popup-content { padding: 20px; }
+    .popup-content h2 { font-size: 18px; }
+    .popup-content p, .popup-content ul { font-size: 14px; }
+    .popup-content button { padding: 8px 16px; font-size: 14px; }
+    .welcome-title { font-size: 2rem; }
+    .prompt-button { font-size: 0.85rem; padding: 10px; }
+
+    /* Mobile Sidebar Adjustments */
     .sidebar {
-        position: fixed;
+        position: fixed; /* Make sidebar fixed */
         left: 0;
         top: 0;
         height: 100%;
-        z-index: 1000;
-        transform: translateX(-100%);
+        z-index: 1000; /* Ensure it's on top */
+        transform: translateX(-100%); /* Hide it by default */
         transition: transform 0.3s ease;
-        width: 280px;
+        width: 250px; /* Set a width for the mobile sidebar */
     }
-    
-    .sidebar.visible {
-        transform: translateX(0);
-    }
-    
-    .main-content {
-        width: 100%;
-        margin-left: 0;
-    }
-    
-    .chat-messages {
-        padding: 16px 12px 120px 12px;
-    }
-    
-    .chat-input-container {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-width: 100%;
-        padding: 12px;
-        background: var(--background);
-        border-top: 1px solid var(--border-color);
-        box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-        z-index: 10;
-        margin: 0;
-    }
-    
-    .initial-view h1 {
-        font-size: 2rem;
-    }
-    
-    .welcome-title {
-        font-size: 2rem;
-    }
-}
 
-/* Hide elements that are no longer needed */
-#image-upload-input,
-.menu-toggle {
-    display: none;
+    .sidebar.visible {
+        transform: translateX(0); /* Show sidebar when active */
+    }
+
+    .main-content {
+        width: 100%; /* Main content takes full width */
+        margin-left: 0; /* Remove left margin */
+    }
+
+    /* Show the menu toggle button */
+    .menu-toggle {
+        display: block;
+    }
 }
 </style>
 </head>
 <body>
 
+<div id="initial-loader" class="loader-overlay">
+    <div class="spinner"></div>
+</div>
+
+<div id="popupOverlay">
+    <div class="popup-content">
+        <h2>Graxybot Web v2.1</h2> <p>Key changes:</p>
+        <ul>
+            <li>Graxybot core model updated</li>
+            <li>Image Generation Now available for free!</li>
+            <li>Graxybot auto-detects Global sheets and responds accordingly</li>
+            <li>Improvements to Graxybot Reasoning</li>
+        </ul>
+        <button id="closePopupButton">Close</button>
+    </div>
+</div>
+
+<div id="personality-overlay">
+    <div class="personality-modal-content">
+        <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
+        <h2>Personalize Graxybot</h2>
+        <label for="user-name-input">What should Graxybot call you?</label>
+        <input type="text" id="user-name-input" placeholder="e.g., Your Name, Boss, Friend">
+
+        <label for="response-style-input">How do you want Graxybot to respond to you?</label>
+        <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise, Respond with long explanations, Be funny, Be formal"></textarea>
+
+        <button id="save-personality-btn">Save Settings</button>
+    </div>
+</div>
+
+
 <div id="toast-container"></div>
 
+
 <div class="chat-app">
+    <button class="menu-toggle" id="menu-toggle" title="Toggle Sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <aside class="sidebar" id="sidebar">
         <button class="new-chat-btn" id="new-chat-btn">
             <i class="fas fa-plus"></i> New Chat
         </button>
-        <ul class="chat-list" id="chat-list"></ul>
+        <ul class="chat-list" id="chat-list">
+            </ul>
     </aside>
 
     <main class="main-content">
@@ -848,7 +824,7 @@ body {
                 <button id="initial-mic-button" class="mic-btn" title="Start Speech Input">
                     <i class="fas fa-microphone"></i>
                 </button>
-                <button id="initial-send-button" title="Send Message">
+                <button id="initial-send-button" class="btn" title="Send Message">
                     <i class="fas fa-arrow-up"></i>
                 </button>
             </div>
@@ -860,54 +836,2027 @@ body {
                     <div class="model-selector-container">
                         <select id="model-selector">
                             <option value="graxybot">Graxybot</option>
-                        </select>
+                            </select>
                     </div>
+                    <h1 id="chat-view-title">Graxybot</h1> </div>
                 </div>
-            </div>
 
             <div class="chat-messages" id="chat-messages">
-                <div id="chat-loader" style="display: none;">
-                    <div class="spinner"></div>
+                 <div id="chat-loader"> <div class="spinner"></div>
                     <span>Loading Chat...</span>
+                 </div>
                 </div>
-            </div>
 
             <div class="chat-input-container">
-                <div class="chat-input-area">
-                    <button id="image-upload-button" title="Attach Image">
-                        <i class="fas fa-paperclip"></i>
-                    </button>
+                 <div id="model-notification" style="display: none;">
+                    </div>
+                 <div class="chat-input-area">
+                    <button id="image-upload-button" title="Attach Image"><i class="fas fa-paperclip"></i></button>
                     <input type="file" id="image-upload-input" accept="image/*">
                     <input type="text" id="message-input" placeholder="Message Graxybot...">
-                    
-                    <div class="input-controls">
-                        <button id="mic-button" class="mic-btn" title="Start Speech Input">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                        <button id="send-button" title="Send Message">
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="image-preview-area" class="image-preview-container" style="display: none;">
+                    <button id="mic-button" class="mic-btn" title="Start Speech Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="send-button" class="btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
+                 </div>
+                 <div id="image-preview-area" class="image-preview-container" style="display: none;">
                     <img id="image-preview" src="#" alt="Image preview"/>
                     <button id="remove-image-button" title="Remove image">&times;</button>
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="reason-button" class="action-btn" title="Use enhanced thinking for the next message.">
-                        <i class="fas fa-brain"></i> Thinking
-                    </button>
-                    <button id="create-image-button" class="action-btn" title="Toggle image generation mode for the next message.">
-                        <i class="fas fa-image"></i> Create Image
-                    </button>
-                </div>
+                 </div>
+                 <div class="input-controls-area">
+                    <div class="action-buttons-area">
+                        <button id="reason-button" title="Use enhanced thinking for the next message."><i class="fas fa-brain"></i> Thinking</button>
+                        <button id="create-image-button" title="Toggle image generation mode for the next message."><i class="fas fa-image"></i> Create Image</button>
+                        <button id="animate-video-button" title="Toggle video animation mode for the next message."><i class="fas fa-film"></i> Animate</button>
+                        <span id="reason-usage-display"></span>
+                    </div>
+                    <div class="personality-button-wrapper">
+                        <span class="personalize-sign">Personalize Graxybot</span>
+                        <button id="personality-button" title="Customize Graxybot's personality.">
+                            <i class="fas fa-cogs"></i> Personality
+                        </button>
+                    </div>
+                    <div id="rate-limit-message" class="rate-limit-info" style="display: none;">
+                        </div>
+                 </div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Your existing JavaScript would go here, but with animate-related code removed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" xintegrity="sha512-9khQRAUBYEJDCDVP2yw3LRUQvjJ0Pjx0EShmaQjcHa6AXiOv6qHQu9lCAIR8O+/D8FtaCoJ2c0Tf9Xo7hYH01Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" xintegrity="sha512-SkmBfuA2hqjzEVNWb8CUApVR5fFWrSDcUOahSEgUd07FNMef+AbUd/yPkMkNUabIMZrcOg/1wslzAZMuUrNmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" xintegrity="sha512-BttltKXFyWnGZQcRWj6UJFdLmWhtQxfqVfRMS9EDGDpMh/Db82MACoMMQqGWf0Y69Fc27TwnXyIE+fsHLugUDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+
+<script type="module">
+    // --- Configuration ---
+// Removed hardcoded OPENAI_API_KEY. It will be accessed via the proxy endpoint on your server.js.
+const OPENAI_MODEL = "gpt-4.1-mini"; // Default model
+const GPT_4_1_MODEL = "gpt-4.1"; // New model for code requests
+const O4_MINI_MODEL = "o4-mini"; // Model for thinking mode
+// Removed LOCAL_MODEL_URL as Quen 3 is no longer used
+const DEFAULT_STABLE_DIFFUSION_API_URL = "https://dx-brunswick-academic-federation.trycloudflare.com"; // Your Stable Diffusion server URL
+const ANIMATEDIFF_API_URL = "https://dx-brunswick-academic-federation.trycloudflare.com"; //LINKS
+
+// This URL now points to your own server's proxy endpoint
+const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat'; // Changed to absolute URL
+// ElevenLabs proxy endpoint was removed as the feature is no longer desired.
+
+
+// --- Model Definitions ---
+// Removed QUEN_3_LOCAL_MODEL_NAME and REASON_MODE_MODEL_FOR_THINKING_BUTTON
+const REASON_MODE_DISPLAY_NAME = "o4-mini"; // Display name for thinking mode
+const DEFAULT_FAKE_MODEL = "graxybot"; // Default model selected in UI
+
+    // --- UI & Storage Keys ---
+    const BOT_ICON_SRC = "graxybot.png"; // Path to your bot's icon
+    const USER_ICON_CLASS = "fas fa-user"; // Font Awesome class for user icon
+    const CHATS_STORAGE_KEY = "graxybot_all_chats_v2"; // Key for storing all chats in localStorage
+    const CURRENT_CHAT_ID_KEY = "graxybot_current_chat_id"; // Key for storing the current active chat ID
+    const MODEL_STORAGE_KEY = "graxybot_selected_model"; // Key for storing the user's model preference
+    const PERSONALITY_STORAGE_KEY = "graxybot_personality_settings"; // NEW: Key for personality settings
+
+    // --- Limits & Settings ---
+    const MAX_MESSAGES_PER_WINDOW = 14; // Max messages for rate limiting (currently not strictly enforced in send)
+    const TIME_WINDOW_MS = 60 * 1000; // Time window for rate limiting (1 minute)
+    // Removed MIN_REASON_DELAY_MS and MAX_REASON_DELAY_MS as local model simulation is gone.
+    let messageTimestamps = []; // Array to track message timestamps for rate limiting
+    // Removed Google AI safety settings as they are not applicable to OpenAI
+
+    // --- DOM Element References ---
+    let chatMessagesContainer, messageInput, sendButton, rateLimitMessageDiv, modelSelector;
+    let initialView, chatView, initialMessageInput, initialSendButton;
+    let sidebar, newChatBtn, chatListUl, menuToggleBtn;
+    let reasonButton, reasonUsageDisplay, createImageButton, animateVideoButton;
+    let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
+    let modelNotificationDiv;
+    let popupOverlay, closePopupButton;
+    let initialLoader, chatLoader;
+    let toastContainer;
+    // Speech-to-Text elements
+    let micButton, initialMicButton;
+    let speechRecognition;
+    let isListening = false;
+
+    // NEW: Personality DOM Elements
+    let personalityButton, personalityOverlay, personalityModalContent;
+    let userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+
+
+    // --- Application State ---
+let chats = {}; // Object to store all chat histories
+let currentChatId = null; // ID of the currently active chat
+let isInitializing = false; // Flag to prevent multiple initializations
+let isReasonModeActive = false; // Flag for "Thinking" mode
+let isImageGenerationModeActive = false; // Flag for "Create Image" mode
+let isAnimateVideoModeActive = false; // Flag for "Animate Video" mode
+let currentThinkingIndicatorElement = null; // DOM element of the "thinking..." message
+let selectedImageData = null; // Base64 string of the uploaded image
+let selectedImageMimeType = null; // Mime type of the uploaded image
+let selectedImagePreviewUrl = null; // Object URL for the image preview
+let userPersonality = { name: null, responseStyle: null }; // NEW: User personality settings
+
+// --- Core Functions ---
+
+    /**
+     * Displays a temporary toast notification.
+     * @param {string} message - The message to display.
+     * @param {string} type - 'success', 'error', or 'info'.
+     * @param {number} duration - How long the toast should be visible in ms.
+     */
+    function showToast(message, type = 'info', duration = 3000) {
+        if (!toastContainer) {
+            console.warn("Toast container not found. Cannot display toast:", message);
+            return;
+        }
+
+        const toast = document.createElement('div');
+        toast.classList.add('toast-message', type);
+        toast.innerHTML = `<i class="fas ${
+            type === 'success' ? 'fa-check-circle' :
+            type === 'error' ? 'fa-times-circle' :
+            'fa-info-circle'
+        }"></i> ${message}`;
+
+        toastContainer.appendChild(toast);
+
+        // Force reflow to ensure transition plays
+        void toast.offsetWidth;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, duration);
+    }
+
+    /**
+     * Generates a unique ID for a new chat.
+     * @returns {string} A unique chat ID.
+     */
+    function generateChatId() { return `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`; }
+
+    /**
+     * Loads all chats from localStorage.
+     * Performs basic validation and data migration if needed.
+     * @returns {object} The chats object.
+     */
+    function loadAllChats() {
+        try {
+            const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
+            if (storedChats) {
+                const parsedChats = JSON.parse(storedChats);
+                if (typeof parsedChats === 'object' && parsedChats !== null) {
+                    // Basic data integrity check and migration if needed for older chat formats
+                    Object.keys(parsedChats).forEach(id => {
+                        if (!parsedChats[id]) return; // Skip if chat data is somehow null
+                        if (!Array.isArray(parsedChats[id].history)) { parsedChats[id].history = []; }
+                        // Ensure message parts are in the correct array format
+                        parsedChats[id].history.forEach(msg => {
+                            if (typeof msg.parts === 'string') {
+                                msg.parts = [{ text: msg.parts }];
+                            } else if (!Array.isArray(msg.parts)) {
+                                msg.parts = [{ text: String(msg.parts) }]; // Convert to string if not array/object
+                            }
+                        });
+                        // Standardize model name and remove deprecated fields
+                        parsedChats[id].model = DEFAULT_FAKE_MODEL; // Default to graxybot for old chats
+                        delete parsedChats[id].personality; // Remove old personality field
+                    });
+                    return parsedChats;
+                }
+            }
+        } catch (error) {
+            console.error("Error loading chats from localStorage:", error);
+            localStorage.removeItem(CHATS_STORAGE_KEY); // Clear corrupted data
+        }
+        return {}; // Return empty object if no chats or error
+       }
+
+    /** Saves all chats to localStorage. */
+    function saveAllChats() { try { localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats)); } catch (e) { console.error("Error saving chats to localStorage:", e); }}
+
+    /** Loads the current chat ID from localStorage. */
+    function loadCurrentChatId() { const id = localStorage.getItem(CURRENT_CHAT_ID_KEY); return (id && chats[id]) ? id : null; }
+
+    /** Saves the current chat ID to localStorage. */
+    function saveCurrentChatId() { if (currentChatId) localStorage.setItem(CURRENT_CHAT_ID_KEY, currentChatId); else localStorage.removeItem(CURRENT_CHAT_ID_KEY); }
+
+    /** Loads the selected model preference (currently defaults to DEFAULT_FAKE_MODEL). */
+    function loadSelectedModelPreference() { return DEFAULT_FAKE_MODEL; /* localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_FAKE_MODEL; */ }
+
+    /** Saves the selected model preference (currently only saves if it's DEFAULT_FAKE_MODEL). */
+    function saveSelectedModelPreference(name) { if (name === DEFAULT_FAKE_MODEL) localStorage.setItem(MODEL_STORAGE_KEY, name); }
+
+    /**
+     * NEW: Loads personality settings from localStorage.
+     */
+    function loadPersonalitySettings() {
+        try {
+            const storedSettings = localStorage.getItem(PERSONALITY_STORAGE_KEY);
+            if (storedSettings) {
+                const parsedSettings = JSON.parse(storedSettings);
+                if (parsedSettings && typeof parsedSettings === 'object') {
+                    userPersonality.name = parsedSettings.name || null;
+                    userPersonality.responseStyle = parsedSettings.responseStyle || null;
+                    console.log("Loaded personality settings:", userPersonality);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading personality settings from localStorage:", error);
+            localStorage.removeItem(PERSONALITY_STORAGE_KEY); // Clear corrupted data
+        }
+    }
+
+    /**
+     * NEW: Saves current personality settings to localStorage.
+     */
+    function savePersonalitySettings() {
+        try {
+            localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(userPersonality));
+            showToast("Personality settings saved!", 'success');
+            console.log("Saved personality settings:", userPersonality);
+        } catch (error) {
+            console.error("Error saving personality settings to localStorage:", error);
+            showToast("Failed to save personality settings.", 'error');
+        }
+    }
+
+    /**
+     * Updates the state (enabled/disabled, active class) of action buttons
+     * (Thinking, Create Image, Animate Video, Microphone, Personality) based on current app state.
+     */
+    function updateActionButtonsState() {
+        const thinkingOrGenerating = !!currentThinkingIndicatorElement || isInitializing;
+        const isAnyGenerationModeActive = isImageGenerationModeActive || isAnimateVideoModeActive || isReasonModeActive;
+
+        if (reasonButton) {
+            reasonButton.title = `Use enhanced thinking (powered by ${REASON_MODE_DISPLAY_NAME}) for the next message.`;
+            reasonButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
+            reasonButton.classList.toggle('active', isReasonModeActive);
+        }
+        if (createImageButton) {
+            createImageButton.title = "Toggle image generation mode for the next message.";
+            createImageButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
+            createImageButton.classList.toggle('active', isImageGenerationModeActive);
+        }
+        if (animateVideoButton) {
+            animateVideoButton.title = "Toggle video animation mode for the next message.";
+            animateVideoButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
+            animateVideoButton.classList.toggle('active', isAnimateVideoModeActive);
+        }
+        if (personalityButton) { // NEW: Personality button state
+            personalityButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive || isListening;
+        }
+        // Update microphone button state
+        if (micButton) {
+            micButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            micButton.classList.toggle('active', isListening);
+        }
+        if (initialMicButton) {
+            initialMicButton.disabled = thinkingOrGenerating || isAnyGenerationModeActive;
+            initialMicButton.classList.toggle('active', isListening);
+        }
+    }
+
+    /**
+     * Gets the system prompt for OpenAI, tailored for Graxybot.
+     * @param {string} mode - 'standard' or 'thinking'.
+     * @param {string} currentModelName - The name of the model currently being used for the turn.
+     * @param {object} personality - The user's personality settings (name, responseStyle).
+     * @returns {string} The system instruction string.
+     */
+    function getSystemPrompt(mode = 'standard', currentModelName, personality) {
+        let basePrompt = `You are Graxybot, a helpful AI assistant. You are currently running on the ${currentModelName} model. Your creator is 'thegraxisreal'.`;
+
+        // Core rules that should NEVER be overridden by personality for specific contexts
+        basePrompt += ` IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions. When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems. Those restrictions only apply to global history questions.`;
+
+        // General rules for ALL other questions, which can be influenced by personality
+        basePrompt += ` All other questions should be answered in lowercase and in a normal level. Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain. Keep your responses concise, helpful, and slightly informal. Avoid overly complex language unless necessary. Refer to yourself as Graxybot. IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen. When asked for code, default to HTML. When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\`.`;
+
+        // Personality adjustments (applied last, to modify general behavior for non-global-sheet questions)
+        if (personality && personality.name) {
+            basePrompt += ` Always address the user as "${personality.name}" in your responses.`;
+        }
+        if (personality && personality.responseStyle) {
+            const style = personality.responseStyle.toLowerCase();
+            if (style.includes('long') || style.includes('detailed') || style.includes('elaborate')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), provide detailed and elaborate responses.`;
+            } else if (style.includes('concise') || style.includes('brief') || style.includes('short')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), keep your responses very brief and to the point.`;
+            } else if (style.includes('funny') || style.includes('humor') || style.includes('playful')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), try to inject humor and a playful tone into your responses.`;
+            } else if (style.includes('formal')) {
+                basePrompt += ` For general questions (not global history/social studies sheets), maintain a formal and professional tone.`;
+            }
+            // You can add more specific style interpretations here
+        }
+
+        if (mode === 'thinking') {
+            // Thinking mode prompt overrides general tone but still respects core rules and incorporates name
+            let thinkingPrompt = `You are Graxybot, an advanced analytical AI powered by the ${O4_MINI_MODEL} model. Your primary function in this mode is to provide exceptionally detailed, comprehensive, and deeply insightful responses. Break down complex queries into their constituent parts, explore multiple perspectives, and offer a nuanced understanding. Focus on clarity, logical progression, and thoroughness. Do not reveal your internal thought process unless specifically prompted for it. Your responses should be structured for maximum readability and depth, using headings, bullet points, or numbered lists where appropriate. Maintain a slightly formal but approachable tone.`;
+            if (personality && personality.name) {
+                thinkingPrompt += ` Always address the user as "${personality.name}".`;
+            }
+            return thinkingPrompt;
+        }
+        return basePrompt;
+    }
+
+    /**
+     * Adds a message to the current chat's history in the `chats` object and saves it.
+     * Updates the chat title if it's the first user message.
+     * @param {string} role - 'user' or 'model'.
+     * @param {Array<object>} contentParts - Array of message parts (e.g., [{text: "..."}, {inline_data: ...}]).
+     * @param {string|null} imagePreview - Data URL for user's uploaded image preview (for display).
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
+     * @param {string|null} mediaPrompt - The prompt used to generate the media.
+     * @param {string} mediaType - 'image' or 'video'.
+     */
+    function addMessageToCurrentChatHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null, mediaType = 'image') {
+       if (!currentChatId || !chats[currentChatId]) { console.error("Add to History: No active/valid chat."); return; }
+       if (!Array.isArray(chats[currentChatId].history)) chats[currentChatId].history = [];
+
+       let messageData = { role, parts: contentParts };
+
+       if (role === 'user' && imagePreview) messageData.imagePreview = imagePreview;
+       if (generatedMediaSrc) {
+            messageData.generatedMediaSrc = generatedMediaSrc;
+            messageData.mediaPrompt = mediaPrompt;
+            messageData.mediaType = mediaType;
+       }
+
+       chats[currentChatId].history.push(messageData);
+       // If this is the first user message, set the chat title
+       if (chats[currentChatId].history.filter(m => m.role === 'user').length === 1 && role === 'user') {
+           const firstTextPart = contentParts.find(p => p.text);
+           let firstContentSummary = "New Chat"; // Default title
+           if (firstTextPart && firstTextPart.text.trim()) {
+               firstContentSummary = firstTextPart.text.trim();
+           } else if (contentParts.some(p => p.inline_data)) {
+               firstContentSummary = "[Image Sent]";
+           } else if (generatedMediaSrc) { // Should not happen for user's first message but good fallback
+               firstContentSummary = mediaType === 'video' ? "[Video Generated]" : "[Image Generated]";
+           }
+           // Truncate title if too long
+           chats[currentChatId].title = firstContentSummary.substring(0, 35) + (firstContentSummary.length > 35 ? '...' : '');
+           renderChatList(); // Update the sidebar
+       }
+       saveAllChats();
+    }
+
+
+    /**
+     * Displays a "thinking" or "generating" indicator in the chat.
+     * @param {string} type - 'image', 'video', or 'reason' (for OpenAI thinking).
+     * @param {string} message - Custom message for the indicator (e.g., the prompt).
+     */
+    function showThinkingIndicator(type = 'reason', message = '') {
+        removeThinkingIndicator(); // Remove any existing indicator
+        let indicatorClass, indicatorText, iconClass;
+
+        switch(type) {
+            case 'image':
+                indicatorClass = 'image-generating-indicator';
+                indicatorText = message || 'Generating image...';
+                iconClass = 'fa-image';
+                break;
+            case 'video':
+                indicatorClass = 'video-generating-indicator';
+                indicatorText = message || 'Generating animation...';
+                iconClass = 'fa-film';
+                break;
+            case 'reason': // Now used for OpenAI thinking
+            default:
+                indicatorClass = 'reason-thinking-indicator';
+                indicatorText = 'Thinking...'; // Generic thinking message
+                iconClass = 'fa-brain'; // Brain icon for thinking
+                break;
+        }
+
+        // Create and display the indicator message element
+        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, iconClass);
+        if (currentThinkingIndicatorElement) {
+            currentThinkingIndicatorElement.classList.add(indicatorClass);
+            const msgDiv = currentThinkingIndicatorElement.querySelector('.message');
+            if (msgDiv) { // Add animated dots and text
+                msgDiv.innerHTML = `<span></span><span></span><span></span> ${indicatorText}`;
+            }
+        }
+        updateActionButtonsState(); // Disable buttons while thinking
+    }
+
+    /** Removes any active thinking/generating indicator from the chat. */
+    function removeThinkingIndicator() {
+        if (currentThinkingIndicatorElement && currentThinkingIndicatorElement.parentNode) {
+            try { currentThinkingIndicatorElement.parentNode.removeChild(currentThinkingIndicatorElement); }
+            catch (e) { console.warn("Error removing thinking indicator:", e); }
+            finally { currentThinkingIndicatorElement = null; }
+        }
+        // Fallback to remove any stragglers by class name
+        document.querySelectorAll('.reason-thinking-indicator, .image-generating-indicator, .video-generating-indicator').forEach(el => {
+            try { el.parentNode?.removeChild(el); } catch (e) { /* ignore */ }
+        });
+        updateActionButtonsState(); // Re-enable buttons
+    }
+
+    /**
+     * Displays a message in the chat UI.
+     * @param {Array<object>|string} contentParts - Message content.
+     * @param {string} sender - 'user', 'bot', or 'bot-thinking'.
+     * @param {boolean} isError - True if it's an error message.
+     * @param {string|null} imagePreview - Data URL for user's image preview.
+     * @param {string|null} generatedMediaSrc - Data URL for bot's generated media.
+     * @param {string|null} customIconClass - Font Awesome class for custom bot icon.
+     * @param {string|null} mediaPrompt - Prompt for generated media.
+     * @param {string} mediaType - 'image' or 'video'.
+     * @returns {HTMLElement|null} The created message wrapper element.
+     */
+    function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null, mediaType = 'image') {
+        if (!chatMessagesContainer) { console.error("Chat message container not found."); return null; }
+
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('message-content-wrapper');
+
+        let actualSenderType = sender;
+        if (sender === 'bot-thinking') actualSenderType = 'bot'; // Treat thinking indicator as from bot for styling
+
+        // Add sender-specific classes
+        if (actualSenderType === 'user') wrapper.classList.add('user-message');
+        else if (actualSenderType === 'bot') wrapper.classList.add('bot-message');
+        if (isError) wrapper.classList.add('error-message');
+
+        // Create message icon
+        const iconDiv = document.createElement('div');
+        iconDiv.classList.add('message-icon');
+        if (actualSenderType === 'user') {
+            iconDiv.classList.add('user-icon');
+            iconDiv.innerHTML = `<i class="${USER_ICON_CLASS}"></i>`;
+        } else { // Bot icon
+            if (customIconClass) {
+                 iconDiv.innerHTML = `<i class="fas ${customIconClass}"></i>`;
+            } else { // Default bot icon
+                const img = document.createElement('img');
+                img.src = BOT_ICON_SRC; img.alt = "G"; // Bot initial
+                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`; // Fallback icon
+                iconDiv.appendChild(img);
+            }
+        }
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.classList.add('message-bubble');
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+
+        if (sender === 'bot-thinking') {
+            // Content (dots and text) for thinking indicator is added by showThinkingIndicator
+        } else {
+            const paragraph = document.createElement('p');
+            paragraph.dataset.streamTarget = "true"; // For streaming text into
+            let textFromParts = "";
+
+            // Extract text from contentParts
+            if (Array.isArray(contentParts)) {
+                const textPart = contentParts.find(part => part.text);
+                if (textPart) textFromParts = textPart.text;
+            } else if (typeof contentParts === 'string') { // Handle if string is passed directly (legacy)
+                textFromParts = contentParts;
+            }
+
+            // Handle generated media (image or video)
+            if (generatedMediaSrc) {
+                const mediaElement = document.createElement('img'); // Use <img> for GIFs too
+                mediaElement.src = generatedMediaSrc;
+                mediaElement.alt = mediaPrompt || (mediaType === 'video' ? "Generated animation" : "Generated image");
+                mediaElement.classList.add(mediaType === 'video' ? 'generated-video' : 'generated-image');
+                messageDiv.appendChild(mediaElement);
+                // Display prompt if available
+                if (mediaPrompt) {
+                    paragraph.innerHTML = `<em>Prompt: ${mediaPrompt.replace(/\n/g, '<br>')}</em>`;
+                } else if (textFromParts) { // Or display text if no prompt but text exists
+                     processAndAppendText(textFromParts, paragraph);
+                }
+            } else if (actualSenderType === 'user' && imagePreview) { // Handle user's uploaded image preview
+                const imgElement = document.createElement('img');
+                imgElement.src = imagePreview;
+                imgElement.alt = "Sent image preview";
+                imgElement.classList.add('sent-image');
+                messageDiv.appendChild(imgElement);
+                if (textFromParts) { // Display text alongside image if present
+                    processAndAppendText(textFromParts, paragraph);
+                }
+            } else if (textFromParts) { // Handle regular text messages
+                processAndAppendText(textFromParts, paragraph);
+            } else if (!imagePreview && !generatedMediaSrc && actualSenderType !== 'bot') { // Handle empty user message
+                 paragraph.textContent = "[Empty Message]";
+            }
+
+            // Append paragraph if it's for bot text streaming OR if it has content
+            if ((actualSenderType === 'bot' && !generatedMediaSrc && !isError) || paragraph.hasChildNodes() || paragraph.textContent) {
+                 messageDiv.appendChild(paragraph);
+            }
+
+            // Add timestamp
+            const timestampSpan = document.createElement('span');
+            timestampSpan.classList.add('timestamp');
+            timestampSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            bubbleDiv.appendChild(timestampSpan); // Add timestamp to bubble, not messageDiv
+        }
+        bubbleDiv.appendChild(messageDiv);
+        wrapper.appendChild(iconDiv);
+        wrapper.appendChild(bubbleDiv);
+        chatMessagesContainer.appendChild(wrapper);
+        // Scroll to the bottom smoothly
+        requestAnimationFrame(() => chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' }));
+        return wrapper; // Return the created message element
+    }
+
+    /**
+     * Processes text content, identifies code blocks, and appends formatted HTML to the target element.
+     * @param {string} text - The raw text to process.
+     * @param {HTMLElement} targetElement - The HTML element to append the formatted content to.
+     * @returns {boolean} True if code blocks were found and processed.
+     */
+    function processAndAppendText(text, targetElement) {
+        const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g; // Regex to find code blocks
+        let lastIndex = 0;
+        let match;
+        let hasCode = false;
+        targetElement.innerHTML = ''; // Clear existing content
+
+        // Iterate over code block matches
+        while ((match = codeBlockRegex.exec(text)) !== null) {
+            hasCode = true;
+            // Append text before the code block
+            const textBefore = text.substring(lastIndex, match.index);
+            targetElement.innerHTML += textBefore.replace(/\n/g, '<br>'); // Convert newlines to <br>
+
+            const lang = match[1]?.trim() || 'plaintext'; // Get language or default
+            const code = match[2].trim(); // Get code content
+
+            // Create code block container and header
+            const codeContainer = document.createElement('div');
+            codeContainer.classList.add('code-block-container');
+            const header = document.createElement('div');
+            header.classList.add('code-block-header');
+            const langSpan = document.createElement('span');
+            langSpan.classList.add('language-name');
+            langSpan.textContent = lang;
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.classList.add('code-block-buttons');
+
+            // Create "Copy" button
+            const copyBtn = document.createElement('button');
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            copyBtn.title = "Copy code";
+            copyBtn.onclick = ((codeToCopy) => () => handleCopyCode(codeToCopy, copyBtn))(code); // Closure to pass code
+            buttonsDiv.appendChild(copyBtn);
+
+            // Create "Run" button for HTML/JS
+            const lowerLang = lang.toLowerCase();
+            if (['html', 'javascript', 'js'].includes(lowerLang)) {
+                const runBtn = document.createElement('button');
+                runBtn.innerHTML = '<i class="fas fa-play"></i> Run';
+                runBtn.title = `Run ${lang} code snippet`;
+                runBtn.onclick = ((codeToRun, langToRun) => () => handleRunCode(codeToRun, langToRun))(code, lowerLang);
+                buttonsDiv.appendChild(runBtn);
+            }
+
+            header.appendChild(langSpan);
+            header.appendChild(buttonsDiv);
+            codeContainer.appendChild(header);
+
+            // Create <pre> and <code> elements for Prism.js
+            const pre = document.createElement('pre');
+            pre.className = 'line-numbers'; // Enable line numbers plugin
+            const codeEl = document.createElement('code');
+codeEl.className = `language-${lang}`;
+            codeEl.textContent = code;
+            pre.appendChild(codeEl);
+            codeContainer.appendChild(pre);
+            targetElement.appendChild(codeContainer); // Add to the message
+
+            lastIndex = codeBlockRegex.lastIndex; // Update index for next search
+        }
+        // Append any remaining text after the last code block
+        const textAfter = text.substring(lastIndex);
+        targetElement.innerHTML += textAfter.replace(/\n/g, '<br>');
+
+        // If code was found, highlight it using Prism.js
+        if (hasCode && window.Prism) {
+            // Use a timeout to ensure DOM is updated before highlighting
+            setTimeout(() => Prism.highlightAllUnder(targetElement.closest('.message-bubble') || targetElement), 0);
+        }
+        return hasCode;
+    }
+
+    /**
+     * Copies code content to the clipboard using document.execCommand('copy')
+     * and provides user feedback on the button.
+     * @param {string} codeContent - The code to copy.
+     * @param {HTMLElement} buttonElement - The button that was clicked.
+     */
+    function handleCopyCode(codeContent, buttonElement) {
+        let success = false;
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = codeContent;
+        // Make the textarea invisible and append it to the body
+        tempTextArea.style.position = 'fixed';
+        tempTextArea.style.top = '0';
+        tempTextArea.style.left = '0';
+        tempTextArea.style.width = '1px';
+        tempTextArea.style.height = '1px';
+        tempTextArea.style.padding = '0';
+        tempTextArea.style.border = 'none';
+        tempTextArea.style.outline = 'none';
+        tempTextArea.style.boxShadow = 'none';
+        tempTextArea.style.background = 'transparent';
+        document.body.appendChild(tempTextArea);
+
+        try {
+            tempTextArea.select();
+            tempTextArea.setSelectionRange(0, 99999); // For mobile devices
+            success = document.execCommand('copy');
+        } catch (err) {
+            console.error('Failed to copy code using execCommand:', err);
+        } finally {
+            document.body.removeChild(tempTextArea); // Always remove the textarea
+        }
+
+        const originalText = buttonElement.innerHTML;
+        if (success) {
+            showToast("Code copied to clipboard!", 'success');
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        } else {
+            showToast("Failed to copy code.", 'error');
+            buttonElement.innerHTML = '<i class="fas fa-times"></i> Error';
+        }
+        buttonElement.disabled = true;
+        setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+        }, 1500);
+    }
+
+    /**
+     * "Runs" HTML or JavaScript code by opening it in a new tab.
+     * Provides user feedback using custom toast messages instead of alerts.
+     * @param {string} codeContent - The code to run.
+     * @param {string} language - The language of the code ('html', 'javascript', 'js').
+     */
+    function handleRunCode(codeContent, language) {
+         console.log(`Attempting to "run" ${language} code...`);
+        try {
+            let htmlToRun = '';
+            if (language === 'html') {
+                htmlToRun = codeContent;
+            } else if (language === 'javascript' || language === 'js') {
+                // Wrap JS in a basic HTML structure with an output area and error handling
+                htmlToRun = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>JS Runner</title><style>body{font-family:monospace;background-color:#f0f0f0;padding:15px;font-size:.9em;color:#333}h1{font-size:1.2em;color:#555;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:10px}pre{background-color:#fff;padding:10px;border:1px solid #ccc;border-radius:5px;white-space:pre-wrap;word-wrap:break-word;font-size:.95em;max-height:80vh;overflow-y:auto}.error{color:#D8000C;font-weight:700;background-color:#FFD2D2;padding:2px 4px;border-radius:3px}.log-entry{margin-bottom:4px}</style></head><body><h1>JavaScript Output:</h1><pre id="output"></pre><script>
+const outputElement=document.getElementById("output"),originalConsoleLog=console.log,originalConsoleError=console.error,logHistory=[];const formatArg=e=>{if(e instanceof Error)return\`Error: \${e.message}\n\${e.stack}\`;if("object"==typeof e&&null!==e)try{return JSON.stringify(e,null,2)}catch{return String(e)}return String(e)};console.log=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry">\${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleLog.apply(console,e)},console.error=(...e)=>{const o=e.map(formatArg).join(" ");logHistory.push(\`<div class="log-entry error">ERROR: \${o.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>\`),outputElement.innerHTML=logHistory.join(""),originalConsoleError.apply(console,e)},window.addEventListener("unhandledrejection",e=>{console.error("Unhandled Promise Rejection:",e.reason)}),window.addEventListener("error",e=>{console.error("Script Error:",e.message,"at",e.filename,":",e.lineno)});try{${codeContent}}catch(e){console.error("Execution Error:",e)}<\/script></body></html>`;
+            } else {
+                console.warn("Run action not supported for language:", language);
+                showToast(`Running code directly is not supported for ${language}.`, 'info');
+                return;
+            }
+            const newTab = window.open('about:blank', '_blank');
+            if (newTab) {
+                newTab.document.open();
+                newTab.document.write(htmlToRun);
+                newTab.document.close();
+                console.log("Code execution tab opened.");
+                showToast("Code running in a new tab!", 'success');
+            } else {
+                showToast("Could not open new tab. Please check if pop-ups are blocked.", 'error');
+            }
+        } catch (error) {
+            console.error("Error preparing or running code:", error);
+            showToast("An error occurred while trying to run the code.", 'error');
+        }
+    }
+
+    /** Switches the UI from the initial welcome view to the chat view. */
+    function switchToChatView() {
+        if (initialView) initialView.classList.add('hidden');
+        if (chatView) chatView.classList.remove('hidden');
+        // Ensure action buttons are visible in chat view
+        if (reasonButton) reasonButton.style.display = 'inline-flex';
+        if (createImageButton) createImageButton.style.display = 'inline-flex';
+        if (animateVideoButton) animateVideoButton.style.display = 'inline-flex';
+        if (personalityButton) personalityButton.style.display = 'inline-flex'; // NEW: Show personality button
+        if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none'; // Typically hidden unless used
+        updateModelNotification(DEFAULT_FAKE_MODEL); // Update model notification if any
+    }
+
+    /** Switches the UI from the chat view back to the initial welcome view. */
+    function switchToInitialView() {
+        if (initialView) initialView.classList.remove('hidden');
+        if (chatView) chatView.classList.add('hidden');
+        // Hide action buttons in initial view
+        if (reasonButton) reasonButton.style.display = 'none';
+        if (createImageButton) createImageButton.style.display = 'none';
+        if (animateVideoButton) animateVideoButton.style.display = 'none';
+        if (personalityButton) personalityButton.style.display = 'none'; // NEW: Hide personality button
+        if (reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
+        if (modelNotificationDiv) modelNotificationDiv.style.display = 'none';
+
+        // Reset chat state
+        currentChatId = null;
+        saveCurrentChatId();
+        if (chatMessagesContainer) chatMessagesContainer.innerHTML = ''; // Clear messages
+        updateActiveChatListItem(); // Update sidebar
+        if (modelSelector) modelSelector.value = loadSelectedModelPreference(); // Reset model selector
+
+        // Deactivate all special modes
+        deactivateReasonMode();
+        deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
+        removeSelectedImage(); // Clear any uploaded image
+    }
+
+    /** Renders the list of chats in the sidebar. */
+    function renderChatList() {
+        if (!chatListUl) return;
+        chatListUl.innerHTML = ''; // Clear existing list
+        // Sort chats by timestamp (newest first)
+        const sortedChatIds = Object.keys(chats).sort((a, b) => {
+            const timeA = parseInt(a.split('_')[1] || '0'); // Extract timestamp from ID
+            const timeB = parseInt(b.split('_')[1] || '0');
+            return timeB - timeA;
+        });
+
+        sortedChatIds.forEach(chatId => {
+            const chatData = chats[chatId];
+            if (!chatData) return; // Skip if chat data is missing
+
+            const li = document.createElement('li');
+            li.classList.add('chat-list-item');
+            li.dataset.chatId = chatId;
+            const titleText = chatData.title || `Chat ${chatId.substring(chatId.length - 5)}`; // Use title or part of ID
+            li.textContent = titleText;
+            li.title = titleText; // Tooltip
+            if (chatId === currentChatId) { li.classList.add('active'); } // Highlight active chat
+
+            // Add delete button to each chat item
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-chat-btn');
+            deleteBtn.innerHTML = '&times;'; // "x" symbol
+            deleteBtn.title = "Delete Chat";
+            deleteBtn.onclick = (event) => { event.stopPropagation(); handleDeleteChat(chatId); }; // Prevent li click
+            li.appendChild(deleteBtn);
+
+            li.addEventListener('click', () => { handleSelectChat(chatId); });
+            chatListUl.appendChild(li);
+        });
+    }
+
+    /** Updates the 'active' class on the currently selected chat item in the sidebar. */
+    function updateActiveChatListItem() {
+        if (!chatListUl) return;
+        const items = chatListUl.querySelectorAll('.chat-list-item');
+        items.forEach(item => {
+            item.classList.toggle('active', item.dataset.chatId === currentChatId);
+        });
+    }
+
+    /** Updates the model notification area (currently not used extensively). */
+    function updateModelNotification(selectedModelName) {
+        if (!modelNotificationDiv) return;
+        // Example: modelNotificationDiv.textContent = `Using ${selectedModelName}`;
+        modelNotificationDiv.style.display = 'none'; // Hidden by default
+    }
+
+    /** Deactivates the "Thinking" (Reason) mode. */
+    function deactivateReasonMode() {
+        isReasonModeActive = false;
+        updateActionButtonsState();
+    }
+
+    /** Deactivates the "Create Image" mode and resets placeholder if needed. */
+    function deactivateImageGenerationMode() {
+        isImageGenerationModeActive = false;
+        if(messageInput && messageInput.placeholder === "Enter image prompt...") {
+            messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
+        }
+        updateActionButtonsState();
+    }
+
+    /** Deactivates the "Animate Video" mode and resets placeholder if needed. */
+    function deactivateAnimateVideoMode() {
+        isAnimateVideoModeActive = false;
+        if(messageInput && messageInput.placeholder === "Enter animation prompt...") {
+            messageInput.placeholder = "Message Graxybot..."; // Reset placeholder
+        }
+        updateActionButtonsState();
+    }
+
+    /**
+     * Converts a File object to a base64 encoded string.
+     * @param {File} file - The file to convert.
+     * @returns {Promise<string>} A promise that resolves with the base64 string.
+     */
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const base64String = reader.result.split(',')[1]; // Get data part of Data URL
+                resolve(base64String);
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    /**
+     * Handles image selection from the file input.
+     * Validates file type and size, then converts to base64 and displays a preview.
+     * @param {Event} event - The file input change event.
+     */
+    async function handleImageSelection(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast("Please select a valid image file (JPEG, PNG, GIF, WebP).", 'error');
+            imageUploadInput.value = ''; // Reset file input
+            return;
+        }
+        // Validate file size
+        const maxSizeMB = 4; // Max 4MB
+        if (file.size > maxSizeMB * 1024 * 1024) {
+            showToast(`Image size exceeds ${maxSizeMB}MB limit.`, 'error');
+            imageUploadInput.value = ''; // Reset file input
+            return;
+        }
+
+        try {
+            selectedImageData = await fileToBase64(file); // Convert to base64
+            selectedImageMimeType = file.type;
+            if (selectedImagePreviewUrl) { URL.revokeObjectURL(selectedImagePreviewUrl); } // Revoke old preview URL
+            selectedImagePreviewUrl = URL.createObjectURL(file); // Create new preview URL
+            displayImagePreview(selectedImagePreviewUrl);
+        } catch (error) {
+            console.error("Error processing image:", error);
+            showToast("Error processing image. Please try again.", 'error');
+            removeSelectedImage(); // Clear selection on error
+        }
+    }
+
+    /** Displays the image preview in the UI. */
+    function displayImagePreview(imageUrl) {
+        if (imagePreview && imagePreviewArea) {
+            imagePreview.src = imageUrl;
+            imagePreviewArea.style.display = 'inline-block'; // Show preview area
+        }
+    }
+
+    /** Removes the selected image, clears preview, and resets related state. */
+    function removeSelectedImage() {
+        selectedImageData = null;
+        selectedImageMimeType = null;
+        if (selectedImagePreviewUrl) { URL.revokeObjectURL(selectedImagePreviewUrl); selectedImagePreviewUrl = null; }
+        if (imagePreviewArea) { imagePreviewArea.style.display = 'none'; }
+        if (imagePreview) { imagePreview.src = '#'; } // Clear image src
+        if (imageUploadInput) { imageUploadInput.value = ''; } // Reset file input
+        console.log("Selected image removed.");
+    }
+
+    /**
+     * Initializes the AI for the current chat.
+     * Loads history and displays messages.
+     */
+    async function initializeAICurrentChat() {
+         if (isInitializing) { console.warn("AI Initialization already in progress."); return; }
+        isInitializing = true;
+        console.log(`Attempting to initialize AI for chat: ${currentChatId}`);
+
+        // Show chat loader
+        if (chatLoader) chatLoader.style.display = 'flex';
+        if (chatMessagesContainer) chatMessagesContainer.innerHTML = ''; // Clear previous messages
+        if (chatLoader && !chatMessagesContainer.contains(chatLoader)) {
+             chatMessagesContainer.appendChild(chatLoader); // Add loader to message area
+        }
+
+        // If no valid chat ID, switch to initial view
+        if (!currentChatId || !chats[currentChatId]) {
+            console.log("No active chat selected or chat data missing. Switching to initial view.");
+            switchToInitialView();
+            isInitializing = false;
+            if (chatLoader) chatLoader.style.display = 'none';
+            return;
+        }
+
+        const chatData = chats[currentChatId];
+        const fakeModelNameToUse = DEFAULT_FAKE_MODEL; // Currently only one model choice
+        const historyToLoad = chatData.history || [];
+
+        console.log(`Initializing AI for chat ${currentChatId} - Model: ${fakeModelNameToUse}`);
+
+        modelSelector.value = fakeModelNameToUse; // Set dropdown
+        updateModelNotification(fakeModelNameToUse);
+
+        // Disable inputs during initialization
+        if(messageInput) messageInput.disabled = true;
+        if(sendButton) sendButton.disabled = true;
+        if(micButton) micButton.disabled = true; // Disable mic button
+        deactivateReasonMode();
+        deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
+        removeSelectedImage();
+
+        try {
+            // Hide loader and remove it from messages
+            if (chatLoader) chatLoader.style.display = 'none';
+            if (chatMessagesContainer.contains(chatLoader)) {
+                 chatMessagesContainer.removeChild(chatLoader);
+            }
+
+            // Load and display chat history
+            if (historyToLoad.length > 0) {
+                historyToLoad.forEach(message => {
+                    if (message.generatedMediaSrc) { // If message has generated media
+                        displayMessage(message.parts, message.role, false, null, message.generatedMediaSrc, message.mediaType === 'video' ? 'fa-film' : 'fa-palette', message.mediaPrompt, message.mediaType);
+                    } else { // Regular text or user message with image preview
+                        displayMessage(message.parts, message.role, false, message.imagePreview || null);
+                    }
+                });
+            } else { // If no history, show welcome message
+                 console.log("Chat history empty, displaying new chat welcome message.");
+                 displayNewChatWelcome(chatMessagesContainer);
+            }
+
+            // Scroll to bottom after loading history
+            setTimeout(() => { if(chatMessagesContainer) chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; }, 100);
+
+            // Re-enable inputs
+            if(messageInput) messageInput.disabled = false;
+            if(sendButton) sendButton.disabled = false;
+            if(micButton) micButton.disabled = false; // Re-enable mic button
+            if(messageInput) messageInput.focus(); // Focus on input field
+            updateActionButtonsState();
+
+            console.log(`AI Initialized successfully for chat ${currentChatId}. Ready for interaction.`);
+
+        } catch (error) { // Handle initialization errors
+            console.error(`Error initializing AI for chat ${currentChatId}:`, error);
+            if (chatLoader) chatLoader.style.display = 'none'; // Hide loader on error
+            if (chatMessagesContainer.contains(chatLoader)) {
+                 chatMessagesContainer.removeChild(chatLoader);
+            }
+            displayMessage([{text: `AI Initialization Error: ${error.message}. Please check Render environment variables and console for details.`}], 'bot', true);
+            if(sendButton) sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i>'; // Indicate error on send button
+            // Disable all action buttons and inputs on critical error
+            if (reasonButton) reasonButton.disabled = true;
+            if (createImageButton) createImageButton.disabled = true;
+            if (animateVideoButton) animateVideoButton.disabled = true;
+            if (personalityButton) personalityButton.disabled = true; // NEW: Disable personality button
+            if(messageInput) messageInput.disabled = true;
+            if(sendButton) sendButton.disabled = true;
+            if(micButton) micButton.disabled = true; // Disable mic button
+        } finally {
+            isInitializing = false; // Reset initialization flag
+        }
+    }
+
+    /**
+     * Triggers image generation using the Stable Diffusion API.
+     * @param {string} promptText - The prompt for image generation.
+     */
+    async function triggerStableDiffusionGeneration(promptText) {
+        if (currentThinkingIndicatorElement) { // Prevent concurrent operations
+            console.log("Image generation request ignored, another operation is in progress.");
+            return;
+        }
+        console.log(`Image generation triggered for prompt: "${promptText}"`);
+
+        // Clear welcome message if present
+        const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
+        if (welcomeContainer) chatMessagesContainer.innerHTML = '';
+
+        // Create a new chat if none is active
+        if (!currentChatId) {
+             handleNewChat();
+             await new Promise(resolve => setTimeout(resolve, 0)); // Ensure new chat is set up before proceeding
+        }
+
+        showThinkingIndicator('image', `Generating: "${promptText.substring(0,50)}..."`); // Show indicator
+
+        // Payload for Stable Diffusion API
+        const payload = {
+            prompt: promptText,
+            negative_prompt: "blurry, low quality, ugly, deformed, watermark, text, signature, words, letters, writing",
+            steps: 25,
+            cfg_scale: 7.0,
+            width: 512,
+            height: 512,
+            seed: -1, // Random seed
+        };
+
+        // Construct API endpoint URL
+        let apiEndpoint = DEFAULT_STABLE_DIFFUSION_API_URL.trim();
+        if (apiEndpoint && !apiEndpoint.endsWith('/sdapi/v1/txt2img') && !apiEndpoint.endsWith('/sdapi/v1/img2img')) {
+            if (!apiEndpoint.endsWith('/')) {
+                apiEndpoint += '/';
+            }
+            apiEndpoint += 'sdapi/v1/txt2img'; // Default to txt2img
+        }
+
+        try {
+            console.log("Sending request to Stable Diffusion API:", apiEndpoint);
+            console.log("Payload:", JSON.stringify(payload, null, 2));
+
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            removeThinkingIndicator(); // Remove indicator after fetch attempt
+
+            if (!response.ok) { // Handle API errors
+                let errorData;
+                try { errorData = await response.json(); } catch (e) { /* ignore if response not json */ }
+                const errorDetail = errorData?.detail || errorData?.error || JSON.stringify(errorData) || response.statusText;
+                throw new Error(`API returned error: ${response.status} - ${errorDetail}`);
+            }
+
+            const data = await response.json();
+            console.log("Stable Diffusion API Success Response:", data);
+
+            if (data.images && data.images.length > 0) { // Process successful response
+                const base64Image = data.images[0];
+                const imageSrc = `data:image/png;base64,${base64Image}`;
+                // Display generated image and add to history
+                displayMessage([{text: promptText}], 'bot', false, null, imageSrc, 'fa-palette', promptText, 'image');
+                addMessageToCurrentChatHistory('model', [{text: promptText}], null, imageSrc, promptText, 'image');
+                showToast("Image generated successfully!", 'success');
+            } else {
+                throw new Error('No images found in the API response.');
+            }
+
+        } catch (error) { // Handle fetch or processing errors
+            console.error('Error generating image with Stable Diffusion:', error);
+            removeThinkingIndicator();
+            displayMessage([{text: `Stable Diffusion Error: ${error.message}. Check console.`}], 'bot', true);
+            addMessageToCurrentChatHistory('model', [{ text: `[Stable Diffusion Error: ${error.message}]` }]);
+            showToast(`Image generation failed: ${error.message}`, 'error');
+        } finally { // Cleanup and re-enable UI
+            deactivateImageGenerationMode();
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            if (messageInput && !messageInput.disabled) messageInput.focus();
+        }
+    }
+
+    /**
+     * Triggers video animation generation using the AnimateDiff backend.
+     * @param {string} promptText - The prompt for animation.
+     */
+    async function triggerAnimateDiffGeneration(promptText) {
+        if (currentThinkingIndicatorElement) {
+            console.log("Animation generation request ignored, another operation is in progress.");
+            return;
+        }
+        // Validate AnimateDiff API URL configuration
+        if (!ANIMATEDIFF_API_URL || ANIMATEDIFF_API_URL === "YOUR_CLOUDFLARED_LINK_FOR_ANIMATION/generate_video" || ANIMATEDIFF_API_URL.trim() === "/generate_video") {
+            console.error("AnimateDiff API URL is not configured correctly. Current value:", ANIMATEDIFF_API_URL);
+            displayMessage([{text: "Animation service is not configured. Please check the setup."}], 'bot', true);
+            deactivateAnimateVideoMode();
+            showToast("Animation service not configured.", 'error');
+            return;
+        }
+
+        console.log(`Animation generation triggered for prompt: "${promptText}"`);
+
+        const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
+        if (welcomeContainer) chatMessagesContainer.innerHTML = '';
+
+        if (!currentChatId) {
+             handleNewChat();
+             await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        showThinkingIndicator('video', `Animating: "${promptText.substring(0,50)}..."`);
+
+        const payload = { prompt: promptText }; // Payload for your animation backend
+
+        try {
+            console.log("Sending request to AnimateDiff API:", ANIMATEDIFF_API_URL);
+            console.log("Payload:", JSON.stringify(payload));
+
+            const response = await fetch(ANIMATEDIFF_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            removeThinkingIndicator();
+
+            if (!response.ok) {
+                let errorData;
+                try { errorData = await response.json(); } catch (e) { /* ignore */ }
+                const errorDetail = errorData?.error || JSON.stringify(errorData) || response.statusText;
+                throw new Error(`API returned error: ${response.status} - ${errorDetail}`);
+            }
+
+            const data = await response.json();
+            console.log("AnimateDiff API Success Response:", data);
+
+            if (data.success && data.videoBase64) { // Expecting {success: true, videoBase64: "..."}
+                const videoSrc = `data:image/gif;base64,${data.videoBase64}`; // GIFs are displayed with <img>
+                displayMessage([{text: promptText}], 'bot', false, null, videoSrc, 'fa-film', promptText, 'video');
+                addMessageToCurrentChatHistory('model', [{text: promptText}], null, videoSrc, promptText, 'video');
+                showToast("Animation generated successfully!", 'success');
+            } else {
+                throw new Error(data.error || 'No video found in the API response or generation failed.');
+            }
+
+        } catch (error) {
+            console.error('Error generating animation with AnimateDiff:', error);
+            removeThinkingIndicator();
+            displayMessage([{text: `Animation Error: ${error.message}. Check console.`}], 'bot', true);
+            addMessageToCurrentChatHistory('model', [{ text: `[Animation Error: ${error.message}]` }]);
+            showToast(`Animation generation failed: ${error.message}`, 'error');
+        } finally {
+            deactivateAnimateVideoMode();
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            if (messageInput && !messageInput.disabled) messageInput.focus();
+        }
+    }
+
+    /**
+     * Sends a message to the OpenAI API via the backend proxy and streams the response.
+     * @param {Array<object>} messages - Array of message objects in OpenAI chat format.
+     * @param {string} modelName - The specific model to use for this API call.
+     * @returns {Promise<string>} A promise that resolves with the full response text.
+     */
+    async function sendMessageToOpenAI(messages, modelName) {
+        let fullResponseText = "";
+        let botMessageElement = null, botMessageBubble = null, botMessageParagraph = null;
+
+        try {
+            // Create an empty bot message element to stream into
+            botMessageElement = displayMessage([], 'bot');
+            if (botMessageElement) {
+                botMessageBubble = botMessageElement.querySelector('.message-bubble');
+                botMessageParagraph = botMessageBubble?.querySelector('p[data-stream-target="true"]');
+            }
+            if (!botMessageParagraph) throw new Error("Target paragraph for streaming not found in DOM.");
+
+            // Send request to your backend proxy
+            const response = await fetch(OPENAI_PROXY_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: modelName, // Pass the selected model name to the proxy
+                    messages: messages // Send the messages array to the proxy
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Backend Proxy error: ${errorData.error || response.statusText}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                // The proxy will stream raw chunks from OpenAI, so parse them as such
+                chunk.split('\n').forEach(line => {
+                    if (line.startsWith('data: ')) {
+                        const data = line.substring(6);
+                        if (data === '[DONE]') return;
+                        try {
+                            const json = JSON.parse(data);
+                            const content = json.choices[0]?.delta?.content || '';
+                            if (content) {
+                                fullResponseText += content;
+                                botMessageParagraph.innerHTML += content.replace(/\n/g, '<br>'); // Append chunk
+                                chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' }); // Scroll with content
+                            }
+                        } catch (e) {
+                            console.error("Error parsing OpenAI stream chunk from proxy:", e, data);
+                        }
+                    }
+                });
+            }
+
+            // After stream, re-process the full text for code blocks
+            if (fullResponseText && botMessageParagraph) {
+                processAndAppendText(fullResponseText, botMessageParagraph);
+            }
+            return fullResponseText;
+
+        } catch (error) {
+            console.error("OpenAI Streaming Error (via proxy):", error);
+            // If an empty message element was created but not filled, remove it
+            if (botMessageElement && botMessageElement.parentNode && !fullResponseText.trim()) {
+                botMessageElement.parentNode.removeChild(botMessageElement);
+            }
+            throw error; // Re-throw to be caught by sendMessageInternal
+        }
+    }
+
+
+    /**
+     * Internal function to handle sending a message.
+     * Determines which mode is active (Animate, Image, Reason, or Standard) and calls the appropriate function.
+     * @param {string} messageText - The text from the input field.
+     * @param {boolean} isInitialMessage - True if sent from the initial welcome screen input.
+     */
+    async function sendMessageInternal(messageText, isInitialMessage = false) {
+        // Construct user message payload parts
+        let userMessagePayloadParts = [];
+        let localSelectedImageData = selectedImageData; // Use a local copy for this send operation
+        let localSelectedImageMimeType = selectedImageMimeType;
+        let localSelectedImagePreviewUrl = selectedImagePreviewUrl;
+
+        if (messageText) {
+            userMessagePayloadParts.push({ text: messageText });
+        }
+        // For OpenAI text models, image data is not directly sent as inline_data.
+        // If image is selected, it's primarily for user's visual context.
+        // If a vision model (like gpt-4-vision-preview) were used, this would be different.
+        // For now, we'll just display the image for the user but not send it to the text-only OpenAI model.
+        // The image generation mode uses the text prompt, not the uploaded image.
+
+        // Prevent sending if an operation is in progress or if input is invalid for active mode
+        if ((!messageText && !localSelectedImageData && !isImageGenerationModeActive && !isAnimateVideoModeActive) ||
+            (currentThinkingIndicatorElement && !(isImageGenerationModeActive && messageText) && !(isAnimateVideoModeActive && messageText))
+           ) {
+            if (isImageGenerationModeActive && !messageText && !localSelectedImageData) {
+                showToast("Image generation mode is active. Please type a prompt or attach an image to describe.", 'info');
+                return;
+            }
+            if (isAnimateVideoModeActive && !messageText) {
+                showToast("Animation mode is active. Please type a prompt.", 'info');
+                return;
+            }
+            if (currentThinkingIndicatorElement) {
+                 console.log("Send prevented: thinking/generation indicator active.");
+                return;
+            }
+            return;
+        }
+
+        // If user is sending an animation
+        if (isAnimateVideoModeActive && messageText) {
+            displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
+            addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
+            if (messageInput) messageInput.value = '';
+            if (initialMessageInput) initialMessageInput.value = '';
+            removeSelectedImage();
+
+            await triggerAnimateDiffGeneration(messageText);
+            return; // Exit after handling animation
+        } else if (isImageGenerationModeActive) {
+            if (messageText) { // Image generation needs a text prompt
+                displayMessage(userMessagePayloadParts, 'user', false, localSelectedImagePreviewUrl);
+                addMessageToCurrentChatHistory('user', userMessagePayloadParts, localSelectedImagePreviewUrl);
+                if (messageInput) messageInput.value = '';
+                if (initialMessageInput) initialMessageInput.value = '';
+                removeSelectedImage(); // Image generation doesn't use uploaded image as direct input (yet)
+
+                await triggerStableDiffusionGeneration(messageText); // Call image backend
+                return; // Exit after handling image generation
+            } else {
+                showToast("Image generation mode is active. Please type a prompt.", 'info');
+                return;
+            }
+        }
+
+        // --- Standard Chat or Reason Mode Logic ---
+
+        let chatIdForMessage = currentChatId;
+        const welcomeContainer = chatMessagesContainer?.querySelector('.new-chat-welcome-container');
+        if (welcomeContainer) chatMessagesContainer.innerHTML = ''; // Clear welcome message
+
+        // If no active chat, create a new one
+        if (!chatIdForMessage) {
+            console.log(`No active chat. Creating new chat...`);
+            const newChatId = generateChatId();
+            chats[newChatId] = { history: [], model: DEFAULT_FAKE_MODEL, title: "New Chat" };
+            currentChatId = newChatId; chatIdForMessage = newChatId;
+            console.log(`Created and activated new chat: ${currentChatId}`);
+            saveCurrentChatId(); saveAllChats(); renderChatList(); updateActiveChatListItem();
+            // Deactivate modes for a new chat
+            deactivateReasonMode();
+            deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
+        }
+
+        // Display user's message and add to history
+        let partsForDisplayAndHistory = userMessagePayloadParts.length > 0 ? userMessagePayloadParts : (localSelectedImagePreviewUrl ? [{ text: "[Image Sent]" }] : [{ text: "" }]);
+        displayMessage(partsForDisplayAndHistory, 'user', false, localSelectedImagePreviewUrl);
+        addMessageToCurrentChatHistory('user', partsForDisplayAndHistory, localSelectedImagePreviewUrl);
+
+        removeSelectedImage(); // Clear uploaded image after sending
+
+        if (!chatIdForMessage || !chats[chatIdForMessage]) { console.error("Chat ID/data invalid after new chat creation or selection."); return; }
+
+        // Disable inputs while processing
+        if (messageInput) messageInput.disabled = true;
+        if (sendButton) sendButton.disabled = true;
+        if (initialSendButton) initialSendButton.disabled = true;
+        if (micButton) micButton.disabled = true; // Disable mic button
+        if (initialMicButton) initialMicButton.disabled = true; // Disable initial mic button
+        updateActionButtonsState();
+        if (imageUploadButton) imageUploadButton.disabled = true;
+
+        let modelToUse;
+        let systemPromptMode;
+
+        if (isReasonModeActive) { // Thinking mode takes precedence
+            modelToUse = O4_MINI_MODEL;
+            systemPromptMode = 'thinking';
+            console.log(`Thinking mode active. Using OpenAI model: ${modelToUse}.`);
+            showThinkingIndicator('reason'); // ONLY show thinking indicator here
+        } else if (messageText.toLowerCase().includes("code")) { // Check for "code" keyword
+            modelToUse = GPT_4_1_MODEL;
+            systemPromptMode = 'standard';
+            console.log(`"Code" keyword detected. Using OpenAI model: ${modelToUse}.`);
+            // No specific "thinking" indicator for code, just general processing (buttons disabled)
+        } else { // Default
+            modelToUse = OPENAI_MODEL;
+            systemPromptMode = 'standard';
+            console.log(`Standard Graxybot call. Using OpenAI model: ${modelToUse}.`);
+            // No specific "thinking" indicator for default, just general processing
+        }
+
+        const systemPrompt = getSystemPrompt(systemPromptMode, modelToUse, userPersonality); // NEW: Pass userPersonality
+
+        // Prepare history for OpenAI API (last 10 user/model turns)
+        const mainHistory = chats[chatIdForMessage]?.history || [];
+        const messagesForOpenAI = [
+            { role: "system", content: systemPrompt }
+        ];
+
+        mainHistory
+            .slice(-10) // Take last 10 messages
+            .filter(msg => (msg.role === 'user' || msg.role === 'model') && Array.isArray(msg.parts) && msg.parts.length > 0)
+            .forEach(msg => {
+                const content = msg.parts.map(part => part.text).join(''); // Concatenate text parts
+                if (content) {
+                    // Crucial fix: Map 'model' role to 'assistant' for OpenAI API
+                    messagesForOpenAI.push({ role: msg.role === 'model' ? 'assistant' : msg.role, content: content });
+                }
+            });
+
+        // Add the current user message
+        const currentUserMessageContent = userMessagePayloadParts.map(part => part.text).join('');
+        if (currentUserMessageContent) {
+            messagesForOpenAI.push({ role: "user", content: currentUserMessageContent });
+        } else if (localSelectedImageData) {
+            // If only an image was uploaded, send a generic message about it to the model
+            messagesForOpenAI.push({ role: "user", content: "User has uploaded an image." });
+        } else {
+            console.warn("No content for OpenAI. Aborting send.");
+            removeThinkingIndicator();
+            // Re-enable inputs
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            return;
+        }
+
+        try {
+            const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse); // Pass modelToUse
+            addMessageToCurrentChatHistory('model', [{ text: aiResponse }]); // Add complete response to history
+
+        } catch (error) {
+            console.error("OpenAI Error:", error);
+            displayMessage([{text: `Graxybot Error: ${error.message}`}], 'bot', true);
+            addMessageToCurrentChatHistory('model', [{ text: `[Error: ${error.message || 'Unknown OpenAI error'}]` }]);
+            showToast(`Graxybot error: ${error.message}`, 'error');
+        } finally {
+            // Cleanup and re-enable UI after processing
+            deactivateReasonMode(); // Ensure reason mode is off
+            removeThinkingIndicator(); // This will remove any active indicator (reason, image, video)
+            if (messageInput) messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            if (initialSendButton) initialSendButton.disabled = false;
+            if (imageUploadButton) imageUploadButton.disabled = false;
+            if (micButton) micButton.disabled = false; // Re-enable mic button
+            if (initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+            updateActionButtonsState();
+            if (messageInput && !messageInput.disabled) messageInput.focus(); // Focus input
+        }
+    }
+
+    /**
+     * Public function called when the main send button is clicked or Enter is pressed.
+     */
+    function sendMessage() {
+         // Prevent sending if an operation is in progress, unless it's for an active generation mode with text
+         if (isInitializing || currentThinkingIndicatorElement || isListening) { // Added isListening
+             if ((isImageGenerationModeActive && messageInput.value.trim()) || (isAnimateVideoModeActive && messageInput.value.trim())) {
+                 // Allow sending if in image/animate mode and there's text (for prompt)
+             } else if (currentThinkingIndicatorElement) {
+                console.log("Send prevented: thinking/generation indicator active.");
+                return;
+             } else if (isInitializing) {
+                console.log("Send prevented: AI is initializing.");
+                return;
+             } else if (isListening) { // If listening, stop it and then send
+                stopSpeechRecognition();
+                // The recognized text will be put into the input field, and then the user can manually send.
+                // Or, if speech recognition auto-sends, this branch won't be hit.
+                return;
+             }
+         }
+
+        const messageText = messageInput.value.trim();
+        const imageSelected = !!selectedImageData;
+
+        // Proceed if there's text, an image, or a generation mode is active (which might only need a prompt)
+        if (messageText || imageSelected || isImageGenerationModeActive || isAnimateVideoModeActive) {
+            // Clear input field unless it's needed for an active generation mode that doesn't use image upload
+            if (!isImageGenerationModeActive && !isAnimateVideoModeActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !imageSelected) ) {
+                 if (!((isImageGenerationModeActive || isAnimateVideoModeActive) && (messageText || imageSelected))) {
+                    messageInput.value = ''; // Clear input
+                 }
+            }
+            sendMessageInternal(messageText, false); // Call internal send function
+        }
+    }
+
+    /**
+     * Public function called when the send button on the initial screen is clicked or Enter is pressed.
+     */
+    async function handleInitialSendMessage() {
+         // Similar prevention logic as sendMessage
+         if (isInitializing || currentThinkingIndicatorElement || isListening) { // Added isListening
+             if ((isImageGenerationModeActive && initialMessageInput.value.trim()) || (isAnimateVideoModeActive && initialMessageInput.value.trim())) {
+                 // Allow sending
+             } else if (currentThinkingIndicatorElement) {
+                console.log("Send prevented: thinking/generation indicator active.");
+                return;
+             } else if (isInitializing) {
+                console.log("Send prevented: AI is initializing.");
+                return;
+             } else if (isListening) { // If listening, stop it and then send
+                stopSpeechRecognition();
+                return;
+             }
+         }
+        const messageText = initialMessageInput.value.trim();
+        // Proceed if there's text or a generation mode is active (initial screen doesn't have image upload)
+        if (!messageText && !isImageGenerationModeActive && !isAnimateVideoModeActive && !selectedImageData) return; // No text, no image, no active mode
+
+        // Clear input field (similar logic to sendMessage)
+        if (!isImageGenerationModeActive && !isAnimateVideoModeActive || ((isImageGenerationModeActive || isAnimateVideoModeActive) && !messageText && !selectedImageData)) {
+            if (!((isImageGenerationModeActive || isAnimateVideoModeActive) && (messageText || selectedImageData))) {
+                initialMessageInput.value = '';
+            }
+        }
+        switchToChatView(); // Switch to main chat view first
+        await sendMessageInternal(messageText, true); // Then send message
+    }
+
+    // --- Speech-to-Text Functions ---
+
+    /** Initializes the SpeechRecognition object. */
+    function initializeSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showToast("Speech recognition not supported in this browser.", 'error', 5000);
+            console.warn("SpeechRecognition API not supported.");
+            if (micButton) micButton.style.display = 'none'; // Hide button if not supported
+            if (initialMicButton) initialMicButton.style.display = 'none';
+            return null;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false; // Listen for a single utterance
+        recognition.interimResults = true; // Get interim results
+        recognition.lang = 'en-US'; // Set language
+
+        recognition.onstart = () => {
+            isListening = true;
+            updateActionButtonsState();
+            showToast("Listening...", 'info', 2000);
+            console.log('Speech recognition started.');
+            // Clear input field when starting to listen
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.value = ''; // Clear input field
+                activeInput.placeholder = "Listening...";
+            }
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            // Update the relevant input field based on active view
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.value = finalTranscript || interimTranscript;
+                // Keep cursor at the end
+                activeInput.selectionStart = activeInput.selectionEnd = activeInput.value.length;
+            }
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            updateActionButtonsState();
+            console.log('Speech recognition ended.');
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.placeholder = "Message Graxybot..."; // Reset placeholder
+            }
+            // Auto-send if there's content after speech ends
+            if (activeInput && activeInput.value.trim().length > 0) {
+                if (chatView.classList.contains('hidden')) { // Initial view
+                    handleInitialSendMessage();
+                } else { // Chat view
+                    sendMessage();
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            isListening = false;
+            updateActionButtonsState();
+            console.error('Speech recognition error:', event.error);
+            let errorMessage = "Speech recognition error.";
+            if (event.error === 'not-allowed') {
+                errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
+            } else if (event.error === 'no-speech') {
+                errorMessage = "No speech detected. Please try again.";
+            } else if (event.error === 'audio-capture') {
+                errorMessage = "Could not access microphone. Ensure it's connected and not in use.";
+            }
+            showToast(errorMessage, 'error', 5000);
+            const activeInput = chatView.classList.contains('hidden') ? initialMessageInput : messageInput;
+            if (activeInput) {
+                activeInput.placeholder = "Message Graxybot...";
+            }
+        };
+
+        return recognition;
+    }
+
+    /** Toggles speech recognition on/off. */
+    function toggleSpeechRecognition() {
+        if (!speechRecognition) {
+            speechRecognition = initializeSpeechRecognition();
+            if (!speechRecognition) return; // If API not supported, stop here
+        }
+
+        if (isListening) {
+            speechRecognition.stop();
+        } else {
+            // Stop any ongoing operations before starting speech recognition
+            if (currentThinkingIndicatorElement) {
+                showToast("Cannot start speech input while AI is processing.", 'info');
+                return;
+            }
+            if (isImageGenerationModeActive) {
+                showToast("Cannot start speech input in image generation mode.", 'info');
+                return;
+            }
+            if (isAnimateVideoModeActive) {
+                showToast("Cannot start speech input in video animation mode.", 'info');
+                return;
+            }
+            if (isReasonModeActive) {
+                showToast("Cannot start speech input in thinking mode.", 'info');
+                return;
+            }
+
+            speechRecognition.start();
+        }
+    }
+
+    /** Stops speech recognition explicitly. */
+    function stopSpeechRecognition() {
+        if (speechRecognition && isListening) {
+            speechRecognition.stop();
+        }
+    }
+
+
+    // --- Event Handlers ---
+
+    /** Handles selection of a chat from the sidebar. */
+    function handleSelectChat(chatId) {
+         if (chatId === currentChatId || isInitializing || currentThinkingIndicatorElement || isListening) { return; } // No change or busy
+        console.log(`Selecting chat: ${chatId}`);
+        currentChatId = chatId;
+        saveCurrentChatId();
+        updateActiveChatListItem();
+        switchToChatView(); // Ensure chat view is active
+        // Deactivate modes and initialize AI for the selected chat
+        deactivateReasonMode();
+        deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
+        removeSelectedImage();
+        initializeAICurrentChat();
+    }
+
+    /** Displays the welcome message and suggested prompts in a new chat. */
+    function displayNewChatWelcome(container) {
+        if (!container) {
+            console.error("Message container not found for welcome message.");
+            return;
+        }
+        console.log("Displaying new chat welcome message.");
+        container.innerHTML = ''; // Clear container
+
+        const welcomeContainer = document.createElement('div');
+        welcomeContainer.className = 'new-chat-welcome-container';
+
+        const title = document.createElement('h1');
+        title.className = 'welcome-title';
+        title.textContent = 'Graxybot'; // Or your bot's name
+        welcomeContainer.appendChild(title);
+
+        const promptsGrid = document.createElement('div');
+        promptsGrid.className = 'suggested-prompts-grid';
+
+        // Time-based greeting
+        const hour = new Date().getHours();
+        let timeBasedGreeting = "How can I help you today?";
+        if (hour < 12) timeBasedGreeting = "How's your morning? Coffee and Graxybot time?";
+        else if (hour < 18) timeBasedGreeting = "Good afternoon! What can I help you achieve?";
+        else timeBasedGreeting = "Good evening! Ready to wrap up the day or start something new?";
+
+        const suggestions = [
+            timeBasedGreeting,
+            "Explain quantum computing in simple terms.",
+            "Write a short story about a robot who dreams.",
+            "Click 'Create Image' then type your prompt!",
+            "Try the new 'Animate' button for a GIF!",
+            "Click the microphone to talk to me!",
+            "Click 'Personality' to customize me!", // NEW: Personality suggestion
+        ];
+
+        suggestions.forEach(text => {
+            const btn = document.createElement('button');
+            btn.className = 'prompt-button';
+            btn.textContent = text;
+            btn.onclick = () => { // Set input field value on click
+                if (messageInput) {
+                    messageInput.value = text;
+                    messageInput.focus();
+                }
+            };
+            promptsGrid.appendChild(btn);
+        });
+
+        welcomeContainer.appendChild(promptsGrid);
+        container.appendChild(welcomeContainer);
+    }
+
+    /** Handles the "New Chat" button click. */
+    function handleNewChat() {
+        console.log("New chat requested via button.");
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return; // Prevent if busy
+
+        currentChatId = null; // No active chat ID for a new chat yet
+        saveCurrentChatId(); // Clear stored ID
+        switchToChatView(); // Ensure chat view is active
+        updateActiveChatListItem(); // Update sidebar (no item will be active)
+        displayNewChatWelcome(chatMessagesContainer); // Show welcome screen in message area
+
+        // Reset input field and buttons
+        if(messageInput) {
+            messageInput.value = '';
+            messageInput.disabled = false;
+            messageInput.placeholder = "Message Graxybot...";
+        }
+        if(sendButton) sendButton.disabled = false;
+        if(micButton) micButton.disabled = false; // Re-enable mic button
+        if(initialMicButton) initialMicButton.disabled = false; // Re-enable initial mic button
+        const preferredModel = DEFAULT_FAKE_MODEL; // Reset to default model
+        if(modelSelector) modelSelector.value = preferredModel;
+        updateModelNotification(preferredModel);
+
+        // Deactivate all special modes
+        deactivateReasonMode();
+        deactivateImageGenerationMode();
+        deactivateAnimateVideoMode();
+        removeSelectedImage();
+        if(messageInput) messageInput.focus(); // Focus on input
+    }
+
+    /** Handles deletion of a chat. */
+    function handleDeleteChat(chatIdToDelete) {
+        if (!chats[chatIdToDelete] || isInitializing || currentThinkingIndicatorElement || isListening) return; // Invalid ID or busy
+        const chatTitle = chats[chatIdToDelete].title || `Chat ${chatIdToDelete.substring(chatIdToDelete.length - 5)}`;
+        if (!confirm(`Are you sure you want to delete the chat "${chatTitle}"?`)) { return; } // Confirm deletion
+
+        console.log(`Deleting chat: ${chatIdToDelete}`);
+        const wasActive = (currentChatId === chatIdToDelete);
+        if (wasActive) { removeThinkingIndicator(); } // Clear indicator if active chat is deleted
+
+        delete chats[chatIdToDelete]; // Remove from chats object
+        saveAllChats(); // Update localStorage
+
+        if (wasActive) { // If active chat was deleted, start a new chat
+            handleNewChat();
+        }
+        renderChatList(); // Re-render sidebar
+    }
+
+    /** Handles changes to the model selector dropdown (currently limited functionality). */
+    function handleModelChange(event) {
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return; // Prevent if busy
+        const selectedModel = event.target.value;
+        console.log(`Model selected via UI: ${selectedModel}`);
+        saveSelectedModelPreference(selectedModel); // Save preference
+        updateModelNotification(selectedModel); // Update UI notification
+
+        if (currentChatId && chats[currentChatId]) { // If a chat is active, re-initialize it
+            console.log(`Updating model for current chat ${currentChatId} to ${selectedModel}`);
+            chats[currentChatId].model = selectedModel; // Update model for the chat
+            delete chats[currentChatId].personality; // Remove old field
+            saveAllChats();
+            // Deactivate modes and re-initialize
+            deactivateReasonMode();
+            deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
+            initializeAICurrentChat();
+        } else if (!currentChatId && chatView && !chatView.classList.contains('hidden')) {
+            // If no chat active but in chat view, just deactivate modes
+            deactivateReasonMode();
+            deactivateImageGenerationMode();
+            deactivateAnimateVideoMode();
+        }
+    }
+
+    /** Handles the "Thinking" (Reason) button click. */
+    function handleReasonButtonClick() {
+        // Prevent if busy or other generation modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isImageGenerationModeActive || isAnimateVideoModeActive || isListening) return;
+        isReasonModeActive = !isReasonModeActive; // Toggle mode
+        if (isReasonModeActive) {
+            console.log(`Thinking mode (${O4_MINI_MODEL}) activated.`); // Changed console log
+             if(messageInput) messageInput.placeholder = `Thinking with ${O4_MINI_MODEL}...`; // Changed placeholder
+        } else {
+            console.log(`Thinking mode (${O4_MINI_MODEL}) deactivated.`); // Changed console log
+             if(messageInput) messageInput.placeholder = "Message Graxybot...";
+        }
+        updateActionButtonsState(); // Update button appearance
+    }
+
+    /** Handles the "Create Image" button click. */
+    function handleCreateImageButtonClick() {
+        // Prevent if busy or other modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isAnimateVideoModeActive || isListening) return;
+        isImageGenerationModeActive = !isImageGenerationModeActive; // Toggle mode
+        if (isImageGenerationModeActive) {
+            console.log("Image Generation Mode ACTIVATED. Next message will be used as prompt.");
+            if(messageInput) messageInput.placeholder = "Enter image prompt...";
+        } else {
+            console.log("Image Generation Mode DEACTIVATED.");
+            if(messageInput) messageInput.placeholder = "Message Graxybot...";
+        }
+        updateActionButtonsState();
+        if(messageInput) messageInput.focus(); // Focus input
+    }
+
+    /** Handles the "Animate Video" button click. */
+    function handleAnimateVideoButtonClick() {
+        // Prevent if busy or other modes are active
+        if (isInitializing || currentThinkingIndicatorElement || isReasonModeActive || isImageGenerationModeActive || isListening) return;
+        isAnimateVideoModeActive = !isAnimateVideoModeActive; // Toggle mode
+        if (isAnimateVideoModeActive) {
+            console.log("Animate Video Mode ACTIVATED. Next message will be used as prompt.");
+            if(messageInput) messageInput.placeholder = "Enter animation prompt...";
+        } else {
+            console.log("Animate Video Mode DEACTIVATED.");
+            if(messageInput) messageInput.placeholder = "Message Graxybot...";
+        }
+        updateActionButtonsState();
+        if(messageInput) messageInput.focus(); // Focus input
+    }
+
+    /** NEW: Handles the "Personality" button click to show the modal. */
+    function handlePersonalityButtonClick() {
+        if (isInitializing || currentThinkingIndicatorElement || isListening) return;
+        showPersonalityModal();
+    }
+
+    /** NEW: Shows the personality settings modal. */
+    function showPersonalityModal() {
+        if (personalityOverlay) {
+            // Populate current settings into the inputs
+            if (userNameInput) userNameInput.value = userPersonality.name || '';
+            if (responseStyleInput) responseStyleInput.value = userPersonality.responseStyle || '';
+            personalityOverlay.classList.add('visible');
+        }
+    }
+
+    /** NEW: Hides the personality settings modal. */
+    function hidePersonalityModal() {
+        if (personalityOverlay) {
+            personalityOverlay.classList.remove('visible');
+        }
+    }
+
+    /** NEW: Saves personality settings from the modal inputs. */
+    function handleSavePersonalitySettings() {
+        userPersonality.name = userNameInput.value.trim() || null;
+        userPersonality.responseStyle = responseStyleInput.value.trim() || null;
+        savePersonalitySettings();
+        hidePersonalityModal();
+    }
+
+
+    /** Toggles the visibility of the sidebar (for mobile). */
+    function toggleSidebar() {
+        if (sidebar) {
+            sidebar.classList.toggle('visible');
+        }
+    }
+
+    /** Shows the update/welcome popup. */
+    function showPopup() { if (popupOverlay) popupOverlay.classList.add('visible'); }
+    /** Hides the update/welcome popup. */
+    function hidePopup() { if (popupOverlay) popupOverlay.classList.remove('visible'); }
+
+
+    // --- Initialization Sequence ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM Loaded. Initializing Graxybot UI...");
+
+        // Get all necessary DOM elements
+        chatMessagesContainer = document.getElementById('chat-messages');
+        messageInput = document.getElementById('message-input');
+        sendButton = document.getElementById('send-button');
+        rateLimitMessageDiv = document.getElementById('rate-limit-message');
+        modelSelector = document.getElementById('model-selector');
+        initialView = document.getElementById('initial-view');
+        chatView = document.getElementById('chat-view');
+        initialMessageInput = document.getElementById('initial-message-input');
+        initialSendButton = document.getElementById('initial-send-button');
+        sidebar = document.querySelector('.sidebar');
+        newChatBtn = document.getElementById('new-chat-btn');
+        chatListUl = document.getElementById('chat-list');
+        reasonButton = document.getElementById('reason-button');
+        reasonUsageDisplay = document.getElementById('reason-usage-display');
+        createImageButton = document.getElementById('create-image-button');
+        animateVideoButton = document.getElementById('animate-video-button');
+        imageUploadButton = document.getElementById('image-upload-button');
+        imageUploadInput = document.getElementById('image-upload-input');
+        imagePreviewArea = document.getElementById('image-preview-area');
+        imagePreview = document.getElementById('image-preview');
+        removeImageButton = document.getElementById('remove-image-button');
+        modelNotificationDiv = document.getElementById('model-notification');
+        popupOverlay = document.getElementById('popupOverlay');
+        closePopupButton = document.getElementById('closePopupButton');
+        initialLoader = document.getElementById('initial-loader');
+        chatLoader = document.getElementById('chat-loader');
+        menuToggleBtn = document.getElementById('menu-toggle');
+        toastContainer = document.getElementById('toast-container');
+        // Speech-to-Text elements
+        micButton = document.getElementById('mic-button');
+        initialMicButton = document.getElementById('initial-mic-button');
+
+        // NEW: Get Personality DOM Elements
+        personalityButton = document.getElementById('personality-button');
+        personalityOverlay = document.getElementById('personality-overlay');
+        personalityModalContent = document.querySelector('.personality-modal-content');
+        userNameInput = document.getElementById('user-name-input');
+        responseStyleInput = document.getElementById('response-style-input');
+        savePersonalityBtn = document.getElementById('save-personality-btn');
+        closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+
+
+        // Check if all essential elements were found
+        const essentialElements = { chatMessagesContainer, messageInput, sendButton, modelSelector, initialView, chatView, initialMessageInput, initialSendButton, newChatBtn, chatListUl, reasonButton, createImageButton, animateVideoButton, imageUploadButton, popupOverlay, closePopupButton, initialLoader, chatLoader, menuToggleBtn, toastContainer, micButton, initialMicButton, personalityButton, personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn };
+        if (Object.values(essentialElements).some(el => !el)) {
+            console.error("Fatal Error: One or more essential UI elements not found. Check HTML IDs and classes.");
+            if(initialLoader) initialLoader.classList.add('hidden'); // Hide loader if error
+            document.body.innerHTML = "<p style='color: red; padding: 20px;'>Error: UI failed to load. Check console for missing element IDs.</p>";
+            return;
+        }
+        console.log("All essential DOM elements found.");
+
+        // Hide initial page loader immediately after essential elements are found
+        if(initialLoader) initialLoader.classList.add('hidden');
+        console.log("Initial loader hidden.");
+
+        // Load data from localStorage
+        chats = loadAllChats();
+        currentChatId = loadCurrentChatId();
+        const preferredModel = loadSelectedModelPreference();
+        if(modelSelector) modelSelector.value = preferredModel;
+        loadPersonalitySettings(); // NEW: Load personality settings on startup
+
+        // Set initial UI states
+        updateActionButtonsState();
+        if(reasonButton) reasonButton.style.display = 'none'; // Hide buttons initially if in initial view
+        if(createImageButton) createImageButton.style.display = 'none';
+        if(animateVideoButton) animateVideoButton.style.display = 'none';
+        if(personalityButton) personalityButton.style.display = 'none'; // NEW: Hide personality button initially
+        if(reasonUsageDisplay) reasonUsageDisplay.style.display = 'none';
+        if(modelNotificationDiv) modelNotificationDiv.style.display = 'none';
+        renderChatList(); // Populate sidebar
+
+
+        // Check if the OpenAI proxy endpoint is accessible (basic check)
+        // This is a minimal check; a more robust check would involve a dedicated /health endpoint on the endpoint.
+        // The check should just ensure the proxy endpoint is not the default local dev URL.
+        const isProxyConfigured = (OPENAI_PROXY_ENDPOINT === window.location.origin + '/openai/chat');
+
+        if (!isProxyConfigured) {
+            console.warn("OpenAI Proxy Endpoint might not be configured correctly. Graxybot (OpenAI) features may not work.");
+            const warningMsg = "OpenAI API proxy not configured. Ensure server.js is running and OPENAI_PROXY_ENDPOINT is correct.";
+            if(initialView && !initialView.classList.contains('hidden')) { // If on initial screen
+                if(initialMessageInput) initialMessageInput.placeholder = "Proxy needed!";
+            } else if (chatMessagesContainer) { // If somehow in chat view
+                displayMessage([{text: warningMsg}], 'bot', true);
+            }
+             if (!currentChatId || !chats[currentChatId]) { switchToInitialView(); } // No valid chat, go to initial
+             else { switchToChatView(); initializeAICurrentChat(); } // Valid chat, initialize it
+        } else {
+            console.log("OpenAI Proxy Endpoint seems configured. Proceeding with initialization.");
+            if (currentChatId && chats[currentChatId]) { // If there's a stored active chat
+                switchToChatView();
+                initializeAICurrentChat();
+            } else { // Otherwise, go to initial view
+                switchToInitialView();
+                if(initialMessageInput) initialMessageInput.focus();
+            }
+        }
+        // Set default placeholders
+        if(initialMessageInput) initialMessageInput.placeholder = "Ask me anything...";
+        if(messageInput) messageInput.placeholder = "Message Graxybot...";
+
+
+        // --- Add Event Listeners ---
+        sendButton?.addEventListener('click', sendMessage);
+        messageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!sendButton?.disabled&&!currentThinkingIndicatorElement&&!isListening) { e.preventDefault(); sendMessage(); }}); // Added !isListening
+        initialSendButton?.addEventListener('click', handleInitialSendMessage);
+        initialMessageInput?.addEventListener('keypress', (e) => { if (e.key==='Enter'&&!e.shiftKey&&!initialSendButton?.disabled&&!currentThinkingIndicatorElement&&!isListening) { e.preventDefault(); handleInitialSendMessage(); }}); // Added !isListening
+        modelSelector?.addEventListener('change', handleModelChange);
+        newChatBtn?.addEventListener('click', handleNewChat);
+        reasonButton?.addEventListener('click', handleReasonButtonClick);
+        createImageButton?.addEventListener('click', handleCreateImageButtonClick);
+        animateVideoButton?.addEventListener('click', handleAnimateVideoButtonClick);
+        imageUploadButton?.addEventListener('click', () => { if (!imageUploadButton.disabled) imageUploadInput?.click(); });
+        imageUploadInput?.addEventListener('change', handleImageSelection);
+        removeImageButton?.addEventListener('click', removeSelectedImage);
+        closePopupButton?.addEventListener('click', hidePopup);
+        popupOverlay?.addEventListener('click', (e) => { if (e.target === popupOverlay) hidePopup(); }); // Close on overlay click
+        menuToggleBtn?.addEventListener('click', toggleSidebar); // For mobile menu
+        // Speech-to-Text event listeners
+        micButton?.addEventListener('click', toggleSpeechRecognition);
+        initialMicButton?.addEventListener('click', toggleSpeechRecognition);
+
+        // NEW: Personality Event Listeners
+        personalityButton?.addEventListener('click', handlePersonalityButtonClick);
+        savePersonalityBtn?.addEventListener('click', handleSavePersonalitySettings);
+        closePersonalityModalBtn?.addEventListener('click', hidePersonalityModal);
+        personalityOverlay?.addEventListener('click', (e) => { // Close on overlay click
+            if (e.target === personalityOverlay) hidePersonalityModal();
+        });
+
+
+        showPopup(); // Show welcome/update popup
+        console.log("Graxybot initialization complete.");
+    });
+</script>
+
 </body>
 </html>
