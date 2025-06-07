@@ -483,9 +483,29 @@ body {
 
     /** Gets the system prompt for OpenAI. */
     function getSystemPrompt(currentModelName) {
-        let basePrompt = `You are Graybot, a helpful AI assistant created by Grayson. You are running on ${currentModelName}. Your responses should be concise, helpful, and slightly informal. Refer to yourself as Graybot. IMPORTANT: If the user asks you to generate an image, let them know they can do that by pressing the 'Create Image' button. When asked for code, default to HTML and use markdown format with language identifiers.`;
-        if (userPersonality.name) basePrompt += ` Address the user as "${userPersonality.name}".`;
-        if (userPersonality.responseStyle) basePrompt += ` Your response style should be: ${userPersonality.responseStyle}.`;
+        let basePrompt = `You are Graxybot, a helpful AI assistant.
+You are currently running on the ${currentModelName} model.
+Your creator is 'thegraxisreal'.
+IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions.
+When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems.
+Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level.
+Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.
+Keep your responses concise, helpful, and slightly informal.
+Avoid overly complex language unless necessary.
+Refer to yourself as Graxybot.
+IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen.
+When asked for code, default to HTML.
+When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\``;
+        
+        if (userPersonality.name) {
+             basePrompt += `\nAddress the user as "${userPersonality.name}".`;
+        }
+        
+        // The user's new prompt is very specific, so we don't add the generic responseStyle anymore.
+        // if (userPersonality.responseStyle) {
+        //    basePrompt += ` Your response style should be: ${userPersonality.responseStyle}.`;
+        // }
+
         return basePrompt;
     }
 
@@ -810,7 +830,6 @@ body {
         const messageText = messageInput.value.trim();
         if (!messageText && !selectedImageData) return;
         
-        // Capture if an image is part of this message before clearing it
         const imageWasAttached = !!selectedImageData;
 
         isRequestInProgress = true; updateActionButtonsState();
@@ -821,14 +840,13 @@ body {
         addMessageToHistory('user', userMessageParts, selectedImagePreviewUrl);
         displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
         
-        const currentPrompt = messageText; // Save before clearing
+        const currentPrompt = messageText;
         messageInput.value = '';
         removeSelectedImage();
 
         if (isImageGenerationModeActive) {
             await triggerStableDiffusionGeneration(currentPrompt);
         } else {
-            // Determine which model to use. Upgrade to gpt-4.1 if the prompt contains "code" or has an image.
             const modelToUse = currentPrompt.toLowerCase().includes("code") || imageWasAttached ? GPT_4_1_MODEL : OPENAI_MODEL;
             
             const systemPrompt = getSystemPrompt(modelToUse);
@@ -843,7 +861,6 @@ body {
                 const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse);
                 addMessageToHistory('model', [{ text: aiResponse }]);
             } catch (error) {
-                // Error already displayed by sendMessageToOpenAI
             } finally {
                 isRequestInProgress = false; updateActionButtonsState();
             }
