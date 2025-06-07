@@ -357,7 +357,7 @@ body {
         <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
         <h2>Personalize Graxybot</h2>
         <label for="user-name-input">What should Graxybot call you?</label>
-        <input type="text" id="user-name-input" placeholder="e.g., Grayson, Boss, Friend">
+        <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
         <label for="response-style-input">How do you want Graxybot to respond?</label>
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
         <button id="save-personality-btn">Save Settings</button>
@@ -440,7 +440,7 @@ body {
     let isImageGenerationModeActive = false;
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
-    let userPersonality = { name: 'Grayson', responseStyle: null };
+    let userPersonality = { name: null, responseStyle: null };
 
     // --- Core Functions ---
 
@@ -909,7 +909,7 @@ When generating code blocks, always use markdown format with language identifier
         personalityOverlay.classList.remove('visible');
     }
     function handleSavePersonality() {
-        userPersonality.name = userNameInput.value.trim() || 'User';
+        userPersonality.name = userNameInput.value.trim() || null;
         userPersonality.responseStyle = responseStyleInput.value.trim() || '';
         savePersonalitySettings();
         showToast("Personality saved!", "success");
