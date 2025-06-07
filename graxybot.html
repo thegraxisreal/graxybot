@@ -51,7 +51,26 @@ body {
     display: flex;
     height: 100%;
     width: 100%;
+    position: relative;
 }
+
+#menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+#menu-backdrop.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
 
 /* --- Sidebar --- */
 .sidebar {
@@ -62,6 +81,7 @@ body {
     flex-direction: column;
     flex-shrink: 0;
     transition: transform 0.3s ease;
+    z-index: 1001;
 }
 .sidebar-header {
     padding: 1rem;
@@ -121,7 +141,8 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    width: 100%;
+    flex-grow: 1;
+    width: calc(100% - var(--sidebar-width));
     box-sizing: border-box;
     position: relative; /* Context for absolute positioning */
 }
@@ -133,6 +154,8 @@ body {
     align-items: center;
     gap: 1rem;
     height: 38px; /* Give it a static height */
+    position: relative;
+    z-index: 10;
 }
 .menu-toggle {
     display: none; /* Hidden on desktop */
@@ -143,29 +166,17 @@ body {
     margin: 0;
     font-weight: 700;
     color: var(--primary);
-    white-space: nowrap;
-    position: absolute;
-    /* Corner is the default state */
-    top: 0.75rem;
-    left: 4rem; /* Aligned with top bar content */
+    position: static; /* Default state is in flow */
+    transform: none;
     font-size: 1.2rem;
-    transform: scale(1);
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.main-content.new-chat-active #chat-title {
-    /* Center state */
+#chat-title.title-center {
+    position: absolute;
     top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 3rem;
-}
-@media (max-width: 768px) {
-    #chat-title.title-corner {
-        font-size: 1.1rem;
-    }
-    .main-content.new-chat-active #chat-title {
-         font-size: 2.5rem;
-    }
 }
 
 
@@ -225,6 +236,8 @@ body {
 .chat-input-container {
     padding: 1rem 1.5rem; background-color: var(--background);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
 .chat-input-area {
     display: flex; align-items: center; background-color: #f9fafb;
@@ -264,7 +277,7 @@ body {
 /* Loader, Toast, Modals */
 .loader-overlay {
     position: fixed; inset: 0; background-color: rgba(255, 255, 255, 0.9);
-    display: flex; justify-content: center; align-items: center; z-index: 2000;
+    display: flex; justify-content: center; align-items: center; z-index: 2002;
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
 }
 .loader-overlay.visible { opacity: 1; visibility: visible; }
@@ -276,7 +289,7 @@ body {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #toast-container {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    z-index: 1000; pointer-events: none;
+    z-index: 2001; pointer-events: none;
 }
 .toast-message {
     background-color: var(--toast-bg); color: var(--toast-text);
@@ -288,7 +301,7 @@ body {
 .toast-message.show { opacity: 1; transform: translateY(0); }
 #personality-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--modal-bg); z-index: 1000;
+    background: var(--modal-bg); z-index: 1002;
     display: flex; justify-content: center; align-items: center;
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
 }
@@ -323,7 +336,6 @@ body {
         left: 0;
         top: 0;
         height: 100%;
-        z-index: 1001; /* Above main content */
         transform: translateX(-100%);
     }
     .sidebar.visible {
@@ -335,8 +347,14 @@ body {
     .menu-toggle {
         display: block;
     }
-     #chat-title.title-corner {
+     #chat-title {
         left: 4rem; /* Readjust for mobile */
+    }
+    #chat-title.title-center {
+        left: 50%;
+    }
+    .main-content.new-chat-active #chat-title {
+         font-size: 2.5rem;
     }
     .chat-input-container {
         padding: 0.75rem;
@@ -464,6 +482,7 @@ body {
 </div>
 
 <div class="chat-app" id="chat-app">
+     <div id="menu-backdrop"></div>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="new-chat-btn" id="new-chat-btn">
@@ -544,7 +563,7 @@ body {
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
-    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent;
+    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
     let voiceModeOverlay, voiceModeCanvasContainer, voiceMicBtn, voiceHangUpBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
 
@@ -553,6 +572,7 @@ body {
     let currentChatId = null;
     let isRequestInProgress = false;
     let isImageGenerationModeActive = false;
+    let isVoiceModeActive = false;
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
@@ -799,6 +819,7 @@ When generating code blocks, always use markdown format with language identifier
     function handleSelectChat(id) {
         if (id === currentChatId) return;
         sidebar.classList.remove('visible');
+        menuBackdrop.classList.remove('visible');
         loadChat(id);
     }
     function handleDeleteChat(id) {
@@ -869,11 +890,11 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     async function sendMessageToOpenAI(messages, modelName, isVoiceMode = false) {
-        let paragraph;
+        let botMessageElement, paragraph;
         if (isVoiceMode) {
             thinkingIndicatorVoice.style.display = 'block';
         } else {
-             const botMessageElement = displayMessage([], 'bot');
+             botMessageElement = displayMessage([], 'bot');
              paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
         }
         
@@ -1035,7 +1056,7 @@ When generating code blocks, always use markdown format with language identifier
     }
 
     function animateVoiceScene() {
-        if (!voiceModeOverlay.classList.contains('visible')) return;
+        if (!isVoiceModeActive) return;
         requestAnimationFrame(animateVoiceScene);
         
         const time = Date.now() * 0.005;
@@ -1093,6 +1114,7 @@ When generating code blocks, always use markdown format with language identifier
     }
 
     function enterVoiceMode() {
+        isVoiceModeActive = true;
         chatApp.style.transition = 'opacity 0.5s ease';
         chatApp.style.opacity = '0';
         
@@ -1110,6 +1132,7 @@ When generating code blocks, always use markdown format with language identifier
     }
     
     function exitVoiceMode() {
+        isVoiceModeActive = false;
         chatApp.style.opacity = '1';
         voiceModeOverlay.classList.remove('visible');
         isListening = false;
@@ -1125,7 +1148,7 @@ When generating code blocks, always use markdown format with language identifier
         speechRecognition = new SpeechAPI();
         speechRecognition.onstart = () => { 
             isListening = true; 
-            if(voiceModeOverlay.classList.contains('visible')){
+            if(isVoiceModeActive){
                  botResponseText.textContent = '';
                  transcribedText.textContent = 'Listening...';
                  voiceMicBtn.classList.add('listening');
@@ -1136,7 +1159,7 @@ When generating code blocks, always use markdown format with language identifier
         };
         speechRecognition.onresult = (e) => { 
             const transcript = e.results[0][0].transcript;
-            if(voiceModeOverlay.classList.contains('visible')){
+            if(isVoiceModeActive){
                 transcribedText.textContent = transcript;
             } else {
                  messageInput.value = transcript; 
@@ -1144,21 +1167,21 @@ When generating code blocks, always use markdown format with language identifier
         };
         speechRecognition.onend = () => { 
             isListening = false;
-            if (voiceModeOverlay.classList.contains('visible')) {
+            if (isVoiceModeActive) {
                 voiceMicBtn.classList.remove('listening');
                 const finalTranscript = transcribedText.textContent;
                 if (finalTranscript && finalTranscript !== 'Listening...') {
                     (async () => {
                         await handleSendMessage(finalTranscript);
                         setTimeout(() => {
-                            if (voiceModeOverlay.classList.contains('visible')) {
+                            if (isVoiceModeActive) {
                                 transcribedText.textContent = '';
                                 botResponseText.textContent = '';
                                 toggleSpeechRecognition();
                             }
-                        }, 3000); // Increased delay to 3 seconds
+                        }, 3000);
                     })();
-                } else if (voiceModeOverlay.classList.contains('visible')) {
+                } else if (isVoiceModeActive) {
                     setTimeout(toggleSpeechRecognition, 500);
                 }
             } else {
@@ -1171,7 +1194,7 @@ When generating code blocks, always use markdown format with language identifier
             console.error(e.error); 
             showToast(`Mic error: ${e.error}`, 'error'); 
             isListening = false;
-            if (voiceModeOverlay.classList.contains('visible')) {
+            if (isVoiceModeActive) {
                 voiceMicBtn.classList.remove('listening');
             }
             updateActionButtonsState();
@@ -1224,6 +1247,7 @@ When generating code blocks, always use markdown format with language identifier
         chatList = document.getElementById('chat-list');
         settingsButton = document.getElementById('settings-button');
         chatTitle = document.getElementById('chat-title');
+        menuBackdrop = document.getElementById('menu-backdrop');
         chatMessagesContainer = document.getElementById('chat-messages');
         messageInput = document.getElementById('message-input');
         sendButton = document.getElementById('send-button');
@@ -1261,10 +1285,18 @@ When generating code blocks, always use markdown format with language identifier
         // Add Event Listeners
         newChatBtn.addEventListener('click', () => {
             sidebar.classList.remove('visible');
+            menuBackdrop.classList.remove('visible');
             handleNewChat(true);
         });
         settingsButton.addEventListener('click', showPersonalityModal);
-        menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible'));
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('visible');
+            menuBackdrop.classList.toggle('visible');
+        });
+        menuBackdrop.addEventListener('click', () => {
+             sidebar.classList.remove('visible');
+            menuBackdrop.classList.remove('visible');
+        });
         sendButton.addEventListener('click', ()=> handleSendMessage(null));
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(null); } });
         messageInput.addEventListener('input', updateActionButtonsState);
