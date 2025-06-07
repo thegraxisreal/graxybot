@@ -364,12 +364,6 @@ body {
     opacity: 1;
     visibility: visible;
 }
-#voice-mode-exit-btn {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    font-size: 1.5rem;
-}
 #voice-mode-canvas-container {
     position: absolute;
     top: 0;
@@ -388,19 +382,64 @@ body {
     justify-content: center;
     align-items: center;
     height: 100%;
+    width: 100%;
 }
 #transcribed-text, #bot-response-text {
     font-size: 1.5rem;
     font-weight: 500;
     max-width: 80%;
-    margin-bottom: 2rem;
+    margin: 2rem 0;
     transition: opacity 0.3s ease;
+    min-height: 2em;
 }
 #thinking-indicator-voice {
     font-size: 1rem;
     font-weight: 500;
     color: var(--text-secondary);
-    display: none; /* Initially hidden */
+    display: none;
+    height: 1.5rem;
+}
+.voice-mode-controls {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+.voice-mode-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#voice-mic-btn {
+    background-color: var(--primary);
+}
+#voice-mic-btn.listening {
+    animation: pulse 1.5s infinite;
+}
+#voice-hang-up-btn {
+    background-color: #ef4444; /* Red */
+}
+#voice-hang-up-btn:hover {
+    background-color: #dc2626; /* Darker Red */
+}
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(79, 70, 229, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
 }
 </style>
 </head>
@@ -470,11 +509,16 @@ body {
 
 <div id="voice-mode-overlay">
     <div id="voice-mode-canvas-container"></div>
-    <button class="icon-btn" id="voice-mode-exit-btn"><i class="fas fa-times"></i></button>
     <div class="voice-mode-content">
-        <p id="transcribed-text"></p>
-        <p id="thinking-indicator-voice">Thinking...</p>
-        <p id="bot-response-text"></p>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <p id="transcribed-text"></p>
+            <p id="thinking-indicator-voice">Thinking...</p>
+            <p id="bot-response-text"></p>
+        </div>
+        <div class="voice-mode-controls">
+            <button class="icon-btn voice-mode-btn" id="voice-mic-btn"><i class="fas fa-microphone"></i></button>
+            <button class="icon-btn voice-mode-btn" id="voice-hang-up-btn"><i class="fas fa-phone-slash"></i></button>
+        </div>
     </div>
 </div>
 
@@ -502,7 +546,7 @@ body {
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
-    let voiceModeOverlay, voiceModeCanvasContainer, voiceModeExitBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
+    let voiceModeOverlay, voiceModeCanvasContainer, voiceMicBtn, voiceHangUpBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
 
     // --- Application State ---
     let chats = {};
@@ -973,6 +1017,15 @@ When generating code blocks, always use markdown format with language identifier
         if (!voiceModeOverlay.classList.contains('visible')) return;
         requestAnimationFrame(animateVoiceScene);
         
+        const time = Date.now() * 0.005;
+
+        if (isListening && sphereParticles) {
+            const scale = 1 + 0.05 * Math.sin(time * 2);
+            sphereParticles.scale.set(scale, scale, scale);
+        } else if (sphereParticles) {
+            sphereParticles.scale.set(1, 1, 1);
+        }
+
         if (sphereParticles) sphereParticles.rotation.y += 0.001;
         if (logoParticles) logoParticles.rotation.y -= 0.001;
 
@@ -980,8 +1033,8 @@ When generating code blocks, always use markdown format with language identifier
     }
 
     function createLogoParticles() {
-        // This function remains the same, creating particles from the logo
         const loader = new THREE.TextureLoader();
+        // We load the texture to get dimensions, but won't use its colors.
         loader.load('graxybot.png', (texture) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -993,25 +1046,23 @@ When generating code blocks, always use markdown format with language identifier
             
             const geometry = new THREE.BufferGeometry();
             const positions = [];
-            const colors = [];
 
             for (let y = 0; y < imageData.height; y+=2) {
                 for (let x = 0; x < imageData.width; x+=2) {
                     const i = (y * imageData.width + x) * 4;
-                    if (imageData.data[i+3] > 128) {
+                    if (imageData.data[i+3] > 128) { // Only use non-transparent pixels
                         const posX = (x - imageData.width / 2) / 50;
                         const posY = (-y + imageData.height / 2) / 50;
                         positions.push(posX, posY, 0);
-                        colors.push(imageData.data[i]/255, imageData.data[i+1]/255, imageData.data[i+2]/255);
                     }
                 }
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             
+            // Use a single blue color instead of vertex colors
             const material = new THREE.PointsMaterial({ 
                 size: 0.05, 
-                vertexColors: true,
+                color: 0x4f46e5, // Use the primary blue color
                 transparent: true
             });
             logoParticles = new THREE.Points(geometry, material);
@@ -1056,6 +1107,7 @@ When generating code blocks, always use markdown format with language identifier
             if(voiceModeOverlay.classList.contains('visible')){
                  botResponseText.textContent = '';
                  transcribedText.textContent = 'Listening...';
+                 voiceMicBtn.classList.add('listening');
             } else {
                 updateActionButtonsState(); 
                 messageInput.placeholder = "Listening...";
@@ -1072,6 +1124,7 @@ When generating code blocks, always use markdown format with language identifier
         speechRecognition.onend = () => { 
             isListening = false;
             if(voiceModeOverlay.classList.contains('visible')){
+                voiceMicBtn.classList.remove('listening');
                  if(transcribedText.textContent && transcribedText.textContent !== 'Listening...') {
                     handleSendMessage(transcribedText.textContent);
                  }
@@ -1084,7 +1137,8 @@ When generating code blocks, always use markdown format with language identifier
         speechRecognition.onerror = (e) => { 
             console.error(e.error); 
             showToast(`Mic error: ${e.error}`, 'error'); 
-            isListening = false; 
+            isListening = false;
+            voiceMicBtn.classList.remove('listening');
             updateActionButtonsState();
         };
     }
@@ -1153,7 +1207,8 @@ When generating code blocks, always use markdown format with language identifier
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
         voiceModeOverlay = document.getElementById('voice-mode-overlay');
         voiceModeCanvasContainer = document.getElementById('voice-mode-canvas-container');
-        voiceModeExitBtn = document.getElementById('voice-mode-exit-btn');
+        voiceMicBtn = document.getElementById('voice-mic-btn');
+        voiceHangUpBtn = document.getElementById('voice-hang-up-btn');
         transcribedText = document.getElementById('transcribed-text');
         botResponseText = document.getElementById('bot-response-text');
         thinkingIndicatorVoice = document.getElementById('thinking-indicator-voice');
@@ -1183,7 +1238,8 @@ When generating code blocks, always use markdown format with language identifier
         imageUploadInput.addEventListener('change', handleImageSelection);
         removeImageButton.addEventListener('click', removeSelectedImage);
         micButton.addEventListener('click', enterVoiceMode);
-        voiceModeExitBtn.addEventListener('click', exitVoiceMode);
+        voiceMicBtn.addEventListener('click', toggleSpeechRecognition);
+        voiceHangUpBtn.addEventListener('click', exitVoiceMode);
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
