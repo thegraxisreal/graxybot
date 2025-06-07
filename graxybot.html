@@ -869,11 +869,12 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     async function sendMessageToOpenAI(messages, modelName, isVoiceMode = false) {
-        if(isVoiceMode) {
+        let paragraph;
+        if (isVoiceMode) {
             thinkingIndicatorVoice.style.display = 'block';
         } else {
              const botMessageElement = displayMessage([], 'bot');
-             const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
+             paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
         }
         
         let fullResponseText = "";
@@ -897,12 +898,9 @@ When generating code blocks, always use markdown format with language identifier
                             const content = json.choices[0]?.delta?.content || '';
                             if (content) {
                                 fullResponseText += content;
-                                if (!isVoiceMode) {
-                                    const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
-                                    if(paragraph) {
-                                       paragraph.innerHTML += content.replace(/\n/g, '<br>');
-                                       chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
-                                    }
+                                if (!isVoiceMode && paragraph) {
+                                   paragraph.innerHTML += content.replace(/\n/g, '<br>');
+                                   chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
                             }
                         } catch (e) { /* ignore */ }
@@ -911,20 +909,16 @@ When generating code blocks, always use markdown format with language identifier
             }
             if(isVoiceMode) {
                 botResponseText.textContent = fullResponseText;
-            } else {
-                const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
-                if(paragraph) processAndAppendText(fullResponseText, paragraph);
+            } else if (paragraph) {
+                processAndAppendText(fullResponseText, paragraph);
             }
             return fullResponseText;
         } catch (error) {
             if(isVoiceMode){
                 botResponseText.textContent = `Error: ${error.message}`;
-            } else {
-                const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
-                if(paragraph) {
-                    paragraph.textContent = `Error: ${error.message}`;
-                    paragraph.parentElement.classList.add('error-message');
-                }
+            } else if (paragraph) {
+                paragraph.textContent = `Error: ${error.message}`;
+                paragraph.parentElement.classList.add('error-message');
             }
             throw error;
         } finally {
@@ -989,8 +983,8 @@ When generating code blocks, always use markdown format with language identifier
             canvas.width / 2, canvas.height / 2, canvas.width / 2
         );
         gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.2, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.4, 'rgba(255,255,255,0.4)');
+        gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+        gradient.addColorStop(0.4, 'rgba(255,255,255,0.2)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
         context.fillStyle = gradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -1007,7 +1001,6 @@ When generating code blocks, always use markdown format with language identifier
 
         particleTexture = createParticleTexture();
 
-        // Create central particle sphere
         const sphereGeometry = new THREE.BufferGeometry();
         const sphereParticlesCount = 3000;
         const posArray = new Float32Array(sphereParticlesCount * 3);
@@ -1163,10 +1156,9 @@ When generating code blocks, always use markdown format with language identifier
                                 botResponseText.textContent = '';
                                 toggleSpeechRecognition();
                             }
-                        }, 1500);
+                        }, 3000); // Increased delay to 3 seconds
                     })();
                 } else if (voiceModeOverlay.classList.contains('visible')) {
-                    // If no speech was detected but we're still in voice mode, listen again
                     setTimeout(toggleSpeechRecognition, 500);
                 }
             } else {
