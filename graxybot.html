@@ -28,6 +28,7 @@
     --toast-bg: #333;
     --toast-text: white;
     --modal-bg: rgba(0, 0, 0, 0.5);
+    --sidebar-width: 260px;
 }
 
 html, body {
@@ -54,19 +55,18 @@ body {
 
 /* --- Sidebar --- */
 .sidebar {
-    width: 260px;
+    width: var(--sidebar-width);
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
-
 .sidebar-header {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
 }
-
 .new-chat-btn {
     display: flex;
     align-items: center;
@@ -83,7 +83,6 @@ body {
 }
 .new-chat-btn:hover { background-color: var(--hover-bg); }
 .new-chat-btn i { color: var(--primary); }
-
 .chat-list {
     list-style: none;
     padding: 0;
@@ -112,7 +111,6 @@ body {
 }
 .chat-list-item.active .delete-chat-btn { color: white; }
 .chat-list-item:hover .delete-chat-btn { display: block; }
-
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid var(--border-color);
@@ -126,19 +124,23 @@ body {
     width: 100%;
     box-sizing: border-box;
 }
-
 .chat-top-bar {
     padding: 0.75rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.menu-toggle {
+    display: none; /* Hidden on desktop */
 }
 .chat-top-bar h1 {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--primary); /* Changed color */
+    color: var(--primary);
 }
-
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
@@ -146,7 +148,6 @@ body {
     display: flex;
     flex-direction: column;
 }
-
 .welcome-container {
     display: flex;
     flex-direction: column;
@@ -159,7 +160,7 @@ body {
 .welcome-title {
     font-size: 3rem;
     font-weight: 700;
-    color: var(--primary); /* Changed color */
+    color: var(--primary);
     margin-bottom: 2rem;
 }
 
@@ -192,7 +193,7 @@ body {
     display: block; background-color: var(--input-bg);
 }
 
-/* Thinking Indicator */
+/* Thinking Indicator & Code Block */
 .thinking-indicator .message { padding: 15px 18px; display: flex; align-items: center; gap: 8px; }
 .thinking-indicator span {
     display: inline-block; width: 8px; height: 8px; background-color: var(--text-secondary);
@@ -202,8 +203,6 @@ body {
 .thinking-indicator span:nth-child(2) { animation-delay: 0.1s; }
 .thinking-indicator span:nth-child(3) { animation-delay: 0.2s; }
 @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-4px); opacity: 1; } }
-
-/* Code Block */
 .code-block-container { background-color: var(--code-bg); border-radius: 8px; margin: 10px 0; overflow: hidden; }
 .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
 .code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; }
@@ -225,7 +224,6 @@ body {
     resize: none; line-height: 1.5;
 }
 .input-actions { display: flex; align-items: center; gap: 5px; padding-right: 5px; }
-
 .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     border-radius: 8px; border: none; cursor: pointer;
@@ -236,12 +234,9 @@ body {
 .icon-btn:hover { color: var(--primary); background-color: #eef2ff; }
 .icon-btn.active { color: var(--primary); background-color: #e0e7ff; box-shadow: 0 0 0 3px #c7d2fe; }
 .icon-btn:disabled { color: #d1d5db; background-color: transparent; cursor: not-allowed; }
-
 #send-button { background-color: var(--primary); color: white; }
 #send-button:hover { background-color: var(--primary-light); }
 #send-button:disabled { background-color: #9ca3af; opacity: 0.7; }
-
-/* Image Preview */
 #image-upload-input { display: none; }
 #image-preview-area {
     margin-bottom: 10px; position: relative; display: inline-block; max-width: 100px;
@@ -253,7 +248,7 @@ body {
     font-size: 0.8rem; line-height: 20px; text-align: center; cursor: pointer;
 }
 
-/* Loader & Toast */
+/* Loader, Toast, Modals */
 .loader-overlay {
     position: fixed; inset: 0; background-color: rgba(255, 255, 255, 0.9);
     display: flex; justify-content: center; align-items: center; z-index: 2000;
@@ -266,7 +261,6 @@ body {
     animation: spin 1s ease infinite;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
 #toast-container {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     z-index: 1000; pointer-events: none;
@@ -279,8 +273,6 @@ body {
     pointer-events: auto;
 }
 .toast-message.show { opacity: 1; transform: translateY(0); }
-
-/* Personality Modal */
 #personality-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--modal-bg); z-index: 1000;
@@ -311,6 +303,35 @@ body {
     font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;
 }
 
+/* --- Mobile Responsive Styles --- */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        z-index: 1000;
+        transform: translateX(-100%);
+    }
+    .sidebar.visible {
+        transform: translateX(0);
+    }
+    .main-content {
+        width: 100%;
+    }
+    .menu-toggle {
+        display: block;
+    }
+    .chat-top-bar h1 {
+        font-size: 1.1rem;
+    }
+    .chat-input-container {
+        padding: 0.75rem;
+    }
+    .welcome-title {
+        font-size: 2.5rem;
+    }
+}
 </style>
 </head>
 <body>
@@ -334,14 +355,13 @@ body {
 </div>
 
 <div class="chat-app">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="new-chat-btn" id="new-chat-btn">
                 <i class="fas fa-plus"></i> New Chat
             </button>
         </div>
         <ul class="chat-list" id="chat-list">
-            <!-- Chat history items will be here -->
         </ul>
         <div class="sidebar-footer">
             <button class="icon-btn" id="settings-button" title="Settings">
@@ -352,6 +372,9 @@ body {
 
     <main class="main-content">
         <div class="chat-top-bar">
+             <button class="icon-btn menu-toggle" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
@@ -391,15 +414,15 @@ body {
     // --- UI & Storage Keys ---
     const BOT_ICON_SRC = "graxybot.png";
     const USER_ICON_CLASS = "fas fa-user";
-    const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v2";
-    const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v2";
-    const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v2";
+    const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
+    const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
+    const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
 
     // --- DOM Element References ---
     let chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, welcomeContainer, micButton, speechRecognition, isListening = false;
-    let sidebar, newChatBtn, chatList, settingsButton, chatTitle;
+    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
 
     // --- Application State ---
@@ -486,9 +509,9 @@ body {
         let basePrompt = `You are Graxybot, a helpful AI assistant.
 You are currently running on the ${currentModelName} model.
 Your creator is 'thegraxisreal'.
-IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be in as few words as possible, formatted in all lowercase, absolutly no restating for those questions.
-When recieving said social studies sheets, questions 1-5 should be answered in as few words in all lowercase, the ending questions that are longer should be answered in 1 or 2 sentances, all in 9th grade level for those problems.
-Those restrictions only apply to global history questions, all other questions should be answered in lowercase and in a normal level.
+IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.
+When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.
+Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.
 Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.
 Keep your responses concise, helpful, and slightly informal.
 Avoid overly complex language unless necessary.
@@ -501,11 +524,6 @@ When generating code blocks, always use markdown format with language identifier
              basePrompt += `\nAddress the user as "${userPersonality.name}".`;
         }
         
-        // The user's new prompt is very specific, so we don't add the generic responseStyle anymore.
-        // if (userPersonality.responseStyle) {
-        //    basePrompt += ` Your response style should be: ${userPersonality.responseStyle}.`;
-        // }
-
         return basePrompt;
     }
 
@@ -567,7 +585,15 @@ When generating code blocks, always use markdown format with language identifier
             iconDiv.classList.add('user-icon');
             iconDiv.innerHTML = `<i class="${USER_ICON_CLASS}"></i>`;
         } else {
-             iconDiv.innerHTML = `<i class="fas ${customIconClass || 'fa-robot'}"></i>`;
+            if (customIconClass) {
+                 iconDiv.innerHTML = `<i class="fas ${customIconClass}"></i>`;
+            } else {
+                const img = document.createElement('img');
+                img.src = BOT_ICON_SRC;
+                img.alt = "G";
+                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`; // Fallback
+                iconDiv.appendChild(img);
+            }
         }
         
         const bubbleDiv = document.createElement('div');
@@ -700,6 +726,7 @@ When generating code blocks, always use markdown format with language identifier
     /** Handles selecting a chat from the list. */
     function handleSelectChat(id) {
         if (id === currentChatId) return;
+        sidebar.classList.remove('visible'); // Hide sidebar on mobile after selection
         loadChat(id);
     }
 
@@ -744,15 +771,6 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     
-    function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-        });
-    }
-
     function removeSelectedImage() {
         selectedImageData = null; selectedImageMimeType = null;
         if (selectedImagePreviewUrl) URL.revokeObjectURL(selectedImagePreviewUrl);
@@ -831,7 +849,6 @@ When generating code blocks, always use markdown format with language identifier
         if (!messageText && !selectedImageData) return;
         
         const imageWasAttached = !!selectedImageData;
-
         isRequestInProgress = true; updateActionButtonsState();
         
         const userMessageParts = [];
@@ -867,7 +884,7 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
-    // --- Speech Recognition ---
+    // --- UI and Mode Toggles ---
     function initializeSpeechRecognition() {
         const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechAPI) { micButton.style.display = 'none'; return; }
@@ -886,7 +903,6 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
-    // --- Mode Toggles ---
     function deactivateImageGenerationMode() {
         isImageGenerationModeActive = false;
         messageInput.placeholder = "Ask me anything...";
@@ -899,7 +915,6 @@ When generating code blocks, always use markdown format with language identifier
         messageInput.focus();
     }
     
-    // --- Personality Modal ---
     function showPersonalityModal() {
         userNameInput.value = userPersonality.name || '';
         responseStyleInput.value = userPersonality.responseStyle || '';
@@ -921,7 +936,7 @@ When generating code blocks, always use markdown format with language identifier
         // Assign DOM elements
         loader = document.getElementById('loader');
         toastContainer = document.getElementById('toast-container');
-        sidebar = document.querySelector('.sidebar');
+        sidebar = document.getElementById('sidebar');
         newChatBtn = document.getElementById('new-chat-btn');
         chatList = document.getElementById('chat-list');
         settingsButton = document.getElementById('settings-button');
@@ -937,6 +952,7 @@ When generating code blocks, always use markdown format with language identifier
         imagePreview = document.getElementById('image-preview');
         removeImageButton = document.getElementById('remove-image-button');
         micButton = document.getElementById('mic-button');
+        menuToggle = document.getElementById('menu-toggle');
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
@@ -950,8 +966,12 @@ When generating code blocks, always use markdown format with language identifier
         updateActionButtonsState();
 
         // Add Event Listeners
-        newChatBtn.addEventListener('click', () => handleNewChat(true));
+        newChatBtn.addEventListener('click', () => {
+            sidebar.classList.remove('visible');
+            handleNewChat(true);
+        });
         settingsButton.addEventListener('click', showPersonalityModal);
+        menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible'));
         sendButton.addEventListener('click', handleSendMessage);
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
         messageInput.addEventListener('input', updateActionButtonsState);
