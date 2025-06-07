@@ -558,10 +558,9 @@ body {
     let userPersonality = { name: null, responseStyle: null };
     
     // --- Voice Mode 3D Scene ---
-    let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles;
+    let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles, particleTexture;
 
     // --- Core Functions ---
-    // ... (All existing functions like showToast, loadData, etc. go here)
     function showToast(message, type = 'info', duration = 3000) {
         if (!toastContainer) return;
         const toast = document.createElement('div');
@@ -969,7 +968,9 @@ When generating code blocks, always use markdown format with language identifier
             try {
                 const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse, !!messageTextFromVoice);
                 addMessageToHistory('model', [{ text: aiResponse }]);
+                return aiResponse; // Return response for voice mode loop
             } catch (error) {
+                return null;
             } finally {
                 isRequestInProgress = false;
                 if(!messageTextFromVoice) updateActionButtonsState();
@@ -978,6 +979,24 @@ When generating code blocks, always use markdown format with language identifier
     }
 
     // --- Voice Mode & 3D Scene ---
+    function createParticleTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const context = canvas.getContext('2d');
+        const gradient = context.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, 0, 
+            canvas.width / 2, canvas.height / 2, canvas.width / 2
+        );
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.2, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.4, 'rgba(255,255,255,0.4)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        return new THREE.CanvasTexture(canvas);
+    }
+    
     function initVoiceScene() {
         voiceScene = new THREE.Scene();
         voiceCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -986,20 +1005,29 @@ When generating code blocks, always use markdown format with language identifier
         voiceModeCanvasContainer.appendChild(voiceRenderer.domElement);
         voiceCamera.position.z = 5;
 
+        particleTexture = createParticleTexture();
+
         // Create central particle sphere
         const sphereGeometry = new THREE.BufferGeometry();
         const sphereParticlesCount = 3000;
         const posArray = new Float32Array(sphereParticlesCount * 3);
         for(let i = 0; i < sphereParticlesCount * 3; i++) {
-            const phi = Math.acos((2 * Math.random()) - 1); // inclination
-            const theta = Math.random() * 2 * Math.PI; // azimuth
-            const r = 2 + Math.random() * 0.2; // radius with a little variation
-            posArray[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta); // x
-            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta); // y
-            posArray[i * 3 + 2] = r * Math.cos(phi); // z
+            const phi = Math.acos((2 * Math.random()) - 1);
+            const theta = Math.random() * 2 * Math.PI;
+            const r = 2 + Math.random() * 0.2;
+            posArray[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            posArray[i * 3 + 2] = r * Math.cos(phi);
         }
         sphereGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const sphereMaterial = new THREE.PointsMaterial({ size: 0.015, color: 0x8A2BE2 }); // Purple-ish color
+        const sphereMaterial = new THREE.PointsMaterial({ 
+            size: 0.05, 
+            color: 0x8A2BE2,
+            map: particleTexture,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
         sphereParticles = new THREE.Points(sphereGeometry, sphereMaterial);
         voiceScene.add(sphereParticles);
         
@@ -1034,7 +1062,6 @@ When generating code blocks, always use markdown format with language identifier
 
     function createLogoParticles() {
         const loader = new THREE.TextureLoader();
-        // We load the texture to get dimensions, but won't use its colors.
         loader.load('graxybot.png', (texture) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -1046,11 +1073,10 @@ When generating code blocks, always use markdown format with language identifier
             
             const geometry = new THREE.BufferGeometry();
             const positions = [];
-
             for (let y = 0; y < imageData.height; y+=2) {
                 for (let x = 0; x < imageData.width; x+=2) {
                     const i = (y * imageData.width + x) * 4;
-                    if (imageData.data[i+3] > 128) { // Only use non-transparent pixels
+                    if (imageData.data[i+3] > 128) {
                         const posX = (x - imageData.width / 2) / 50;
                         const posY = (-y + imageData.height / 2) / 50;
                         positions.push(posX, posY, 0);
@@ -1059,11 +1085,13 @@ When generating code blocks, always use markdown format with language identifier
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             
-            // Use a single blue color instead of vertex colors
             const material = new THREE.PointsMaterial({ 
-                size: 0.05, 
-                color: 0x4f46e5, // Use the primary blue color
-                transparent: true
+                size: 0.07, 
+                color: 0x4f46e5,
+                map: particleTexture,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
             });
             logoParticles = new THREE.Points(geometry, material);
             logoParticles.position.z = 2;
@@ -1123,11 +1151,24 @@ When generating code blocks, always use markdown format with language identifier
         };
         speechRecognition.onend = () => { 
             isListening = false;
-            if(voiceModeOverlay.classList.contains('visible')){
+            if (voiceModeOverlay.classList.contains('visible')) {
                 voiceMicBtn.classList.remove('listening');
-                 if(transcribedText.textContent && transcribedText.textContent !== 'Listening...') {
-                    handleSendMessage(transcribedText.textContent);
-                 }
+                const finalTranscript = transcribedText.textContent;
+                if (finalTranscript && finalTranscript !== 'Listening...') {
+                    (async () => {
+                        await handleSendMessage(finalTranscript);
+                        setTimeout(() => {
+                            if (voiceModeOverlay.classList.contains('visible')) {
+                                transcribedText.textContent = '';
+                                botResponseText.textContent = '';
+                                toggleSpeechRecognition();
+                            }
+                        }, 1500);
+                    })();
+                } else if (voiceModeOverlay.classList.contains('visible')) {
+                    // If no speech was detected but we're still in voice mode, listen again
+                    setTimeout(toggleSpeechRecognition, 500);
+                }
             } else {
                 updateActionButtonsState(); 
                 messageInput.placeholder = "Ask me anything..."; 
@@ -1138,7 +1179,9 @@ When generating code blocks, always use markdown format with language identifier
             console.error(e.error); 
             showToast(`Mic error: ${e.error}`, 'error'); 
             isListening = false;
-            voiceMicBtn.classList.remove('listening');
+            if (voiceModeOverlay.classList.contains('visible')) {
+                voiceMicBtn.classList.remove('listening');
+            }
             updateActionButtonsState();
         };
     }
