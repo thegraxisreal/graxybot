@@ -342,6 +342,66 @@ body {
         padding: 0.75rem;
     }
 }
+
+/* --- Voice Mode Styles --- */
+#voice-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background);
+    z-index: 1002;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#voice-mode-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+#voice-mode-exit-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    font-size: 1.5rem;
+}
+#voice-mode-canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.voice-mode-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: var(--text-primary);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+#transcribed-text, #bot-response-text {
+    font-size: 1.5rem;
+    font-weight: 500;
+    max-width: 80%;
+    margin-bottom: 2rem;
+    transition: opacity 0.3s ease;
+}
+#thinking-indicator-voice {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: none; /* Initially hidden */
+}
 </style>
 </head>
 <body>
@@ -364,7 +424,7 @@ body {
     </div>
 </div>
 
-<div class="chat-app">
+<div class="chat-app" id="chat-app">
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="new-chat-btn" id="new-chat-btn">
@@ -388,7 +448,6 @@ body {
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
-            <!-- Messages will appear here -->
         </div>
         <footer class="chat-input-container">
             <div id="image-preview-area" style="display: none;">
@@ -409,6 +468,17 @@ body {
     </main>
 </div>
 
+<div id="voice-mode-overlay">
+    <div id="voice-mode-canvas-container"></div>
+    <button class="icon-btn" id="voice-mode-exit-btn"><i class="fas fa-times"></i></button>
+    <div class="voice-mode-content">
+        <p id="transcribed-text"></p>
+        <p id="thinking-indicator-voice">Thinking...</p>
+        <p id="bot-response-text"></p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
@@ -427,11 +497,12 @@ body {
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
 
     // --- DOM Element References ---
-    let chatMessagesContainer, messageInput, sendButton, createImageButton;
+    let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+    let voiceModeOverlay, voiceModeCanvasContainer, voiceModeExitBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
 
     // --- Application State ---
     let chats = {};
@@ -441,9 +512,12 @@ body {
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
+    
+    // --- Voice Mode 3D Scene ---
+    let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles;
 
     // --- Core Functions ---
-
+    // ... (All existing functions like showToast, loadData, etc. go here)
     function showToast(message, type = 'info', duration = 3000) {
         if (!toastContainer) return;
         const toast = document.createElement('div');
@@ -456,9 +530,7 @@ body {
             toast.addEventListener('transitionend', () => toast.remove(), { once: true });
         }, duration);
     }
-
     function generateChatId() { return `chat_${Date.now()}`; }
-
     function loadData() {
         try {
             const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
@@ -477,7 +549,6 @@ body {
             chats = {}; currentChatId = null;
         }
     }
-
     function saveChats() {
         try {
             localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats));
@@ -488,13 +559,11 @@ body {
             }
         } catch (e) { console.error("Error saving chats:", e); }
     }
-    
     function savePersonalitySettings() {
         try {
             localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(userPersonality));
         } catch (e) { console.error("Error saving personality:", e); }
     }
-    
     function updateActionButtonsState() {
         const isBusy = isRequestInProgress || isListening;
         sendButton.disabled = isBusy || (!messageInput.value.trim() && !selectedImageData);
@@ -505,7 +574,6 @@ body {
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
         settingsButton.disabled = isBusy;
     }
-
     function getSystemPrompt(currentModelName) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.
 You are currently running on the ${currentModelName} model.
@@ -520,24 +588,18 @@ Refer to yourself as Graxybot.
 IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen.
 When asked for code, default to HTML.
 When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\``;
-        
         if (userPersonality.name) {
              basePrompt += `\nAddress the user as "${userPersonality.name}".`;
         }
-        
         return basePrompt;
     }
-
     function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null) {
-       if (!currentChatId) {
-           handleNewChat(false);
-       }
+       if (!currentChatId) { handleNewChat(false); }
        if (!chats[currentChatId]) return;
        if (role === 'user' && chats[currentChatId].history.length === 0) {
            const firstText = contentParts.find(p => p.text)?.text;
            chats[currentChatId].title = firstText ? firstText.substring(0, 30) : "New Chat";
            renderChatList();
-           // No need to update the h1 title text here, just the list
        }
        const messageData = { role, parts: contentParts, timestamp: new Date().toISOString() };
        if (imagePreview) messageData.imagePreview = imagePreview;
@@ -548,7 +610,6 @@ When generating code blocks, always use markdown format with language identifier
        chats[currentChatId].history.push(messageData);
        saveChats();
     }
-    
     function showThinkingIndicator(message = 'Thinking...') {
         removeThinkingIndicator();
         currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, 'fa-brain', message);
@@ -558,20 +619,17 @@ When generating code blocks, always use markdown format with language identifier
             if (msgDiv) msgDiv.innerHTML = `<span></span><span></span><span></span> ${message}`;
         }
     }
-
     function removeThinkingIndicator() {
         if (currentThinkingIndicatorElement) {
             currentThinkingIndicatorElement.remove();
             currentThinkingIndicatorElement = null;
         }
     }
-    
     function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null) {
         mainContent.classList.remove('new-chat-active');
         const wrapper = document.createElement('div');
         wrapper.className = 'message-content-wrapper';
         if (sender === 'user') wrapper.classList.add('user-message');
-
         const iconDiv = document.createElement('div');
         iconDiv.className = 'message-icon';
         if (sender === 'user') {
@@ -588,18 +646,14 @@ When generating code blocks, always use markdown format with language identifier
                 iconDiv.appendChild(img);
             }
         }
-        
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'message-bubble';
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message';
         if (isError) messageDiv.classList.add('error-message');
-
         const paragraph = document.createElement('p');
         paragraph.dataset.streamTarget = "true";
-
         let textContent = Array.isArray(contentParts) ? (contentParts.find(p => p.text)?.text || '') : '';
-
         if (generatedMediaSrc) {
             const media = document.createElement('img');
             media.src = generatedMediaSrc; media.className = 'generated-image';
@@ -610,21 +664,17 @@ When generating code blocks, always use markdown format with language identifier
             img.src = imagePreview; img.className = 'sent-image';
             messageDiv.appendChild(img);
         }
-
         if (textContent) processAndAppendText(textContent, paragraph);
         if (paragraph.hasChildNodes() || paragraph.textContent || sender === 'bot') {
             messageDiv.appendChild(paragraph);
         }
-
         bubbleDiv.appendChild(messageDiv);
         wrapper.appendChild(iconDiv);
         wrapper.appendChild(bubbleDiv);
         chatMessagesContainer.appendChild(wrapper);
         chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' });
-        
         return wrapper;
     }
-
     function processAndAppendText(text, targetElement) {
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
         let lastIndex = 0, match;
@@ -652,7 +702,6 @@ When generating code blocks, always use markdown format with language identifier
         targetElement.innerHTML += text.substring(lastIndex).replace(/\n/g, '<br>');
         if (window.Prism) setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
     }
-    
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
             showToast("Code copied!", 'success');
@@ -660,7 +709,6 @@ When generating code blocks, always use markdown format with language identifier
             setTimeout(() => { buttonElement.textContent = 'Copy'; }, 2000);
         });
     }
-    
     function renderChatList() {
         chatList.innerHTML = '';
         const sortedChatIds = Object.keys(chats).sort((a,b) => (chats[b].history[0]?.timestamp || 0) - (chats[a].history[0]?.timestamp || 0));
@@ -670,18 +718,15 @@ When generating code blocks, always use markdown format with language identifier
             li.dataset.chatId = id;
             li.textContent = chats[id].title || 'Chat';
             if (id === currentChatId) li.classList.add('active');
-
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-chat-btn';
             deleteBtn.innerHTML = '&times;';
             deleteBtn.onclick = (e) => { e.stopPropagation(); handleDeleteChat(id); };
-
             li.appendChild(deleteBtn);
             li.onclick = () => handleSelectChat(id);
             chatList.appendChild(li);
         });
     }
-    
     function loadChat(chatId) {
         if (!chats[chatId]) return;
         currentChatId = chatId;
@@ -697,7 +742,6 @@ When generating code blocks, always use markdown format with language identifier
              mainContent.classList.add('new-chat-active');
         }
     }
-
     function handleNewChat(clearUI = true) {
         const newId = generateChatId();
         chats[newId] = { history: [], title: "New Chat" };
@@ -709,13 +753,11 @@ When generating code blocks, always use markdown format with language identifier
             mainContent.classList.add('new-chat-active');
         }
     }
-
     function handleSelectChat(id) {
         if (id === currentChatId) return;
         sidebar.classList.remove('visible');
         loadChat(id);
     }
-
     function handleDeleteChat(id) {
         if (confirm(`Are you sure you want to delete "${chats[id].title}"?`)) {
             delete chats[id];
@@ -728,8 +770,6 @@ When generating code blocks, always use markdown format with language identifier
             renderChatList();
         }
     }
-
-    // --- Image and Send Logic ---
     async function handleImageSelection(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -754,7 +794,6 @@ When generating code blocks, always use markdown format with language identifier
             removeSelectedImage();
         }
     }
-    
     function removeSelectedImage() {
         selectedImageData = null; selectedImageMimeType = null;
         if (selectedImagePreviewUrl) URL.revokeObjectURL(selectedImagePreviewUrl);
@@ -763,7 +802,6 @@ When generating code blocks, always use markdown format with language identifier
         imageUploadInput.value = '';
         updateActionButtonsState();
     }
-    
     async function triggerStableDiffusionGeneration(promptText) {
         showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
         isRequestInProgress = true; updateActionButtonsState();
@@ -787,10 +825,14 @@ When generating code blocks, always use markdown format with language identifier
             isRequestInProgress = false; deactivateImageGenerationMode(); updateActionButtonsState();
         }
     }
-
-    async function sendMessageToOpenAI(messages, modelName) {
-        const botMessageElement = displayMessage([], 'bot');
-        const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
+    async function sendMessageToOpenAI(messages, modelName, isVoiceMode = false) {
+        if(isVoiceMode) {
+            thinkingIndicatorVoice.style.display = 'block';
+        } else {
+             const botMessageElement = displayMessage([], 'bot');
+             const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
+        }
+        
         let fullResponseText = "";
         try {
             const response = await fetch(OPENAI_PROXY_ENDPOINT, {
@@ -812,24 +854,42 @@ When generating code blocks, always use markdown format with language identifier
                             const content = json.choices[0]?.delta?.content || '';
                             if (content) {
                                 fullResponseText += content;
-                                paragraph.innerHTML += content.replace(/\n/g, '<br>');
-                                chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
+                                if (!isVoiceMode) {
+                                    const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
+                                    if(paragraph) {
+                                       paragraph.innerHTML += content.replace(/\n/g, '<br>');
+                                       chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
+                                    }
+                                }
                             }
                         } catch (e) { /* ignore */ }
                     }
                 });
             }
-            processAndAppendText(fullResponseText, paragraph);
+            if(isVoiceMode) {
+                botResponseText.textContent = fullResponseText;
+            } else {
+                const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
+                if(paragraph) processAndAppendText(fullResponseText, paragraph);
+            }
             return fullResponseText;
         } catch (error) {
-            paragraph.textContent = `Error: ${error.message}`;
-            botMessageElement.classList.add('error-message');
+            if(isVoiceMode){
+                botResponseText.textContent = `Error: ${error.message}`;
+            } else {
+                const paragraph = document.querySelector('.message-bubble:last-of-type p[data-stream-target="true"]');
+                if(paragraph) {
+                    paragraph.textContent = `Error: ${error.message}`;
+                    paragraph.parentElement.classList.add('error-message');
+                }
+            }
             throw error;
+        } finally {
+            if(isVoiceMode) thinkingIndicatorVoice.style.display = 'none';
         }
     }
-
-    async function handleSendMessage() {
-        const messageText = messageInput.value.trim();
+    async function handleSendMessage(messageTextFromVoice = null) {
+        const messageText = messageTextFromVoice ?? messageInput.value.trim();
         if (!messageText && !selectedImageData) return;
         
         mainContent.classList.remove('new-chat-active');
@@ -840,8 +900,11 @@ When generating code blocks, always use markdown format with language identifier
         if (messageText) userMessageParts.push({ text: messageText });
         
         addMessageToHistory('user', userMessageParts, selectedImagePreviewUrl);
-        displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
         
+        if (!messageTextFromVoice) {
+            displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
+        }
+
         const currentPrompt = messageText;
         messageInput.value = '';
         removeSelectedImage();
@@ -860,34 +923,179 @@ When generating code blocks, always use markdown format with language identifier
             const messagesForOpenAI = [{ role: "system", content: systemPrompt }, ...historyForAPI];
             
             try {
-                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse);
+                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse, !!messageTextFromVoice);
                 addMessageToHistory('model', [{ text: aiResponse }]);
             } catch (error) {
             } finally {
-                isRequestInProgress = false; updateActionButtonsState();
+                isRequestInProgress = false;
+                if(!messageTextFromVoice) updateActionButtonsState();
             }
         }
     }
 
-    // --- UI and Mode Toggles ---
+    // --- Voice Mode & 3D Scene ---
+    function initVoiceScene() {
+        voiceScene = new THREE.Scene();
+        voiceCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        voiceRenderer = new THREE.WebGLRenderer({ alpha: true });
+        voiceRenderer.setSize(window.innerWidth, window.innerHeight);
+        voiceModeCanvasContainer.appendChild(voiceRenderer.domElement);
+        voiceCamera.position.z = 5;
+
+        // Create central particle sphere
+        const sphereGeometry = new THREE.BufferGeometry();
+        const sphereParticlesCount = 3000;
+        const posArray = new Float32Array(sphereParticlesCount * 3);
+        for(let i = 0; i < sphereParticlesCount * 3; i++) {
+            const phi = Math.acos((2 * Math.random()) - 1); // inclination
+            const theta = Math.random() * 2 * Math.PI; // azimuth
+            const r = 2 + Math.random() * 0.2; // radius with a little variation
+            posArray[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta); // x
+            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta); // y
+            posArray[i * 3 + 2] = r * Math.cos(phi); // z
+        }
+        sphereGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const sphereMaterial = new THREE.PointsMaterial({ size: 0.015, color: 0x8A2BE2 }); // Purple-ish color
+        sphereParticles = new THREE.Points(sphereGeometry, sphereMaterial);
+        voiceScene.add(sphereParticles);
+        
+        window.addEventListener('resize', onVoiceWindowResize, false);
+    }
+    
+    function onVoiceWindowResize() {
+        if (!voiceRenderer) return;
+        voiceCamera.aspect = window.innerWidth / window.innerHeight;
+        voiceCamera.updateProjectionMatrix();
+        voiceRenderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animateVoiceScene() {
+        if (!voiceModeOverlay.classList.contains('visible')) return;
+        requestAnimationFrame(animateVoiceScene);
+        
+        if (sphereParticles) sphereParticles.rotation.y += 0.001;
+        if (logoParticles) logoParticles.rotation.y -= 0.001;
+
+        voiceRenderer.render(voiceScene, voiceCamera);
+    }
+
+    function createLogoParticles() {
+        // This function remains the same, creating particles from the logo
+        const loader = new THREE.TextureLoader();
+        loader.load('graxybot.png', (texture) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = texture.image;
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+            
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+
+            for (let y = 0; y < imageData.height; y+=2) {
+                for (let x = 0; x < imageData.width; x+=2) {
+                    const i = (y * imageData.width + x) * 4;
+                    if (imageData.data[i+3] > 128) {
+                        const posX = (x - imageData.width / 2) / 50;
+                        const posY = (-y + imageData.height / 2) / 50;
+                        positions.push(posX, posY, 0);
+                        colors.push(imageData.data[i]/255, imageData.data[i+1]/255, imageData.data[i+2]/255);
+                    }
+                }
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            const material = new THREE.PointsMaterial({ 
+                size: 0.05, 
+                vertexColors: true,
+                transparent: true
+            });
+            logoParticles = new THREE.Points(geometry, material);
+            logoParticles.position.z = 2;
+            voiceScene.add(logoParticles);
+        });
+    }
+
+    function enterVoiceMode() {
+        chatApp.style.transition = 'opacity 0.5s ease';
+        chatApp.style.opacity = '0';
+        
+        voiceModeOverlay.classList.add('visible');
+        
+        if (!voiceScene) {
+            initVoiceScene();
+        }
+        createLogoParticles();
+        animateVoiceScene();
+
+        setTimeout(() => {
+            toggleSpeechRecognition();
+        }, 500);
+    }
+    
+    function exitVoiceMode() {
+        chatApp.style.opacity = '1';
+        voiceModeOverlay.classList.remove('visible');
+        isListening = false;
+        if(speechRecognition) speechRecognition.stop();
+        if(logoParticles) voiceScene.remove(logoParticles);
+        logoParticles = null;
+    }
+
+    // --- UI Toggles & Handlers ---
     function initializeSpeechRecognition() {
         const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechAPI) { micButton.style.display = 'none'; return; }
         speechRecognition = new SpeechAPI();
-        speechRecognition.onstart = () => { isListening = true; updateActionButtonsState(); messageInput.placeholder = "Listening..."; };
-        speechRecognition.onresult = (e) => { messageInput.value = e.results[0][0].transcript; };
-        speechRecognition.onend = () => { isListening = false; updateActionButtonsState(); messageInput.placeholder = "Ask me anything..."; if(messageInput.value) handleSendMessage(); };
-        speechRecognition.onerror = (e) => { console.error(e.error); showToast(`Mic error: ${e.error}`, 'error'); isListening = false; updateActionButtonsState(); };
+        speechRecognition.onstart = () => { 
+            isListening = true; 
+            if(voiceModeOverlay.classList.contains('visible')){
+                 botResponseText.textContent = '';
+                 transcribedText.textContent = 'Listening...';
+            } else {
+                updateActionButtonsState(); 
+                messageInput.placeholder = "Listening...";
+            }
+        };
+        speechRecognition.onresult = (e) => { 
+            const transcript = e.results[0][0].transcript;
+            if(voiceModeOverlay.classList.contains('visible')){
+                transcribedText.textContent = transcript;
+            } else {
+                 messageInput.value = transcript; 
+            }
+        };
+        speechRecognition.onend = () => { 
+            isListening = false;
+            if(voiceModeOverlay.classList.contains('visible')){
+                 if(transcribedText.textContent && transcribedText.textContent !== 'Listening...') {
+                    handleSendMessage(transcribedText.textContent);
+                 }
+            } else {
+                updateActionButtonsState(); 
+                messageInput.placeholder = "Ask me anything..."; 
+                if(messageInput.value) handleSendMessage(); 
+            }
+        };
+        speechRecognition.onerror = (e) => { 
+            console.error(e.error); 
+            showToast(`Mic error: ${e.error}`, 'error'); 
+            isListening = false; 
+            updateActionButtonsState();
+        };
     }
-    
     function toggleSpeechRecognition() {
-        if (isListening) speechRecognition.stop();
-        else {
-            if (!speechRecognition) initializeSpeechRecognition();
-            speechRecognition.start();
+        if(isListening) {
+             speechRecognition.stop();
+        } else {
+             if (!speechRecognition) initializeSpeechRecognition();
+             speechRecognition.start();
         }
     }
-
     function deactivateImageGenerationMode() {
         isImageGenerationModeActive = false;
         messageInput.placeholder = "Ask me anything...";
@@ -899,7 +1107,6 @@ When generating code blocks, always use markdown format with language identifier
         updateActionButtonsState();
         messageInput.focus();
     }
-    
     function showPersonalityModal() {
         userNameInput.value = userPersonality.name || '';
         responseStyleInput.value = userPersonality.responseStyle || '';
@@ -921,6 +1128,7 @@ When generating code blocks, always use markdown format with language identifier
         // Assign DOM elements
         loader = document.getElementById('loader');
         toastContainer = document.getElementById('toast-container');
+        chatApp = document.getElementById('chat-app');
         sidebar = document.getElementById('sidebar');
         mainContent = document.getElementById('main-content');
         newChatBtn = document.getElementById('new-chat-btn');
@@ -943,6 +1151,12 @@ When generating code blocks, always use markdown format with language identifier
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+        voiceModeOverlay = document.getElementById('voice-mode-overlay');
+        voiceModeCanvasContainer = document.getElementById('voice-mode-canvas-container');
+        voiceModeExitBtn = document.getElementById('voice-mode-exit-btn');
+        transcribedText = document.getElementById('transcribed-text');
+        botResponseText = document.getElementById('bot-response-text');
+        thinkingIndicatorVoice = document.getElementById('thinking-indicator-voice');
         
         // Load data and render UI
         loadData();
@@ -961,14 +1175,15 @@ When generating code blocks, always use markdown format with language identifier
         });
         settingsButton.addEventListener('click', showPersonalityModal);
         menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible'));
-        sendButton.addEventListener('click', handleSendMessage);
-        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
+        sendButton.addEventListener('click', ()=> handleSendMessage(null));
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(null); } });
         messageInput.addEventListener('input', updateActionButtonsState);
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
         imageUploadButton.addEventListener('click', () => imageUploadInput.click());
         imageUploadInput.addEventListener('change', handleImageSelection);
         removeImageButton.addEventListener('click', removeSelectedImage);
-        micButton.addEventListener('click', toggleSpeechRecognition);
+        micButton.addEventListener('click', enterVoiceMode);
+        voiceModeExitBtn.addEventListener('click', exitVoiceMode);
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
