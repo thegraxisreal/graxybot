@@ -123,6 +123,7 @@ body {
     height: 100%;
     width: 100%;
     box-sizing: border-box;
+    position: relative; /* Context for absolute positioning */
 }
 .chat-top-bar {
     padding: 0.75rem 1.5rem;
@@ -131,37 +132,49 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    height: 38px; /* Give it a static height */
 }
 .menu-toggle {
     display: none; /* Hidden on desktop */
 }
-.chat-top-bar h1 {
+
+/* Title Animation */
+#chat-title {
     margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--primary);
+    white-space: nowrap;
+    position: absolute;
+    /* Corner is the default state */
+    top: 0.75rem;
+    left: 4rem; /* Aligned with top bar content */
+    font-size: 1.2rem;
+    transform: scale(1);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.main-content.new-chat-active #chat-title {
+    /* Center state */
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+}
+@media (max-width: 768px) {
+    #chat-title.title-corner {
+        font-size: 1.1rem;
+    }
+    .main-content.new-chat-active #chat-title {
+         font-size: 2.5rem;
+    }
+}
+
+
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
     padding: 20px 15px;
     display: flex;
     flex-direction: column;
-}
-.welcome-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex-grow: 1;
-    color: var(--text-secondary);
-}
-.welcome-title {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 2rem;
 }
 
 /* --- Message Bubbles --- */
@@ -310,7 +323,7 @@ body {
         left: 0;
         top: 0;
         height: 100%;
-        z-index: 1000;
+        z-index: 1001; /* Above main content */
         transform: translateX(-100%);
     }
     .sidebar.visible {
@@ -322,14 +335,11 @@ body {
     .menu-toggle {
         display: block;
     }
-    .chat-top-bar h1 {
-        font-size: 1.1rem;
+     #chat-title.title-corner {
+        left: 4rem; /* Readjust for mobile */
     }
     .chat-input-container {
         padding: 0.75rem;
-    }
-    .welcome-title {
-        font-size: 2.5rem;
     }
 }
 </style>
@@ -370,7 +380,7 @@ body {
         </div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         <div class="chat-top-bar">
              <button class="icon-btn menu-toggle" id="menu-toggle">
                 <i class="fas fa-bars"></i>
@@ -378,9 +388,7 @@ body {
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
-            <div class="welcome-container" id="welcome-container">
-                <h1 class="welcome-title">Graxybot</h1>
-            </div>
+            <!-- Messages will appear here -->
         </div>
         <footer class="chat-input-container">
             <div id="image-preview-area" style="display: none;">
@@ -421,8 +429,8 @@ body {
     // --- DOM Element References ---
     let chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
-    let loader, toastContainer, welcomeContainer, micButton, speechRecognition, isListening = false;
-    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle;
+    let loader, toastContainer, micButton, speechRecognition, isListening = false;
+    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
 
     // --- Application State ---
@@ -436,7 +444,6 @@ body {
 
     // --- Core Functions ---
 
-    /** Displays a temporary toast notification. */
     function showToast(message, type = 'info', duration = 3000) {
         if (!toastContainer) return;
         const toast = document.createElement('div');
@@ -450,10 +457,8 @@ body {
         }, duration);
     }
 
-    /** Generates a unique ID for a new chat. */
     function generateChatId() { return `chat_${Date.now()}`; }
 
-    /** Loads data from localStorage. */
     function loadData() {
         try {
             const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
@@ -473,7 +478,6 @@ body {
         }
     }
 
-    /** Saves all chats and current chat ID to localStorage. */
     function saveChats() {
         try {
             localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats));
@@ -485,14 +489,12 @@ body {
         } catch (e) { console.error("Error saving chats:", e); }
     }
     
-    /** Saves personality settings. */
     function savePersonalitySettings() {
         try {
             localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(userPersonality));
         } catch (e) { console.error("Error saving personality:", e); }
     }
     
-    /** Updates the state of all interactive buttons. */
     function updateActionButtonsState() {
         const isBusy = isRequestInProgress || isListening;
         sendButton.disabled = isBusy || (!messageInput.value.trim() && !selectedImageData);
@@ -504,7 +506,6 @@ body {
         settingsButton.disabled = isBusy;
     }
 
-    /** Gets the system prompt for OpenAI. */
     function getSystemPrompt(currentModelName) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.
 You are currently running on the ${currentModelName} model.
@@ -527,32 +528,27 @@ When generating code blocks, always use markdown format with language identifier
         return basePrompt;
     }
 
-    /** Adds a message to the current chat's history object. */
     function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null) {
        if (!currentChatId) {
-           handleNewChat(false); // Create a new chat but don't clear the UI yet
+           handleNewChat(false);
        }
        if (!chats[currentChatId]) return;
-
-        // Set title on first user message
        if (role === 'user' && chats[currentChatId].history.length === 0) {
            const firstText = contentParts.find(p => p.text)?.text;
            chats[currentChatId].title = firstText ? firstText.substring(0, 30) : "New Chat";
            renderChatList();
+           // No need to update the h1 title text here, just the list
        }
-
        const messageData = { role, parts: contentParts, timestamp: new Date().toISOString() };
        if (imagePreview) messageData.imagePreview = imagePreview;
        if (generatedMediaSrc) {
            messageData.generatedMediaSrc = generatedMediaSrc;
            messageData.mediaPrompt = mediaPrompt;
        }
-
        chats[currentChatId].history.push(messageData);
        saveChats();
     }
     
-    /** Displays a "thinking" indicator in the chat. */
     function showThinkingIndicator(message = 'Thinking...') {
         removeThinkingIndicator();
         currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, 'fa-brain', message);
@@ -563,7 +559,6 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
-    /** Removes the thinking indicator. */
     function removeThinkingIndicator() {
         if (currentThinkingIndicatorElement) {
             currentThinkingIndicatorElement.remove();
@@ -571,10 +566,8 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     
-    /** Displays a message in the chat UI. */
     function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null) {
-        if (welcomeContainer) welcomeContainer.style.display = 'none';
-
+        mainContent.classList.remove('new-chat-active');
         const wrapper = document.createElement('div');
         wrapper.className = 'message-content-wrapper';
         if (sender === 'user') wrapper.classList.add('user-message');
@@ -591,7 +584,7 @@ When generating code blocks, always use markdown format with language identifier
                 const img = document.createElement('img');
                 img.src = BOT_ICON_SRC;
                 img.alt = "G";
-                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`; // Fallback
+                img.onerror = () => iconDiv.innerHTML = `<i class="fas fa-robot"></i>`;
                 iconDiv.appendChild(img);
             }
         }
@@ -632,7 +625,6 @@ When generating code blocks, always use markdown format with language identifier
         return wrapper;
     }
 
-    /** Processes text for code blocks. */
     function processAndAppendText(text, targetElement) {
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
         let lastIndex = 0, match;
@@ -661,7 +653,6 @@ When generating code blocks, always use markdown format with language identifier
         if (window.Prism) setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
     }
     
-    /** Copies code to clipboard. */
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
             showToast("Code copied!", 'success');
@@ -670,7 +661,6 @@ When generating code blocks, always use markdown format with language identifier
         });
     }
     
-    /** Renders the list of chats in the sidebar. */
     function renderChatList() {
         chatList.innerHTML = '';
         const sortedChatIds = Object.keys(chats).sort((a,b) => (chats[b].history[0]?.timestamp || 0) - (chats[a].history[0]?.timestamp || 0));
@@ -692,24 +682,22 @@ When generating code blocks, always use markdown format with language identifier
         });
     }
     
-    /** Loads a selected chat into the main view. */
     function loadChat(chatId) {
         if (!chats[chatId]) return;
         currentChatId = chatId;
         saveChats();
         renderChatList();
         chatMessagesContainer.innerHTML = '';
+        mainContent.classList.remove('new-chat-active');
         if (chats[chatId].history.length > 0) {
             chats[chatId].history.forEach(msg => {
                 displayMessage(msg.parts, msg.role, false, msg.imagePreview, msg.generatedMediaSrc, null, msg.mediaPrompt);
             });
         } else {
-             welcomeContainer.style.display = 'flex';
+             mainContent.classList.add('new-chat-active');
         }
-        chatTitle.textContent = chats[chatId].title || "Graxybot";
     }
 
-    /** Handles creating a new chat. */
     function handleNewChat(clearUI = true) {
         const newId = generateChatId();
         chats[newId] = { history: [], title: "New Chat" };
@@ -718,27 +706,23 @@ When generating code blocks, always use markdown format with language identifier
         renderChatList();
         if (clearUI) {
             chatMessagesContainer.innerHTML = '';
-            welcomeContainer.style.display = 'flex';
-            chatTitle.textContent = "Graxybot";
+            mainContent.classList.add('new-chat-active');
         }
     }
 
-    /** Handles selecting a chat from the list. */
     function handleSelectChat(id) {
         if (id === currentChatId) return;
-        sidebar.classList.remove('visible'); // Hide sidebar on mobile after selection
+        sidebar.classList.remove('visible');
         loadChat(id);
     }
 
-    /** Handles deleting a chat. */
     function handleDeleteChat(id) {
         if (confirm(`Are you sure you want to delete "${chats[id].title}"?`)) {
             delete chats[id];
             if (currentChatId === id) {
                 currentChatId = null;
                 chatMessagesContainer.innerHTML = '';
-                welcomeContainer.style.display = 'flex';
-                 chatTitle.textContent = "Graxybot";
+                 mainContent.classList.add('new-chat-active');
             }
             saveChats();
             renderChatList();
@@ -848,6 +832,7 @@ When generating code blocks, always use markdown format with language identifier
         const messageText = messageInput.value.trim();
         if (!messageText && !selectedImageData) return;
         
+        mainContent.classList.remove('new-chat-active');
         const imageWasAttached = !!selectedImageData;
         isRequestInProgress = true; updateActionButtonsState();
         
@@ -937,12 +922,12 @@ When generating code blocks, always use markdown format with language identifier
         loader = document.getElementById('loader');
         toastContainer = document.getElementById('toast-container');
         sidebar = document.getElementById('sidebar');
+        mainContent = document.getElementById('main-content');
         newChatBtn = document.getElementById('new-chat-btn');
         chatList = document.getElementById('chat-list');
         settingsButton = document.getElementById('settings-button');
         chatTitle = document.getElementById('chat-title');
         chatMessagesContainer = document.getElementById('chat-messages');
-        welcomeContainer = document.getElementById('welcome-container');
         messageInput = document.getElementById('message-input');
         sendButton = document.getElementById('send-button');
         createImageButton = document.getElementById('create-image-button');
@@ -962,7 +947,11 @@ When generating code blocks, always use markdown format with language identifier
         // Load data and render UI
         loadData();
         renderChatList();
-        if(currentChatId) { loadChat(currentChatId); }
+        if (currentChatId && chats[currentChatId]?.history.length > 0) {
+            loadChat(currentChatId);
+        } else {
+            mainContent.classList.add('new-chat-active');
+        }
         updateActionButtonsState();
 
         // Add Event Listeners
