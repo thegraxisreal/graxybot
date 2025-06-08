@@ -20,8 +20,9 @@
     --primary-light: #675ef2;
     --border-color: #e5e7eb;
     --input-bg: #f3f4f6;
+    /* UPDATED: Made message bubbles opaque for readability */
     --user-message-bg: #eef2ff;
-    --bot-message-bg: rgba(255, 255, 255, 0.85); /* Slightly transparent for wallpaper */
+    --bot-message-bg: #f9fafb;
     --hover-bg: #f3f4f6;
     --code-bg: #272822;
     --code-header-bg: #3a3b35;
@@ -150,16 +151,8 @@ body {
     background-repeat: no-repeat;
     transition: background-image 0.5s ease-in-out;
 }
-.main-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.5);
-    z-index: -1;
-}
+
+/* REMOVED: The ::before pseudo-element was hiding the background image. */
 
 .chat-messages, .chat-input-container {
     position: relative;
@@ -753,8 +746,6 @@ When generating code blocks, always use markdown format with language identifier
         return wrapper;
     }
     
-    // UPDATED: This function has been rewritten to safely append DOM elements
-    // instead of using innerHTML, which prevents event listeners from being destroyed.
     function processAndAppendText(text, targetElement) {
         targetElement.innerHTML = ''; // Clear the element first.
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
@@ -832,7 +823,6 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
-    // UPDATED: This function reliably copies code to the clipboard.
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
             showToast("Code copied!", 'success');
@@ -846,7 +836,6 @@ When generating code blocks, always use markdown format with language identifier
         });
     }
 
-    // NEW: This function runs HTML code in a new window.
     function handleRunCode(codeContent) {
         try {
             const newWindow = window.open('', '_blank');
