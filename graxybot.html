@@ -273,7 +273,7 @@ body {
 @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-4px); opacity: 1; } }
 .code-block-container { background-color: var(--code-bg); border-radius: 8px; margin: 10px 0; overflow: hidden; }
 .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
-.code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; } /* UPDATED */
+.code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; }
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; }
 
 /* Chat Input */
@@ -483,7 +483,7 @@ body {
 <div id="img2img-overlay" class="modal-overlay">
     <div id="img2img-modal-content" class="modal-content">
         <button class="close-modal-btn" id="close-img2img-modal-btn">&times;</button>
-        <h2>Image to Image</h2>
+        <h2>Edit Image</h2>
         <label>Upload an image to transform:</label>
         <div id="img2img-preview" class="modal-preview-box">
             <div class="spinner modal-spinner" id="img2img-spinner"></div>
@@ -753,13 +753,24 @@ When generating code blocks, always use markdown format with language identifier
         return wrapper;
     }
     
-    // UPDATED: This function is now responsible for creating the copy and run buttons.
+    // UPDATED: This function has been rewritten to safely append DOM elements
+    // instead of using innerHTML, which prevents event listeners from being destroyed.
     function processAndAppendText(text, targetElement) {
+        targetElement.innerHTML = ''; // Clear the element first.
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
-        let lastIndex = 0, match;
-        targetElement.innerHTML = '';
+        let lastIndex = 0;
+        let match;
+
         while ((match = codeBlockRegex.exec(text)) !== null) {
-            targetElement.innerHTML += text.substring(lastIndex, match.index).replace(/\n/g, '<br>');
+            // Append text before the code block
+            const precedingText = text.substring(lastIndex, match.index);
+            if (precedingText) {
+                const textSpan = document.createElement('span');
+                textSpan.innerHTML = precedingText.replace(/\n/g, '<br>');
+                targetElement.appendChild(textSpan);
+            }
+
+            // Handle the code block
             const lang = match[1]?.trim().toLowerCase() || 'plaintext';
             const code = match[2].trim();
             
@@ -775,7 +786,7 @@ When generating code blocks, always use markdown format with language identifier
             const buttonContainer = document.createElement('div');
             buttonContainer.className = 'code-block-buttons';
 
-            // NEW: Run Button
+            // Add Run button for HTML
             if (lang === 'html') {
                 const runButton = document.createElement('button');
                 runButton.innerHTML = '<i class="fas fa-play"></i> Run';
@@ -784,7 +795,7 @@ When generating code blocks, always use markdown format with language identifier
                 buttonContainer.appendChild(runButton);
             }
 
-            // UPDATED: Copy Button
+            // Add Copy button for all code blocks
             const copyButton = document.createElement('button');
             copyButton.innerHTML = '<i class="fas fa-copy"></i> Copy';
             copyButton.title = 'Copy Code';
@@ -803,13 +814,25 @@ When generating code blocks, always use markdown format with language identifier
             codeContainer.appendChild(header);
             codeContainer.appendChild(pre);
             targetElement.appendChild(codeContainer);
+            
             lastIndex = codeBlockRegex.lastIndex;
         }
-        targetElement.innerHTML += text.substring(lastIndex).replace(/\n/g, '<br>');
-        if (window.Prism) setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
+
+        // Append any remaining text after the last code block
+        const remainingText = text.substring(lastIndex);
+        if (remainingText) {
+            const textSpan = document.createElement('span');
+            textSpan.innerHTML = remainingText.replace(/\n/g, '<br>');
+            targetElement.appendChild(textSpan);
+        }
+
+        // Highlight syntax
+        if (window.Prism) {
+            setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
+        }
     }
 
-    // UPDATED: This function now copies the code to the clipboard reliably.
+    // UPDATED: This function reliably copies code to the clipboard.
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
             showToast("Code copied!", 'success');
@@ -823,14 +846,20 @@ When generating code blocks, always use markdown format with language identifier
         });
     }
 
-    // NEW: Function to run HTML code in a new window.
+    // NEW: This function runs HTML code in a new window.
     function handleRunCode(codeContent) {
-        const newWindow = window.open('about:blank', '_blank');
-        if (newWindow) {
-            newWindow.document.write(codeContent);
-            newWindow.document.close();
-        } else {
-            showToast("Please allow popups to run code.", 'error');
+        try {
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.open();
+                newWindow.document.write(codeContent);
+                newWindow.document.close();
+            } else {
+                showToast("Please allow pop-ups to run code.", 'error');
+            }
+        } catch (e) {
+             showToast("Error opening window. Check pop-up blocker.", 'error');
+             console.error("Error running code:", e);
         }
     }
 
@@ -1009,7 +1038,7 @@ When generating code blocks, always use markdown format with language identifier
                             if (content) {
                                 fullResponseText += content;
                                 if (paragraph) {
-                                   paragraph.innerHTML += content.replace(/\n/g, '<br>');
+                                   processAndAppendText(fullResponseText, paragraph); // Use the safe function to render stream
                                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
                             }
