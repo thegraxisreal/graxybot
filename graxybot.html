@@ -183,7 +183,6 @@ body {
     display: none;
 }
 
-/* --- CORRECTED TITLE ANIMATION --- */
 #chat-title {
     position: fixed; /* Position relative to viewport */
     margin: 0;
@@ -192,7 +191,6 @@ body {
     color: var(--primary);
     z-index: 10; /* Ensure above other elements */
     
-    /* Default state (top-left within chat-top-bar) */
     top: 1rem;
     left: 4.5rem;
     font-size: 1.2rem;
@@ -210,7 +208,6 @@ body {
     position: fixed;
 }
 
-/* Mobile responsive styles */
 @media (max-width: 768px) {
     #chat-title {
         left: 4.5rem; /* Align with menu icon */
@@ -276,7 +273,7 @@ body {
 @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-4px); opacity: 1; } }
 .code-block-container { background-color: var(--code-bg); border-radius: 8px; margin: 10px 0; overflow: hidden; }
 .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
-.code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; }
+.code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; } /* UPDATED */
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; }
 
 /* Chat Input */
@@ -382,7 +379,7 @@ body {
     color: var(--text-primary);
     margin-top: 10px;
 }
-.modal-preview-box { /* NEW: Reusable preview box style */
+.modal-preview-box {
     margin-top: 15px;
     height: 150px;
     border: 2px dashed var(--border-color);
@@ -400,13 +397,13 @@ body {
 .modal-preview-box:hover {
     border-color: var(--primary);
 }
-.modal-preview-box .modal-spinner { /* NEW: Reusable spinner style */
+.modal-preview-box .modal-spinner {
     display: none;
 }
 .modal-preview-box img {
     max-width: 100%; max-height: 100%;
 }
-.modal-preview-box .upload-text { /* NEW: Text for upload box */
+.modal-preview-box .upload-text {
     color: var(--text-secondary);
     font-size: 0.9rem;
 }
@@ -436,105 +433,6 @@ body {
     #chat-title.title-center {
         left: 50%;
         font-size: 2.5rem;
-    }
-}
-
-/* --- Voice Mode Styles --- */
-#voice-mode-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--background);
-    z-index: 1002;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-}
-#voice-mode-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
-#voice-mode-canvas-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-.voice-mode-content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    color: var(--text-primary);
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-}
-#transcribed-text, #bot-response-text {
-    font-size: 1.5rem;
-    font-weight: 500;
-    max-width: 80%;
-    margin: 2rem 0;
-    transition: opacity 0.3s ease;
-    min-height: 2em;
-}
-#thinking-indicator-voice {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    display: none;
-    height: 1.5rem;
-}
-.voice-mode-controls {
-    position: absolute;
-    bottom: 5%;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
-.voice-mode-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-#voice-mic-btn {
-    background-color: var(--primary);
-}
-#voice-mic-btn.listening {
-    animation: pulse 1.5s infinite;
-}
-#voice-hang-up-btn {
-    background-color: #ef4444; /* Red */
-}
-#voice-hang-up-btn:hover {
-    background-color: #dc2626; /* Darker Red */
-}
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 20px rgba(79, 70, 229, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
     }
 }
 </style>
@@ -581,7 +479,7 @@ body {
     </div>
 </div>
 
-<!-- NEW: Image-to-Image Modal -->
+<!-- Image-to-Image Modal -->
 <div id="img2img-overlay" class="modal-overlay">
     <div id="img2img-modal-content" class="modal-content">
         <button class="close-modal-btn" id="close-img2img-modal-btn">&times;</button>
@@ -638,10 +536,9 @@ body {
                 <div class="input-actions">
                     <button id="image-upload-button" class="icon-btn" title="Attach Image"><i class="fas fa-paperclip"></i></button>
                     <input type="file" id="image-upload-input" accept="image/*">
-                    <!-- NEW: Image-to-Image Button -->
                     <button id="img2img-button" class="icon-btn" title="Image to Image"><i class="fas fa-paint-brush"></i></button>
                     <button id="create-image-button" class="icon-btn" title="Create Image"><i class="fas fa-image"></i></button>
-                    <button id="mic-button" class="icon-btn" title="Start Speech Input"><i class="fas fa-microphone"></i></button>
+                    <button id="mic-button" class="icon-btn" title="Speech to Text"><i class="fas fa-microphone"></i></button>
                     <button id="send-button" class="icon-btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -649,22 +546,6 @@ body {
     </main>
 </div>
 
-<div id="voice-mode-overlay">
-    <div id="voice-mode-canvas-container"></div>
-    <div class="voice-mode-content">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <p id="transcribed-text"></p>
-            <p id="thinking-indicator-voice">Thinking...</p>
-            <p id="bot-response-text"></p>
-        </div>
-        <div class="voice-mode-controls">
-            <button class="icon-btn voice-mode-btn" id="voice-mic-btn"><i class="fas fa-microphone"></i></button>
-            <button class="icon-btn voice-mode-btn" id="voice-hang-up-btn"><i class="fas fa-phone-slash"></i></button>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 
@@ -689,29 +570,21 @@ body {
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, resetWallpaperBtn;
-    let voiceModeOverlay, voiceModeCanvasContainer, voiceMicBtn, voiceHangUpBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
-    // NEW: Image-to-Image DOM Elements
     let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
-
 
     // --- Application State ---
     let chats = {};
     let currentChatId = null;
     let isRequestInProgress = false;
     let isImageGenerationModeActive = false;
-    let isVoiceModeActive = false;
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
     let currentWallpaper = null;
     let generatedWallpaperData = null;
-    // NEW: Image-to-Image state
     let img2imgBaseImageData = null;
     
-    // --- Voice Mode 3D Scene ---
-    let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles, particleTexture;
-
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
         if (!toastContainer) return;
@@ -773,7 +646,7 @@ body {
         micButton.classList.toggle('active', isListening);
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
-        if (img2imgButton) img2imgButton.disabled = isBusy; // NEW
+        if (img2imgButton) img2imgButton.disabled = isBusy;
         settingsButton.disabled = isBusy;
     }
     function getSystemPrompt(currentModelName) {
@@ -786,7 +659,7 @@ Those restrictions only apply to global history questions. All other questions s
 Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.
 Keep your responses concise, helpful, and slightly informal.
 Refer to yourself as Graxybot.
-IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen.
+IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., 'draw a cat'), you should fulfill that request directly instead of referring them to the buttons.
 When asked for code, default to HTML.
 When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\``;
         if (userPersonality.name) {
@@ -879,24 +752,53 @@ When generating code blocks, always use markdown format with language identifier
         chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' });
         return wrapper;
     }
+    
+    // UPDATED: This function is now responsible for creating the copy and run buttons.
     function processAndAppendText(text, targetElement) {
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
         let lastIndex = 0, match;
         targetElement.innerHTML = '';
         while ((match = codeBlockRegex.exec(text)) !== null) {
             targetElement.innerHTML += text.substring(lastIndex, match.index).replace(/\n/g, '<br>');
-            const lang = match[1]?.trim() || 'plaintext';
+            const lang = match[1]?.trim().toLowerCase() || 'plaintext';
             const code = match[2].trim();
+            
             const codeContainer = document.createElement('div');
             codeContainer.className = 'code-block-container';
+
             const header = document.createElement('div');
             header.className = 'code-block-header';
-            header.innerHTML = `<span>${lang}</span><button title="Copy code">Copy</button>`;
-            header.querySelector('button').onclick = () => handleCopyCode(code, header.querySelector('button'));
+
+            const langSpan = document.createElement('span');
+            langSpan.textContent = lang;
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'code-block-buttons';
+
+            // NEW: Run Button
+            if (lang === 'html') {
+                const runButton = document.createElement('button');
+                runButton.innerHTML = '<i class="fas fa-play"></i> Run';
+                runButton.title = 'Run Code';
+                runButton.onclick = () => handleRunCode(code);
+                buttonContainer.appendChild(runButton);
+            }
+
+            // UPDATED: Copy Button
+            const copyButton = document.createElement('button');
+            copyButton.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            copyButton.title = 'Copy Code';
+            copyButton.onclick = (e) => handleCopyCode(code, e.currentTarget);
+            buttonContainer.appendChild(copyButton);
+            
+            header.appendChild(langSpan);
+            header.appendChild(buttonContainer);
+
             const pre = document.createElement('pre');
             const codeEl = document.createElement('code');
             codeEl.className = `language-${lang}`;
             codeEl.textContent = code;
+
             pre.appendChild(codeEl);
             codeContainer.appendChild(header);
             codeContainer.appendChild(pre);
@@ -906,13 +808,32 @@ When generating code blocks, always use markdown format with language identifier
         targetElement.innerHTML += text.substring(lastIndex).replace(/\n/g, '<br>');
         if (window.Prism) setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
     }
+
+    // UPDATED: This function now copies the code to the clipboard reliably.
     function handleCopyCode(codeContent, buttonElement) {
         navigator.clipboard.writeText(codeContent).then(() => {
             showToast("Code copied!", 'success');
-            buttonElement.textContent = 'Copied!';
-            setTimeout(() => { buttonElement.textContent = 'Copy'; }, 2000);
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { 
+                buttonElement.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy code: ', err);
+            showToast("Failed to copy code.", 'error');
         });
     }
+
+    // NEW: Function to run HTML code in a new window.
+    function handleRunCode(codeContent) {
+        const newWindow = window.open('about:blank', '_blank');
+        if (newWindow) {
+            newWindow.document.write(codeContent);
+            newWindow.document.close();
+        } else {
+            showToast("Please allow popups to run code.", 'error');
+        }
+    }
+
     function renderChatList() {
         chatList.innerHTML = '';
         const sortedChatIds = Object.keys(chats).sort((a,b) => (chats[b].history[0]?.timestamp || 0) - (chats[a].history[0]?.timestamp || 0));
@@ -1015,6 +936,17 @@ When generating code blocks, always use markdown format with language identifier
         imageUploadInput.value = '';
         updateActionButtonsState();
     }
+    
+    function isImageGenerationRequest(prompt) {
+        const lowercasedPrompt = prompt.toLowerCase();
+        const keywords = [
+            'draw', 'paint', 'sketch', 'illustrate', 'generate an image', 
+            'make an image', 'create an image', 'show me a picture', 'make a picture',
+            'create a picture'
+        ];
+        return keywords.some(keyword => lowercasedPrompt.includes(keyword));
+    }
+
     async function triggerStableDiffusionGeneration(promptText, isForWallpaper = false) {
         if(!isForWallpaper) showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
         isRequestInProgress = true; 
@@ -1051,14 +983,9 @@ When generating code blocks, always use markdown format with language identifier
             }
         }
     }
-    async function sendMessageToOpenAI(messages, modelName, isVoiceMode = false) {
-        let botMessageElement, paragraph;
-        if (isVoiceMode) {
-            thinkingIndicatorVoice.style.display = 'block';
-        } else {
-             botMessageElement = displayMessage([], 'bot');
-             paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
-        }
+    async function sendMessageToOpenAI(messages, modelName) {
+        const botMessageElement = displayMessage([], 'bot');
+        const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
         
         let fullResponseText = "";
         try {
@@ -1081,7 +1008,7 @@ When generating code blocks, always use markdown format with language identifier
                             const content = json.choices[0]?.delta?.content || '';
                             if (content) {
                                 fullResponseText += content;
-                                if (!isVoiceMode && paragraph) {
+                                if (paragraph) {
                                    paragraph.innerHTML += content.replace(/\n/g, '<br>');
                                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
@@ -1090,26 +1017,21 @@ When generating code blocks, always use markdown format with language identifier
                     }
                 });
             }
-            if(isVoiceMode) {
-                botResponseText.textContent = fullResponseText;
-            } else if (paragraph) {
+            if (paragraph) {
                 processAndAppendText(fullResponseText, paragraph);
             }
             return fullResponseText;
         } catch (error) {
-            if(isVoiceMode){
-                botResponseText.textContent = `Error: ${error.message}`;
-            } else if (paragraph) {
+            if (paragraph) {
                 paragraph.textContent = `Error: ${error.message}`;
                 paragraph.parentElement.classList.add('error-message');
             }
             throw error;
-        } finally {
-            if(isVoiceMode) thinkingIndicatorVoice.style.display = 'none';
         }
     }
-    async function handleSendMessage(messageTextFromVoice = null) {
-        const messageText = messageTextFromVoice ?? messageInput.value.trim();
+    
+    async function handleSendMessage() {
+        const messageText = messageInput.value.trim();
         if (!messageText && !selectedImageData) return;
         
         setChatActiveState(false);
@@ -1119,23 +1041,22 @@ When generating code blocks, always use markdown format with language identifier
         if (messageText) userMessageParts.push({ text: messageText });
         
         addMessageToHistory('user', userMessageParts, selectedImagePreviewUrl);
-        
-        if (!messageTextFromVoice) {
-            displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
-        }
+        displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
 
         const currentPrompt = messageText;
         messageInput.value = '';
         removeSelectedImage();
 
-        if (isImageGenerationModeActive) {
+        const shouldGenerateImage = isImageGenerationModeActive || isImageGenerationRequest(currentPrompt);
+
+        if (shouldGenerateImage) {
             isRequestInProgress = true; updateActionButtonsState();
             await triggerStableDiffusionGeneration(currentPrompt, false);
             isRequestInProgress = false; updateActionButtonsState();
 
         } else {
             isRequestInProgress = true; 
-            if(!messageTextFromVoice) updateActionButtonsState();
+            updateActionButtonsState();
             
             const modelToUse = currentPrompt.toLowerCase().includes("code") || imageWasAttached ? GPT_4_1_MODEL : OPENAI_MODEL;
             
@@ -1148,223 +1069,55 @@ When generating code blocks, always use markdown format with language identifier
             const messagesForOpenAI = [{ role: "system", content: systemPrompt }, ...historyForAPI];
             
             try {
-                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse, !!messageTextFromVoice);
+                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse);
                 addMessageToHistory('model', [{ text: aiResponse }]);
-                return aiResponse; // Return response for voice mode loop
             } catch (error) {
-                return null;
+                // Error is already displayed by sendMessageToOpenAI
             } finally {
                 isRequestInProgress = false;
-                if(!messageTextFromVoice) updateActionButtonsState();
+                updateActionButtonsState();
             }
         }
     }
-
-    // --- Voice Mode & 3D Scene ---
-    function createParticleTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const context = canvas.getContext('2d');
-        const gradient = context.createRadialGradient(
-            canvas.width / 2, canvas.height / 2, 0, 
-            canvas.width / 2, canvas.height / 2, canvas.width / 2
-        );
-        gradient.addColorStop(0, 'rgba(255,255,255,1)');
-        gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-        gradient.addColorStop(0.4, 'rgba(255,255,255,0.2)');
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        return new THREE.CanvasTexture(canvas);
-    }
     
-    function initVoiceScene() {
-        voiceScene = new THREE.Scene();
-        voiceCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        voiceRenderer = new THREE.WebGLRenderer({ alpha: true });
-        voiceRenderer.setSize(window.innerWidth, window.innerHeight);
-        voiceModeCanvasContainer.appendChild(voiceRenderer.domElement);
-        voiceCamera.position.z = 5;
-
-        particleTexture = createParticleTexture();
-
-        const sphereGeometry = new THREE.BufferGeometry();
-        const sphereParticlesCount = 3000;
-        const posArray = new Float32Array(sphereParticlesCount * 3);
-        for(let i = 0; i < sphereParticlesCount * 3; i++) {
-            const phi = Math.acos((2 * Math.random()) - 1);
-            const theta = Math.random() * 2 * Math.PI;
-            const r = 2 + Math.random() * 0.2;
-            posArray[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
-            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-            posArray[i * 3 + 2] = r * Math.cos(phi);
-        }
-        sphereGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const sphereMaterial = new THREE.PointsMaterial({ 
-            size: 0.05, 
-            color: 0x8A2BE2,
-            map: particleTexture,
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-        sphereParticles = new THREE.Points(sphereGeometry, sphereMaterial);
-        voiceScene.add(sphereParticles);
-        
-        window.addEventListener('resize', onVoiceWindowResize, false);
-    }
-    
-    function onVoiceWindowResize() {
-        if (!voiceRenderer) return;
-        voiceCamera.aspect = window.innerWidth / window.innerHeight;
-        voiceCamera.updateProjectionMatrix();
-        voiceRenderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function animateVoiceScene() {
-        if (!isVoiceModeActive) return;
-        requestAnimationFrame(animateVoiceScene);
-        
-        const time = Date.now() * 0.005;
-
-        if (isListening && sphereParticles) {
-            const scale = 1 + 0.05 * Math.sin(time * 2);
-            sphereParticles.scale.set(scale, scale, scale);
-        } else if (sphereParticles) {
-            sphereParticles.scale.set(1, 1, 1);
-        }
-
-        if (sphereParticles) sphereParticles.rotation.y += 0.001;
-        if (logoParticles) logoParticles.rotation.y -= 0.001;
-
-        voiceRenderer.render(voiceScene, voiceCamera);
-    }
-
-    function createLogoParticles() {
-        const loader = new THREE.TextureLoader();
-        loader.load('graxybot.png', (texture) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = texture.image;
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const imageData = ctx.getImageData(0, 0, img.width, img.height);
-            
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            for (let y = 0; y < imageData.height; y+=2) {
-                for (let x = 0; x < imageData.width; x+=2) {
-                    const i = (y * imageData.width + x) * 4;
-                    if (imageData.data[i+3] > 128) {
-                        const posX = (x - imageData.width / 2) / 50;
-                        const posY = (-y + imageData.height / 2) / 50;
-                        positions.push(posX, posY, 0);
-                    }
-                }
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({ 
-                size: 0.07, 
-                color: 0x4f46e5,
-                map: particleTexture,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false
-            });
-            logoParticles = new THREE.Points(geometry, material);
-            logoParticles.position.z = 2;
-            voiceScene.add(logoParticles);
-        });
-    }
-
-    function enterVoiceMode() {
-        isVoiceModeActive = true;
-        chatApp.style.transition = 'opacity 0.5s ease';
-        chatApp.style.opacity = '0';
-        
-        voiceModeOverlay.classList.add('visible');
-        
-        if (!voiceScene) {
-            initVoiceScene();
-        }
-        createLogoParticles();
-        animateVoiceScene();
-
-        setTimeout(() => {
-            toggleSpeechRecognition();
-        }, 500);
-    }
-    
-    function exitVoiceMode() {
-        isVoiceModeActive = false;
-        chatApp.style.opacity = '1';
-        voiceModeOverlay.classList.remove('visible');
-        isListening = false;
-        if(speechRecognition) speechRecognition.stop();
-        if(logoParticles) voiceScene.remove(logoParticles);
-        logoParticles = null;
-    }
-
     // --- UI Toggles & Handlers ---
     function initializeSpeechRecognition() {
         const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechAPI) { micButton.style.display = 'none'; return; }
+        if (!SpeechAPI) { 
+            micButton.style.display = 'none'; 
+            return; 
+        }
         speechRecognition = new SpeechAPI();
+        speechRecognition.continuous = false;
+        speechRecognition.interimResults = false;
+
         speechRecognition.onstart = () => { 
             isListening = true; 
-            if(isVoiceModeActive){
-                 botResponseText.textContent = '';
-                 transcribedText.textContent = 'Listening...';
-                 voiceMicBtn.classList.add('listening');
-            } else {
-                updateActionButtonsState(); 
-                messageInput.placeholder = "Listening...";
-            }
+            updateActionButtonsState(); 
+            messageInput.placeholder = "Listening...";
         };
+
         speechRecognition.onresult = (e) => { 
-            const transcript = e.results[0][0].transcript;
-            if(isVoiceModeActive){
-                transcribedText.textContent = transcript;
-            } else {
-                 messageInput.value = transcript; 
-            }
+            const transcript = e.results[e.results.length - 1][0].transcript;
+            messageInput.value = transcript;
         };
+
         speechRecognition.onend = () => { 
             isListening = false;
-            if (isVoiceModeActive) {
-                voiceMicBtn.classList.remove('listening');
-                const finalTranscript = transcribedText.textContent;
-                if (finalTranscript && finalTranscript !== 'Listening...') {
-                    (async () => {
-                        await handleSendMessage(finalTranscript);
-                        setTimeout(() => {
-                            if (isVoiceModeActive) {
-                                transcribedText.textContent = '';
-                                botResponseText.textContent = '';
-                                toggleSpeechRecognition();
-                            }
-                        }, 3000);
-                    })();
-                } else if (isVoiceModeActive) {
-                    setTimeout(toggleSpeechRecognition, 500);
-                }
-            } else {
-                updateActionButtonsState(); 
-                messageInput.placeholder = "Ask me anything..."; 
-                if(messageInput.value) handleSendMessage(null); 
+            updateActionButtonsState(); 
+            messageInput.placeholder = "Ask me anything..."; 
+            // Automatically send if there's content
+            if(messageInput.value.trim()) {
+                handleSendMessage(); 
             }
         };
+
         speechRecognition.onerror = (e) => { 
-            console.error(e.error); 
+            console.error("Speech recognition error:", e.error); 
             showToast(`Mic error: ${e.error}`, 'error'); 
             isListening = false;
-            if (isVoiceModeActive) {
-                voiceMicBtn.classList.remove('listening');
-            }
             updateActionButtonsState();
+            messageInput.placeholder = "Ask me anything...";
         };
     }
     function toggleSpeechRecognition() {
@@ -1463,10 +1216,9 @@ When generating code blocks, always use markdown format with language identifier
         showToast("Wallpaper reset.", "success");
     }
 
-    // --- NEW: Image-to-Image Functions ---
+    // --- Image-to-Image Functions ---
     function showImg2ImgModal() {
         img2imgOverlay.classList.add('visible');
-        // Reset modal state
         img2imgPromptInput.value = '';
         img2imgImagePreview.style.display = 'none';
         img2imgImagePreview.src = '';
@@ -1512,7 +1264,6 @@ When generating code blocks, always use markdown format with language identifier
         updateActionButtonsState();
         showThinkingIndicator(`Transforming image: "${prompt.substring(0, 40)}..."`);
         
-        // Display user's request in chat
         const originalImageSrc = img2imgImagePreview.src;
         displayMessage([{ text: prompt }], 'user', false, originalImageSrc);
         addMessageToHistory('user', [{ text: prompt }], originalImageSrc);
@@ -1576,7 +1327,6 @@ When generating code blocks, always use markdown format with language identifier
         micButton = document.getElementById('mic-button');
         menuToggle = document.getElementById('menu-toggle');
         
-        // Personality Modal elements
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
@@ -1585,7 +1335,6 @@ When generating code blocks, always use markdown format with language identifier
         openWallpaperModalBtn = document.getElementById('open-wallpaper-modal-btn');
         resetWallpaperBtn = document.getElementById('reset-wallpaper-btn');
 
-        // Wallpaper Modal elements
         wallpaperOverlay = document.getElementById('wallpaper-overlay');
         closeWallpaperModalBtn = document.getElementById('close-wallpaper-modal-btn');
         wallpaperPromptInput = document.getElementById('wallpaper-prompt-input');
@@ -1595,17 +1344,7 @@ When generating code blocks, always use markdown format with language identifier
         wallpaperImagePreview = document.getElementById('wallpaper-image-preview');
         saveWallpaperBtn = document.getElementById('save-wallpaper-btn');
         removeWallpaperBtn = document.getElementById('remove-wallpaper-btn');
-
-        // Voice Mode elements
-        voiceModeOverlay = document.getElementById('voice-mode-overlay');
-        voiceModeCanvasContainer = document.getElementById('voice-mode-canvas-container');
-        voiceMicBtn = document.getElementById('voice-mic-btn');
-        voiceHangUpBtn = document.getElementById('voice-hang-up-btn');
-        transcribedText = document.getElementById('transcribed-text');
-        botResponseText = document.getElementById('bot-response-text');
-        thinkingIndicatorVoice = document.getElementById('thinking-indicator-voice');
-
-        // NEW: Assign Img2Img elements
+        
         img2imgButton = document.getElementById('img2img-button');
         img2imgOverlay = document.getElementById('img2img-overlay');
         closeImg2ImgModalBtn = document.getElementById('close-img2img-modal-btn');
@@ -1616,7 +1355,6 @@ When generating code blocks, always use markdown format with language identifier
         img2imgPromptInput = document.getElementById('img2img-prompt-input');
         generateImg2ImgBtn = document.getElementById('generate-img2img-btn');
         
-        // Load data and render UI
         loadData();
         renderChatList();
         setChatActiveState(true); 
@@ -1640,25 +1378,21 @@ When generating code blocks, always use markdown format with language identifier
              sidebar.classList.remove('visible');
             menuBackdrop.classList.remove('visible');
         });
-        sendButton.addEventListener('click', ()=> handleSendMessage(null));
-        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(null); } });
+        sendButton.addEventListener('click', handleSendMessage);
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
         messageInput.addEventListener('input', updateActionButtonsState);
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
         imageUploadButton.addEventListener('click', () => imageUploadInput.click());
         imageUploadInput.addEventListener('change', handleImageSelection);
         removeImageButton.addEventListener('click', removeSelectedImage);
-        micButton.addEventListener('click', enterVoiceMode);
-        voiceMicBtn.addEventListener('click', toggleSpeechRecognition);
-        voiceHangUpBtn.addEventListener('click', exitVoiceMode);
-
-        // Settings/Personality listeners
+        micButton.addEventListener('click', toggleSpeechRecognition);
+        
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
         openWallpaperModalBtn.addEventListener('click', showWallpaperModal);
         resetWallpaperBtn.addEventListener('click', handleResetWallpaper);
 
-        // Wallpaper listeners
         closeWallpaperModalBtn.addEventListener('click', hideWallpaperModal);
         wallpaperOverlay.addEventListener('click', (e) => { if(e.target === wallpaperOverlay) hideWallpaperModal(); });
         generateWallpaperBtn.addEventListener('click', handleGenerateWallpaper);
@@ -1668,7 +1402,6 @@ When generating code blocks, always use markdown format with language identifier
             hideWallpaperModal();
         });
 
-        // NEW: Img2Img Listeners
         img2imgButton.addEventListener('click', showImg2ImgModal);
         closeImg2ImgModalBtn.addEventListener('click', hideImg2ImgModal);
         img2imgOverlay.addEventListener('click', (e) => { if(e.target === img2imgOverlay) hideImg2ImgModal(); });
@@ -1676,7 +1409,6 @@ When generating code blocks, always use markdown format with language identifier
         img2imgUploadInput.addEventListener('change', handleImg2ImgSelection);
         generateImg2ImgBtn.addEventListener('click', handleImg2ImgGeneration);
         img2imgPromptInput.addEventListener('input', () => {
-            // Enable generate button only if both image and prompt are present
             generateImg2ImgBtn.disabled = !(img2imgBaseImageData && img2imgPromptInput.value.trim());
         });
         
