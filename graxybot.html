@@ -21,7 +21,7 @@
     --border-color: #e5e7eb;
     --input-bg: #f3f4f6;
     --user-message-bg: #eef2ff;
-    --bot-message-bg: #ffffff;
+    --bot-message-bg: rgba(255, 255, 255, 0.85); /* Slightly transparent for wallpaper */
     --hover-bg: #f3f4f6;
     --code-bg: #272822;
     --code-header-bg: #3a3b35;
@@ -136,7 +136,7 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
-/* --- Main Content --- */
+/* --- Main Content & Wallpaper --- */
 .main-content {
     display: flex;
     flex-direction: column;
@@ -144,8 +144,28 @@ body {
     flex-grow: 1;
     width: calc(100% - var(--sidebar-width));
     box-sizing: border-box;
-    position: relative; /* Context for absolute positioning */
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease-in-out;
 }
+.main-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.5);
+    z-index: -1;
+}
+
+.chat-messages, .chat-input-container {
+    position: relative;
+    z-index: 1;
+}
+
 .chat-top-bar {
     padding: 0.75rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
@@ -153,32 +173,59 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
-    height: 38px; /* Give it a static height */
-    position: relative;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+    position: relative; /* Context for the title's absolute positioning */
     z-index: 10;
 }
 .menu-toggle {
-    display: none; /* Hidden on desktop */
+    display: none;
 }
 
-/* Title Animation */
+/* --- CORRECTED TITLE ANIMATION --- */
+/* --- CORRECTED TITLE ANIMATION --- */
 #chat-title {
+    position: fixed; /* Position relative to viewport */
     margin: 0;
+    padding: 0; /* Remove any default padding */
     font-weight: 700;
     color: var(--primary);
-    position: static; /* Default state is in flow */
-    transform: none;
+    z-index: 10; /* Ensure above other elements */
+    
+    /* Default state (top-left within chat-top-bar) */
+    top: 1rem;
+    left: 4.5rem;
     font-size: 1.2rem;
+    transform: none; /* Explicitly reset transform */
+
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 #chat-title.title-center {
-    position: absolute;
-    top: 45%;
+    /* Centered state (dead center of viewport) */
+    top: 100%;
     left: 50%;
-    transform: translate(-50%, -50%);
     font-size: 3rem;
+    transform: translate(-50%, -50%);
+    position: fixed;
 }
 
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    #chat-title {
+        left: 4.5rem; /* Align with menu icon */
+        top: 1rem;
+        font-size: 1.2rem;
+        transform: none;
+    }
+    #chat-title.title-center {
+        left: 50%;
+        top: 50%;
+        font-size: 2.5rem;
+        transform: translate(-50%, -50%);
+    }
+}
 
 .chat-messages {
     flex-grow: 1;
@@ -208,6 +255,7 @@ body {
     padding: 12px 18px; border-radius: 12px; line-height: 1.6;
     background-color: var(--bot-message-bg); color: var(--text-primary);
     word-wrap: break-word; border: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 .user-message .message { background-color: var(--user-message-bg); }
 .error-message .message { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }
@@ -234,10 +282,10 @@ body {
 
 /* Chat Input */
 .chat-input-container {
-    padding: 1rem 1.5rem; background-color: var(--background);
+    padding: 1rem 1.5rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
-    position: relative;
-    z-index: 10;
 }
 .chat-input-area {
     display: flex; align-items: center; background-color: #f9fafb;
@@ -299,35 +347,63 @@ body {
     pointer-events: auto;
 }
 .toast-message.show { opacity: 1; transform: translateY(0); }
-#personality-overlay {
+
+/* --- Settings & Wallpaper Modals --- */
+.modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--modal-bg); z-index: 1002;
     display: flex; justify-content: center; align-items: center;
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
 }
-#personality-overlay.visible { opacity: 1; visibility: visible; }
-.personality-modal-content {
+.modal-overlay.visible { opacity: 1; visibility: visible; }
+.modal-content {
     background: var(--background); padding: 30px; border-radius: 12px;
     max-width: 450px; width: 90%; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     position: relative; transform: scale(0.95); transition: transform 0.3s ease;
 }
-#personality-overlay.visible .personality-modal-content { transform: scale(1); }
-.personality-modal-content h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary); margin-bottom: 20px; }
-.personality-modal-content label { display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
-.personality-modal-content input, .personality-modal-content textarea {
+.modal-overlay.visible .modal-content { transform: scale(1); }
+.modal-content h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary); margin-bottom: 20px; }
+.modal-content label { display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+.modal-content input, .modal-content textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--border-color);
     border-radius: 8px; background-color: #f9fafb; color: var(--text-primary);
     font-size: 0.95rem; margin-bottom: 20px; box-sizing: border-box;
 }
-.personality-modal-content button {
+.modal-content button {
     width: 100%; padding: 12px 20px; background: var(--primary);
     color: white; border: none; border-radius: 8px; cursor: pointer;
     font-size: 1rem; font-weight: 600;
 }
-.personality-modal-content .close-modal-btn {
+.modal-content .close-modal-btn {
     position: absolute; top: 15px; right: 15px; background: none; border: none;
     font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;
 }
+.modal-content .secondary-btn {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    margin-top: 10px;
+}
+#wallpaper-modal-content .wallpaper-preview {
+    margin-top: 15px;
+    height: 150px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--input-bg);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+}
+#wallpaper-modal-content .wallpaper-spinner {
+    display: none;
+}
+#wallpaper-modal-content .wallpaper-preview img {
+    max-width: 100%; max-height: 100%;
+}
+
 
 /* --- Mobile Responsive Styles --- */
 @media (max-width: 768px) {
@@ -347,17 +423,12 @@ body {
     .menu-toggle {
         display: block;
     }
-     #chat-title {
-        left: 4rem; /* Readjust for mobile */
+    #chat-title {
+        left: 4.5rem; /* Readjust for mobile to clear menu icon */
     }
     #chat-title.title-center {
         left: 50%;
-    }
-    .main-content.new-chat-active #chat-title {
-         font-size: 2.5rem;
-    }
-    .chat-input-container {
-        padding: 0.75rem;
+        font-size: 2.5rem;
     }
 }
 
@@ -469,8 +540,9 @@ body {
 
 <div id="toast-container"></div>
 
-<div id="personality-overlay">
-    <div class="personality-modal-content">
+<!-- Personality/Settings Modal -->
+<div id="personality-overlay" class="modal-overlay">
+    <div id="personality-modal-content" class="modal-content">
         <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
         <h2>Personalize Graxybot</h2>
         <label for="user-name-input">What should Graxybot call you?</label>
@@ -478,8 +550,30 @@ body {
         <label for="response-style-input">How do you want Graxybot to respond?</label>
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
         <button id="save-personality-btn">Save Settings</button>
+        <button id="open-wallpaper-modal-btn" class="secondary-btn">Customize Chat Wallpaper</button>
+        <button id="reset-wallpaper-btn" class="secondary-btn">Reset Wallpaper</button>
     </div>
 </div>
+
+<!-- Wallpaper Modal -->
+<div id="wallpaper-overlay" class="modal-overlay">
+    <div id="wallpaper-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-wallpaper-modal-btn">&times;</button>
+        <h2>Chat Wallpaper</h2>
+        <label for="wallpaper-prompt-input">Enter a prompt for your wallpaper:</label>
+        <input type="text" id="wallpaper-prompt-input" placeholder="e.g., a serene mountain lake at dawn">
+        <button id="generate-wallpaper-btn">Generate Image</button>
+        
+        <div id="wallpaper-preview" class="wallpaper-preview">
+            <div class="spinner wallpaper-spinner" id="wallpaper-spinner"></div>
+            <img id="wallpaper-image-preview" src="" alt="Wallpaper preview" style="display: none;"/>
+        </div>
+
+        <button id="save-wallpaper-btn" style="margin-top: 15px;" disabled>Save Wallpaper</button>
+        <button id="remove-wallpaper-btn" class="secondary-btn">Remove Wallpaper</button>
+    </div>
+</div>
+
 
 <div class="chat-app" id="chat-app">
      <div id="menu-backdrop"></div>
@@ -558,14 +652,16 @@ body {
     const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
+    const WALLPAPER_STORAGE_KEY = "graxybot_minimalist_wallpaper_v1";
 
     // --- DOM Element References ---
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
-    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, resetWallpaperBtn;
     let voiceModeOverlay, voiceModeCanvasContainer, voiceMicBtn, voiceHangUpBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
+    let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
 
     // --- Application State ---
     let chats = {};
@@ -576,6 +672,8 @@ body {
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
+    let currentWallpaper = null;
+    let generatedWallpaperData = null;
     
     // --- Voice Mode 3D Scene ---
     let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles, particleTexture;
@@ -607,6 +705,12 @@ body {
             }
             const storedPersonality = localStorage.getItem(PERSONALITY_STORAGE_KEY);
             if (storedPersonality) userPersonality = JSON.parse(storedPersonality);
+            
+            const storedWallpaper = localStorage.getItem(WALLPAPER_STORAGE_KEY);
+            if (storedWallpaper) {
+                currentWallpaper = storedWallpaper;
+                applyWallpaper(currentWallpaper);
+            }
         } catch (error) {
             console.error("Error loading data:", error);
             chats = {}; currentChatId = null;
@@ -654,6 +758,9 @@ When generating code blocks, always use markdown format with language identifier
         if (userPersonality.name) {
              basePrompt += `\nAddress the user as "${userPersonality.name}".`;
         }
+        if(userPersonality.responseStyle){
+            basePrompt += `\nFollow these response style instructions: "${userPersonality.responseStyle}"`;
+        }
         return basePrompt;
     }
     function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null) {
@@ -689,7 +796,7 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null) {
-        mainContent.classList.remove('new-chat-active');
+        setChatActiveState(false);
         const wrapper = document.createElement('div');
         wrapper.className = 'message-content-wrapper';
         if (sender === 'user') wrapper.classList.add('user-message');
@@ -796,13 +903,12 @@ When generating code blocks, always use markdown format with language identifier
         saveChats();
         renderChatList();
         chatMessagesContainer.innerHTML = '';
-        mainContent.classList.remove('new-chat-active');
-        if (chats[chatId].history.length > 0) {
+        const hasHistory = chats[chatId].history.length > 0;
+        setChatActiveState(!hasHistory);
+        if (hasHistory) {
             chats[chatId].history.forEach(msg => {
                 displayMessage(msg.parts, msg.role, false, msg.imagePreview, msg.generatedMediaSrc, null, msg.mediaPrompt);
             });
-        } else {
-             mainContent.classList.add('new-chat-active');
         }
     }
     function handleNewChat(clearUI = true) {
@@ -813,7 +919,7 @@ When generating code blocks, always use markdown format with language identifier
         renderChatList();
         if (clearUI) {
             chatMessagesContainer.innerHTML = '';
-            mainContent.classList.add('new-chat-active');
+            setChatActiveState(true);
         }
     }
     function handleSelectChat(id) {
@@ -828,12 +934,23 @@ When generating code blocks, always use markdown format with language identifier
             if (currentChatId === id) {
                 currentChatId = null;
                 chatMessagesContainer.innerHTML = '';
-                 mainContent.classList.add('new-chat-active');
+                setChatActiveState(true);
             }
             saveChats();
             renderChatList();
         }
     }
+    
+    // --- CORRECTED JAVASCRIPT LOGIC FOR ANIMATION ---
+    function setChatActiveState(isActive) {
+        // This function now correctly targets the title element to toggle the class
+        if (isActive) {
+            chatTitle.classList.add('title-center');
+        } else {
+            chatTitle.classList.remove('title-center');
+        }
+    }
+
     async function handleImageSelection(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -866,27 +983,40 @@ When generating code blocks, always use markdown format with language identifier
         imageUploadInput.value = '';
         updateActionButtonsState();
     }
-    async function triggerStableDiffusionGeneration(promptText) {
-        showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
-        isRequestInProgress = true; updateActionButtonsState();
+    async function triggerStableDiffusionGeneration(promptText, isForWallpaper = false) {
+        if(!isForWallpaper) showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
+        isRequestInProgress = true; 
+        if(!isForWallpaper) updateActionButtonsState();
+
         const payload = { prompt: promptText, negative_prompt: "blurry, low quality, deformed", steps: 25 };
         try {
             const response = await fetch(`${DEFAULT_STABLE_DIFFUSION_API_URL}/sdapi/v1/txt2img`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
-            removeThinkingIndicator();
+            if(!isForWallpaper) removeThinkingIndicator();
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const data = await response.json();
             if (data.images && data.images.length > 0) {
                 const imageSrc = `data:image/png;base64,${data.images[0]}`;
-                displayMessage([], 'bot', false, null, imageSrc, 'fa-palette', promptText);
-                addMessageToHistory('model', [{text: `Image generated`}], null, imageSrc, promptText);
+                if (isForWallpaper) {
+                    return imageSrc;
+                } else {
+                    displayMessage([], 'bot', false, null, imageSrc, 'fa-palette', promptText);
+                    addMessageToHistory('model', [{text: `Image generated`}], null, imageSrc, promptText);
+                }
             } else { throw new Error('No images in API response.'); }
         } catch (error) {
-            removeThinkingIndicator();
-            displayMessage([{ text: `Image Generation Error: ${error.message}` }], 'bot', true);
+            if(!isForWallpaper) {
+                removeThinkingIndicator();
+                displayMessage([{ text: `Image Generation Error: ${error.message}` }], 'bot', true);
+            }
+            throw error;
         } finally {
-            isRequestInProgress = false; deactivateImageGenerationMode(); updateActionButtonsState();
+            isRequestInProgress = false; 
+            if(!isForWallpaper) {
+                deactivateImageGenerationMode(); 
+                updateActionButtonsState();
+            }
         }
     }
     async function sendMessageToOpenAI(messages, modelName, isVoiceMode = false) {
@@ -950,9 +1080,8 @@ When generating code blocks, always use markdown format with language identifier
         const messageText = messageTextFromVoice ?? messageInput.value.trim();
         if (!messageText && !selectedImageData) return;
         
-        mainContent.classList.remove('new-chat-active');
+        setChatActiveState(false);
         const imageWasAttached = !!selectedImageData;
-        isRequestInProgress = true; updateActionButtonsState();
         
         const userMessageParts = [];
         if (messageText) userMessageParts.push({ text: messageText });
@@ -968,8 +1097,14 @@ When generating code blocks, always use markdown format with language identifier
         removeSelectedImage();
 
         if (isImageGenerationModeActive) {
-            await triggerStableDiffusionGeneration(currentPrompt);
+            isRequestInProgress = true; updateActionButtonsState();
+            await triggerStableDiffusionGeneration(currentPrompt, false);
+            isRequestInProgress = false; updateActionButtonsState();
+
         } else {
+            isRequestInProgress = true; 
+            if(!messageTextFromVoice) updateActionButtonsState();
+            
             const modelToUse = currentPrompt.toLowerCase().includes("code") || imageWasAttached ? GPT_4_1_MODEL : OPENAI_MODEL;
             
             const systemPrompt = getSystemPrompt(modelToUse);
@@ -1187,7 +1322,7 @@ When generating code blocks, always use markdown format with language identifier
             } else {
                 updateActionButtonsState(); 
                 messageInput.placeholder = "Ask me anything..."; 
-                if(messageInput.value) handleSendMessage(); 
+                if(messageInput.value) handleSendMessage(null); 
             }
         };
         speechRecognition.onerror = (e) => { 
@@ -1235,6 +1370,75 @@ When generating code blocks, always use markdown format with language identifier
         hidePersonalityModal();
     }
 
+    // --- New Wallpaper Functions ---
+    function showWallpaperModal() {
+        hidePersonalityModal();
+        wallpaperOverlay.classList.add('visible');
+        wallpaperPromptInput.value = '';
+        wallpaperImagePreview.style.display = 'none';
+        saveWallpaperBtn.disabled = true;
+        generatedWallpaperData = null;
+    }
+
+    function hideWallpaperModal() {
+        wallpaperOverlay.classList.remove('visible');
+    }
+
+    async function handleGenerateWallpaper() {
+        const prompt = wallpaperPromptInput.value.trim();
+        if (!prompt) {
+            showToast("Please enter a prompt for the wallpaper.", "error");
+            return;
+        }
+
+        wallpaperSpinner.style.display = 'block';
+        wallpaperImagePreview.style.display = 'none';
+        generateWallpaperBtn.disabled = true;
+        saveWallpaperBtn.disabled = true;
+
+        try {
+            const imageSrc = await triggerStableDiffusionGeneration(prompt, true);
+            if(imageSrc){
+                generatedWallpaperData = imageSrc;
+                wallpaperImagePreview.src = imageSrc;
+                wallpaperImagePreview.style.display = 'block';
+                saveWallpaperBtn.disabled = false;
+            } else {
+                 showToast("Failed to generate wallpaper. Please try again.", "error");
+            }
+        } catch (error) {
+            console.error("Wallpaper generation error:", error);
+            showToast(`Error: ${error.message}`, "error");
+        } finally {
+            wallpaperSpinner.style.display = 'none';
+            generateWallpaperBtn.disabled = false;
+        }
+    }
+
+    function saveWallpaper() {
+        if (generatedWallpaperData) {
+            currentWallpaper = generatedWallpaperData;
+            localStorage.setItem(WALLPAPER_STORAGE_KEY, currentWallpaper);
+            applyWallpaper(currentWallpaper);
+            showToast("Wallpaper saved!", "success");
+            hideWallpaperModal();
+        }
+    }
+
+    function applyWallpaper(imageDataUrl) {
+        if(mainContent && imageDataUrl) {
+            mainContent.style.backgroundImage = `url(${imageDataUrl})`;
+        }
+    }
+    
+    function handleResetWallpaper() {
+        mainContent.style.backgroundImage = '';
+        localStorage.removeItem(WALLPAPER_STORAGE_KEY);
+        currentWallpaper = null;
+        showToast("Wallpaper reset.", "success");
+    }
+
+
     // --- Initialization Sequence ---
     document.addEventListener('DOMContentLoaded', () => {
         // Assign DOM elements
@@ -1259,11 +1463,28 @@ When generating code blocks, always use markdown format with language identifier
         removeImageButton = document.getElementById('remove-image-button');
         micButton = document.getElementById('mic-button');
         menuToggle = document.getElementById('menu-toggle');
+        
+        // Personality Modal elements
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+        openWallpaperModalBtn = document.getElementById('open-wallpaper-modal-btn');
+        resetWallpaperBtn = document.getElementById('reset-wallpaper-btn');
+
+        // Wallpaper Modal elements
+        wallpaperOverlay = document.getElementById('wallpaper-overlay');
+        closeWallpaperModalBtn = document.getElementById('close-wallpaper-modal-btn');
+        wallpaperPromptInput = document.getElementById('wallpaper-prompt-input');
+        generateWallpaperBtn = document.getElementById('generate-wallpaper-btn');
+        wallpaperPreview = document.getElementById('wallpaper-preview');
+        wallpaperSpinner = document.getElementById('wallpaper-spinner');
+        wallpaperImagePreview = document.getElementById('wallpaper-image-preview');
+        saveWallpaperBtn = document.getElementById('save-wallpaper-btn');
+        removeWallpaperBtn = document.getElementById('remove-wallpaper-btn');
+
+        // Voice Mode elements
         voiceModeOverlay = document.getElementById('voice-mode-overlay');
         voiceModeCanvasContainer = document.getElementById('voice-mode-canvas-container');
         voiceMicBtn = document.getElementById('voice-mic-btn');
@@ -1273,14 +1494,13 @@ When generating code blocks, always use markdown format with language identifier
         thinkingIndicatorVoice = document.getElementById('thinking-indicator-voice');
         
         // Load data and render UI
-        loadData();
-        renderChatList();
-        if (currentChatId && chats[currentChatId]?.history.length > 0) {
-            loadChat(currentChatId);
-        } else {
-            mainContent.classList.add('new-chat-active');
-        }
-        updateActionButtonsState();
+loadData();
+renderChatList();
+setChatActiveState(true); // Force centered state initially
+if (currentChatId && chats[currentChatId]?.history.length > 0) {
+    loadChat(currentChatId); // This will switch to top-left when chat loads
+}
+updateActionButtonsState();
 
         // Add Event Listeners
         newChatBtn.addEventListener('click', () => {
@@ -1307,9 +1527,23 @@ When generating code blocks, always use markdown format with language identifier
         micButton.addEventListener('click', enterVoiceMode);
         voiceMicBtn.addEventListener('click', toggleSpeechRecognition);
         voiceHangUpBtn.addEventListener('click', exitVoiceMode);
+
+        // Settings/Personality listeners
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
+        openWallpaperModalBtn.addEventListener('click', showWallpaperModal);
+        resetWallpaperBtn.addEventListener('click', handleResetWallpaper);
+
+        // Wallpaper listeners
+        closeWallpaperModalBtn.addEventListener('click', hideWallpaperModal);
+        wallpaperOverlay.addEventListener('click', (e) => { if(e.target === wallpaperOverlay) hideWallpaperModal(); });
+        generateWallpaperBtn.addEventListener('click', handleGenerateWallpaper);
+        saveWallpaperBtn.addEventListener('click', saveWallpaper);
+        removeWallpaperBtn.addEventListener('click', () => {
+            handleResetWallpaper();
+            hideWallpaperModal();
+        });
         
         loader.classList.remove('visible');
         messageInput.focus();
