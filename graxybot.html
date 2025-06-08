@@ -20,7 +20,6 @@
     --primary-light: #675ef2;
     --border-color: #e5e7eb;
     --input-bg: #f3f4f6;
-    /* UPDATED: Made message bubbles opaque for readability */
     --user-message-bg: #eef2ff;
     --bot-message-bg: #f9fafb;
     --hover-bg: #f3f4f6;
@@ -30,6 +29,8 @@
     --toast-text: white;
     --modal-bg: rgba(0, 0, 0, 0.5);
     --sidebar-width: 260px;
+    --danger-color: #ef4444;
+    --danger-color-hover: #dc2626;
 }
 
 html, body {
@@ -152,8 +153,6 @@ body {
     transition: background-image 0.5s ease-in-out;
 }
 
-/* REMOVED: The ::before pseudo-element was hiding the background image. */
-
 .chat-messages, .chat-input-container {
     position: relative;
     z-index: 1;
@@ -169,7 +168,7 @@ body {
     height: 38px;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
-    position: relative; /* Context for the title's absolute positioning */
+    position: relative; 
     z-index: 10;
 }
 .menu-toggle {
@@ -177,23 +176,22 @@ body {
 }
 
 #chat-title {
-    position: fixed; /* Position relative to viewport */
+    position: fixed;
     margin: 0;
-    padding: 0; /* Remove any default padding */
+    padding: 0;
     font-weight: 700;
     color: var(--primary);
-    z-index: 10; /* Ensure above other elements */
+    z-index: 10;
     
     top: 1rem;
     left: 4.5rem;
     font-size: 1.2rem;
-    transform: none; /* Explicitly reset transform */
+    transform: none;
 
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #chat-title.title-center {
-    /* Centered state (dead center of viewport) */
     top: 55%;
     left: 50%;
     font-size: 3rem;
@@ -203,7 +201,7 @@ body {
 
 @media (max-width: 768px) {
     #chat-title {
-        left: 4.5rem; /* Align with menu icon */
+        left: 4.5rem;
         top: 1rem;
         font-size: 1.2rem;
         transform: none;
@@ -326,7 +324,8 @@ body {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #toast-container {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    z-index: 2001; pointer-events: none;
+    z-index: 3002; /* Higher than tutorial overlay */
+    pointer-events: none;
 }
 .toast-message {
     background-color: var(--toast-bg); color: var(--toast-text);
@@ -372,6 +371,13 @@ body {
     color: var(--text-primary);
     margin-top: 10px;
 }
+.modal-content .danger-btn {
+    background-color: var(--danger-color);
+    margin-top: 10px;
+}
+.modal-content .danger-btn:hover {
+    background-color: var(--danger-color-hover);
+}
 .modal-preview-box {
     margin-top: 15px;
     height: 150px;
@@ -401,6 +407,113 @@ body {
     font-size: 0.9rem;
 }
 
+/* --- Tutorial Styles --- */
+#tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+#tutorial-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+.tutorial-step {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s, transform 0.3s;
+}
+#tutorial-overlay.visible .tutorial-step {
+    opacity: 1;
+    transform: scale(1);
+}
+.tutorial-step h2 {
+    color: var(--primary);
+    margin-top: 0;
+}
+.tutorial-step p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+.tutorial-step input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin: 10px 0 20px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 1rem;
+}
+.tutorial-step button, .tutorial-pointer button { /* UPDATED: Unified button style */
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+.tutorial-pointer {
+    position: absolute;
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    max-width: 250px;
+    text-align: center;
+}
+.tutorial-pointer p {
+    margin: 0 0 10px 0;
+}
+.tutorial-pointer::after { /* The arrow */
+    content: '';
+    position: absolute;
+    border-style: solid;
+}
+/* Arrow pointing up */
+.tutorial-pointer.arrow-bottom::after {
+    top: 100%;
+    left: 50%;
+    margin-left: -10px;
+    border-width: 10px;
+    border-color: white transparent transparent transparent;
+}
+/* Arrow pointing down */
+.tutorial-pointer.arrow-top::after {
+    bottom: 100%;
+    left: 50%;
+    margin-left: -10px;
+    border-width: 10px;
+    border-color: transparent transparent white transparent;
+}
+.highlighted-element {
+    position: relative;
+    z-index: 3001; /* Must be higher than the overlay */
+    box-shadow: 0 0 0 4px var(--primary-light), 0 0 20px 10px rgba(79, 70, 229, 0.5);
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease;
+}
 
 /* --- Mobile Responsive Styles --- */
 @media (max-width: 768px) {
@@ -438,6 +551,13 @@ body {
 
 <div id="toast-container"></div>
 
+<!-- NEW: Tutorial HTML -->
+<div id="tutorial-overlay">
+    <div id="tutorial-step-container">
+        <!-- Tutorial steps will be dynamically inserted here -->
+    </div>
+</div>
+
 <!-- Personality/Settings Modal -->
 <div id="personality-overlay" class="modal-overlay">
     <div id="personality-modal-content" class="modal-content">
@@ -449,7 +569,7 @@ body {
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
         <button id="save-personality-btn">Save Settings</button>
         <button id="open-wallpaper-modal-btn" class="secondary-btn">Customize Chat Wallpaper</button>
-        <button id="reset-wallpaper-btn" class="secondary-btn">Reset Wallpaper</button>
+        <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
     </div>
 </div>
 
@@ -556,15 +676,17 @@ body {
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
     const WALLPAPER_STORAGE_KEY = "graxybot_minimalist_wallpaper_v1";
+    const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
 
     // --- DOM Element References ---
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
-    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, resetWallpaperBtn;
+    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
     let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
+    let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
 
     // --- Application State ---
     let chats = {};
@@ -1319,6 +1441,170 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
+    // --- Tutorial Functions ---
+    let currentTutorialStep = 0;
+    let tutorialSteps = [];
+
+    function startTutorial() {
+        tutorialSteps = [
+            {
+                content: `
+                    <div class="tutorial-step">
+                        <h2>Hi, I'm Graxybot!</h2>
+                        <p>What should I call you?</p>
+                        <input type="text" id="tutorial-name-input" placeholder="Enter your name...">
+                        <button id="tutorial-next-btn">Next</button>
+                    </div>`,
+                action: (next) => {
+                    document.getElementById('tutorial-next-btn').onclick = () => {
+                        const name = document.getElementById('tutorial-name-input').value.trim();
+                        if (name) {
+                            userPersonality.name = name;
+                            savePersonalitySettings();
+                            showToast(`Nice to meet you, ${name}!`, 'success');
+                            next();
+                        } else {
+                            showToast('Please enter a name!', 'error');
+                        }
+                    };
+                }
+            },
+            {
+                target: '#message-input',
+                text: 'Put your questions, ideas, and coding projects here.',
+                position: 'top'
+            },
+            {
+                target: '#image-upload-button',
+                text: 'Send me photos or files to analyze.',
+                position: 'top'
+            },
+            {
+                target: '#img2img-button',
+                text: 'Send me pictures to edit.',
+                position: 'top'
+            },
+            {
+                target: '#create-image-button',
+                text: 'Ask me to create an image, or press this to enter image mode.',
+                position: 'top'
+            },
+            {
+                target: '#mic-button',
+                text: 'Use your voice to talk to me.',
+                position: 'top'
+            },
+            {
+                target: '#settings-button',
+                text: "Here is where you can personalize Graxybot, change your chat background, and manage memory.",
+                position: 'top'
+            },
+            {
+                content: `
+                    <div class="tutorial-step">
+                        <h2>You're all set!</h2>
+                        <p>Enjoy chatting with Graxybot. You can always restart this tutorial or wipe your data from the settings menu.</p>
+                        <button id="tutorial-finish-btn">Let's Go!</button>
+                    </div>`,
+                action: (next) => {
+                    document.getElementById('tutorial-finish-btn').onclick = next;
+                }
+            },
+        ];
+        currentTutorialStep = 0;
+        tutorialOverlay.classList.add('visible');
+        showTutorialStep();
+    }
+
+    // UPDATED: This function now handles positioning to prevent screen overflow.
+    function showTutorialStep() {
+        document.querySelectorAll('.highlighted-element').forEach(el => el.classList.remove('highlighted-element'));
+        tutorialStepContainer.innerHTML = '';
+
+        if (currentTutorialStep >= tutorialSteps.length) {
+            endTutorial();
+            return;
+        }
+
+        const step = tutorialSteps[currentTutorialStep];
+
+        if (step.content) {
+            tutorialStepContainer.innerHTML = step.content;
+            if (step.action) step.action(() => {
+                currentTutorialStep++;
+                showTutorialStep();
+            });
+        } else if (step.target) {
+            const targetElement = document.querySelector(step.target);
+            if (!targetElement) {
+                console.warn(`Tutorial target not found: ${step.target}`);
+                currentTutorialStep++;
+                showTutorialStep();
+                return;
+            }
+
+            targetElement.classList.add('highlighted-element');
+            
+            const pointer = document.createElement('div');
+            pointer.className = 'tutorial-pointer';
+            pointer.innerHTML = `<p>${step.text}</p><button>Next</button>`;
+            
+            tutorialStepContainer.appendChild(pointer);
+            
+            const targetRect = targetElement.getBoundingClientRect();
+            // We get pointerRect after it's in the DOM to have correct dimensions
+            const pointerRect = pointer.getBoundingClientRect();
+
+            let topPos = 0;
+            let leftPos = 0;
+
+            if (step.position === 'top') {
+                pointer.classList.add('arrow-bottom');
+                topPos = targetRect.top - pointerRect.height - 15;
+                leftPos = targetRect.left + targetRect.width / 2 - pointerRect.width / 2;
+            }
+
+            // Adjust for screen edges
+            if (leftPos < 10) {
+                leftPos = 10;
+            } else if (leftPos + pointerRect.width > window.innerWidth) {
+                leftPos = window.innerWidth - pointerRect.width - 10;
+            }
+
+            pointer.style.top = `${topPos}px`;
+            pointer.style.left = `${leftPos}px`;
+            
+            // Adjust arrow position to still point at the middle of the target
+            const arrowEl = pointer.querySelector('::after');
+            const arrowOffset = (targetRect.left + targetRect.width / 2) - leftPos - 10;
+            pointer.style.setProperty('--arrow-left', `${arrowOffset}px`);
+
+
+            pointer.querySelector('button').onclick = () => {
+                currentTutorialStep++;
+                showTutorialStep();
+            };
+        }
+    }
+
+    function endTutorial() {
+        tutorialOverlay.classList.remove('visible');
+        document.querySelectorAll('.highlighted-element').forEach(el => el.classList.remove('highlighted-element'));
+        localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
+    }
+
+    function handleWipeData() {
+        if (confirm("Are you sure you want to delete ALL chats, settings, and stored data? This cannot be undone.")) {
+            localStorage.removeItem(CHATS_STORAGE_KEY);
+            localStorage.removeItem(CURRENT_CHAT_ID_KEY);
+            localStorage.removeItem(PERSONALITY_STORAGE_KEY);
+            localStorage.removeItem(WALLPAPER_STORAGE_KEY);
+            localStorage.removeItem(TUTORIAL_COMPLETED_KEY);
+            
+            showToast("All data has been wiped.", "success");
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    }
 
     // --- Initialization Sequence ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -1351,8 +1637,7 @@ When generating code blocks, always use markdown format with language identifier
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
         openWallpaperModalBtn = document.getElementById('open-wallpaper-modal-btn');
-        resetWallpaperBtn = document.getElementById('reset-wallpaper-btn');
-
+        
         wallpaperOverlay = document.getElementById('wallpaper-overlay');
         closeWallpaperModalBtn = document.getElementById('close-wallpaper-modal-btn');
         wallpaperPromptInput = document.getElementById('wallpaper-prompt-input');
@@ -1372,6 +1657,10 @@ When generating code blocks, always use markdown format with language identifier
         img2imgImagePreview = document.getElementById('img2img-image-preview');
         img2imgPromptInput = document.getElementById('img2img-prompt-input');
         generateImg2ImgBtn = document.getElementById('generate-img2img-btn');
+
+        tutorialOverlay = document.getElementById('tutorial-overlay');
+        tutorialStepContainer = document.getElementById('tutorial-step-container');
+        wipeDataBtn = document.getElementById('wipe-data-btn');
         
         loadData();
         renderChatList();
@@ -1409,7 +1698,9 @@ When generating code blocks, always use markdown format with language identifier
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
         openWallpaperModalBtn.addEventListener('click', showWallpaperModal);
-        resetWallpaperBtn.addEventListener('click', handleResetWallpaper);
+        
+        const resetWallpaperSettingsBtn = document.querySelector('#personality-modal-content .danger-btn');
+        if(resetWallpaperSettingsBtn) resetWallpaperSettingsBtn.addEventListener('click', handleResetWallpaper);
 
         closeWallpaperModalBtn.addEventListener('click', hideWallpaperModal);
         wallpaperOverlay.addEventListener('click', (e) => { if(e.target === wallpaperOverlay) hideWallpaperModal(); });
@@ -1430,9 +1721,15 @@ When generating code blocks, always use markdown format with language identifier
             generateImg2ImgBtn.disabled = !(img2imgBaseImageData && img2imgPromptInput.value.trim());
         });
         
+        wipeDataBtn.addEventListener('click', handleWipeData);
+
         loader.classList.remove('visible');
         messageInput.focus();
         console.log("Graxybot UI Initialized.");
+
+        if (localStorage.getItem(TUTORIAL_COMPLETED_KEY) !== 'true') {
+            startTutorial();
+        }
     });
 </script>
 </body>
