@@ -184,7 +184,6 @@ body {
 }
 
 /* --- CORRECTED TITLE ANIMATION --- */
-/* --- CORRECTED TITLE ANIMATION --- */
 #chat-title {
     position: fixed; /* Position relative to viewport */
     margin: 0;
@@ -383,7 +382,7 @@ body {
     color: var(--text-primary);
     margin-top: 10px;
 }
-#wallpaper-modal-content .wallpaper-preview {
+.modal-preview-box { /* NEW: Reusable preview box style */
     margin-top: 15px;
     height: 150px;
     border: 2px dashed var(--border-color);
@@ -396,12 +395,20 @@ body {
     background-position: center;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
 }
-#wallpaper-modal-content .wallpaper-spinner {
+.modal-preview-box:hover {
+    border-color: var(--primary);
+}
+.modal-preview-box .modal-spinner { /* NEW: Reusable spinner style */
     display: none;
 }
-#wallpaper-modal-content .wallpaper-preview img {
+.modal-preview-box img {
     max-width: 100%; max-height: 100%;
+}
+.modal-preview-box .upload-text { /* NEW: Text for upload box */
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 
@@ -564,13 +571,33 @@ body {
         <input type="text" id="wallpaper-prompt-input" placeholder="e.g., a serene mountain lake at dawn">
         <button id="generate-wallpaper-btn">Generate Image</button>
         
-        <div id="wallpaper-preview" class="wallpaper-preview">
-            <div class="spinner wallpaper-spinner" id="wallpaper-spinner"></div>
+        <div id="wallpaper-preview" class="modal-preview-box">
+            <div class="spinner modal-spinner" id="wallpaper-spinner"></div>
             <img id="wallpaper-image-preview" src="" alt="Wallpaper preview" style="display: none;"/>
         </div>
 
         <button id="save-wallpaper-btn" style="margin-top: 15px;" disabled>Save Wallpaper</button>
         <button id="remove-wallpaper-btn" class="secondary-btn">Remove Wallpaper</button>
+    </div>
+</div>
+
+<!-- NEW: Image-to-Image Modal -->
+<div id="img2img-overlay" class="modal-overlay">
+    <div id="img2img-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-img2img-modal-btn">&times;</button>
+        <h2>Image to Image</h2>
+        <label>Upload an image to transform:</label>
+        <div id="img2img-preview" class="modal-preview-box">
+            <div class="spinner modal-spinner" id="img2img-spinner"></div>
+            <span class="upload-text">Click to upload</span>
+            <img id="img2img-image-preview" src="" alt="Image to image preview" style="display: none;"/>
+        </div>
+        <input type="file" id="img2img-upload-input" accept="image/*" style="display:none;">
+
+        <label for="img2img-prompt-input" style="margin-top: 20px;">Describe the changes you want:</label>
+        <textarea id="img2img-prompt-input" rows="3" placeholder="e.g., Make it a watercolor painting, add a cat"></textarea>
+        
+        <button id="generate-img2img-btn" disabled>Generate</button>
     </div>
 </div>
 
@@ -611,6 +638,8 @@ body {
                 <div class="input-actions">
                     <button id="image-upload-button" class="icon-btn" title="Attach Image"><i class="fas fa-paperclip"></i></button>
                     <input type="file" id="image-upload-input" accept="image/*">
+                    <!-- NEW: Image-to-Image Button -->
+                    <button id="img2img-button" class="icon-btn" title="Image to Image"><i class="fas fa-paint-brush"></i></button>
                     <button id="create-image-button" class="icon-btn" title="Create Image"><i class="fas fa-image"></i></button>
                     <button id="mic-button" class="icon-btn" title="Start Speech Input"><i class="fas fa-microphone"></i></button>
                     <button id="send-button" class="icon-btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
@@ -662,6 +691,9 @@ body {
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, resetWallpaperBtn;
     let voiceModeOverlay, voiceModeCanvasContainer, voiceMicBtn, voiceHangUpBtn, transcribedText, botResponseText, thinkingIndicatorVoice;
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
+    // NEW: Image-to-Image DOM Elements
+    let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
+
 
     // --- Application State ---
     let chats = {};
@@ -674,6 +706,8 @@ body {
     let userPersonality = { name: null, responseStyle: null };
     let currentWallpaper = null;
     let generatedWallpaperData = null;
+    // NEW: Image-to-Image state
+    let img2imgBaseImageData = null;
     
     // --- Voice Mode 3D Scene ---
     let voiceScene, voiceCamera, voiceRenderer, sphereParticles, logoParticles, particleTexture;
@@ -739,6 +773,7 @@ body {
         micButton.classList.toggle('active', isListening);
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
+        if (img2imgButton) img2imgButton.disabled = isBusy; // NEW
         settingsButton.disabled = isBusy;
     }
     function getSystemPrompt(currentModelName) {
@@ -750,7 +785,6 @@ When receiving said social studies sheets, questions 1-5 should be answered in 1
 Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.
 Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.
 Keep your responses concise, helpful, and slightly informal.
-Avoid overly complex language unless necessary.
 Refer to yourself as Graxybot.
 IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen.
 When asked for code, default to HTML.
@@ -941,9 +975,7 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
     
-    // --- CORRECTED JAVASCRIPT LOGIC FOR ANIMATION ---
     function setChatActiveState(isActive) {
-        // This function now correctly targets the title element to toggle the class
         if (isActive) {
             chatTitle.classList.add('title-center');
         } else {
@@ -1370,7 +1402,7 @@ When generating code blocks, always use markdown format with language identifier
         hidePersonalityModal();
     }
 
-    // --- New Wallpaper Functions ---
+    // --- Wallpaper Functions ---
     function showWallpaperModal() {
         hidePersonalityModal();
         wallpaperOverlay.classList.add('visible');
@@ -1379,23 +1411,19 @@ When generating code blocks, always use markdown format with language identifier
         saveWallpaperBtn.disabled = true;
         generatedWallpaperData = null;
     }
-
     function hideWallpaperModal() {
         wallpaperOverlay.classList.remove('visible');
     }
-
     async function handleGenerateWallpaper() {
         const prompt = wallpaperPromptInput.value.trim();
         if (!prompt) {
             showToast("Please enter a prompt for the wallpaper.", "error");
             return;
         }
-
         wallpaperSpinner.style.display = 'block';
         wallpaperImagePreview.style.display = 'none';
         generateWallpaperBtn.disabled = true;
         saveWallpaperBtn.disabled = true;
-
         try {
             const imageSrc = await triggerStableDiffusionGeneration(prompt, true);
             if(imageSrc){
@@ -1414,7 +1442,6 @@ When generating code blocks, always use markdown format with language identifier
             generateWallpaperBtn.disabled = false;
         }
     }
-
     function saveWallpaper() {
         if (generatedWallpaperData) {
             currentWallpaper = generatedWallpaperData;
@@ -1424,18 +1451,103 @@ When generating code blocks, always use markdown format with language identifier
             hideWallpaperModal();
         }
     }
-
     function applyWallpaper(imageDataUrl) {
         if(mainContent && imageDataUrl) {
             mainContent.style.backgroundImage = `url(${imageDataUrl})`;
         }
     }
-    
     function handleResetWallpaper() {
         mainContent.style.backgroundImage = '';
         localStorage.removeItem(WALLPAPER_STORAGE_KEY);
         currentWallpaper = null;
         showToast("Wallpaper reset.", "success");
+    }
+
+    // --- NEW: Image-to-Image Functions ---
+    function showImg2ImgModal() {
+        img2imgOverlay.classList.add('visible');
+        // Reset modal state
+        img2imgPromptInput.value = '';
+        img2imgImagePreview.style.display = 'none';
+        img2imgImagePreview.src = '';
+        img2imgPreview.querySelector('.upload-text').style.display = 'block';
+        img2imgUploadInput.value = '';
+        img2imgBaseImageData = null;
+        generateImg2ImgBtn.disabled = true;
+    }
+    function hideImg2ImgModal() {
+        img2imgOverlay.classList.remove('visible');
+    }
+    function handleImg2ImgSelection(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast("Invalid image file type.", 'error'); return;
+        }
+        try {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                img2imgBaseImageData = reader.result.split(',')[1];
+                img2imgImagePreview.src = reader.result;
+                img2imgImagePreview.style.display = 'block';
+                img2imgPreview.querySelector('.upload-text').style.display = 'none';
+                generateImg2ImgBtn.disabled = !img2imgPromptInput.value.trim();
+            };
+        } catch (e) {
+            showToast("Error processing image.", 'error');
+            img2imgBaseImageData = null;
+        }
+    }
+    async function handleImg2ImgGeneration() {
+        const prompt = img2imgPromptInput.value.trim();
+        if (!prompt || !img2imgBaseImageData) {
+            showToast("Please upload an image and provide a prompt.", "error");
+            return;
+        }
+
+        hideImg2ImgModal();
+        isRequestInProgress = true;
+        updateActionButtonsState();
+        showThinkingIndicator(`Transforming image: "${prompt.substring(0, 40)}..."`);
+        
+        // Display user's request in chat
+        const originalImageSrc = img2imgImagePreview.src;
+        displayMessage([{ text: prompt }], 'user', false, originalImageSrc);
+        addMessageToHistory('user', [{ text: prompt }], originalImageSrc);
+
+        const payload = {
+            init_images: [img2imgBaseImageData],
+            prompt: prompt,
+            negative_prompt: "blurry, low quality, deformed",
+            steps: 30,
+            cfg_scale: 7,
+            denoising_strength: 0.75
+        };
+
+        try {
+            const response = await fetch(`${DEFAULT_STABLE_DIFFUSION_API_URL}/sdapi/v1/img2img`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            removeThinkingIndicator();
+            if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+            const data = await response.json();
+            if (data.images && data.images.length > 0) {
+                const imageSrc = `data:image/png;base64,${data.images[0]}`;
+                displayMessage([], 'bot', false, null, imageSrc, 'fa-magic', prompt);
+                addMessageToHistory('model', [{text: 'Image transformed'}], null, imageSrc, prompt);
+            } else {
+                throw new Error('No images in API response.');
+            }
+        } catch (error) {
+            removeThinkingIndicator();
+            displayMessage([{ text: `Image Transformation Error: ${error.message}` }], 'bot', true);
+            console.error("Img2Img Error:", error);
+        } finally {
+            isRequestInProgress = false;
+            updateActionButtonsState();
+        }
     }
 
 
@@ -1492,15 +1604,26 @@ When generating code blocks, always use markdown format with language identifier
         transcribedText = document.getElementById('transcribed-text');
         botResponseText = document.getElementById('bot-response-text');
         thinkingIndicatorVoice = document.getElementById('thinking-indicator-voice');
+
+        // NEW: Assign Img2Img elements
+        img2imgButton = document.getElementById('img2img-button');
+        img2imgOverlay = document.getElementById('img2img-overlay');
+        closeImg2ImgModalBtn = document.getElementById('close-img2img-modal-btn');
+        img2imgPreview = document.getElementById('img2img-preview');
+        img2imgUploadInput = document.getElementById('img2img-upload-input');
+        img2imgSpinner = document.getElementById('img2img-spinner');
+        img2imgImagePreview = document.getElementById('img2img-image-preview');
+        img2imgPromptInput = document.getElementById('img2img-prompt-input');
+        generateImg2ImgBtn = document.getElementById('generate-img2img-btn');
         
         // Load data and render UI
-loadData();
-renderChatList();
-setChatActiveState(true); // Force centered state initially
-if (currentChatId && chats[currentChatId]?.history.length > 0) {
-    loadChat(currentChatId); // This will switch to top-left when chat loads
-}
-updateActionButtonsState();
+        loadData();
+        renderChatList();
+        setChatActiveState(true); 
+        if (currentChatId && chats[currentChatId]?.history.length > 0) {
+            loadChat(currentChatId); 
+        }
+        updateActionButtonsState();
 
         // Add Event Listeners
         newChatBtn.addEventListener('click', () => {
@@ -1543,6 +1666,18 @@ updateActionButtonsState();
         removeWallpaperBtn.addEventListener('click', () => {
             handleResetWallpaper();
             hideWallpaperModal();
+        });
+
+        // NEW: Img2Img Listeners
+        img2imgButton.addEventListener('click', showImg2ImgModal);
+        closeImg2ImgModalBtn.addEventListener('click', hideImg2ImgModal);
+        img2imgOverlay.addEventListener('click', (e) => { if(e.target === img2imgOverlay) hideImg2ImgModal(); });
+        img2imgPreview.addEventListener('click', () => img2imgUploadInput.click());
+        img2imgUploadInput.addEventListener('change', handleImg2ImgSelection);
+        generateImg2ImgBtn.addEventListener('click', handleImg2ImgGeneration);
+        img2imgPromptInput.addEventListener('input', () => {
+            // Enable generate button only if both image and prompt are present
+            generateImg2ImgBtn.disabled = !(img2imgBaseImageData && img2imgPromptInput.value.trim());
         });
         
         loader.classList.remove('visible');
