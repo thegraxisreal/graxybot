@@ -276,7 +276,8 @@ body {
 }
 .chat-input-area {
     display: flex; align-items: center; background-color: #f9fafb;
-    border: 1px solid var(--border-color); border-radius: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     padding: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 #message-input {
@@ -541,11 +542,59 @@ body {
         font-size: 2.5rem;
     }
 }
+
+/* --- NEW: Reddit Story Player Styles --- */
+#story-overlay {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background-color: black;
+    z-index: 4000;
+}
+#story-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the whole screen */
+    z-index: -1; /* Behind the captions */
+}
+#story-captions-container {
+    color: white;
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    padding: 20px;
+    max-width: 80%;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 10px;
+}
+#story-captions-container .highlight {
+    color: #ffc107; /* A bright yellow for the highlighted word */
+}
+#close-story-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2.5rem;
+    color: white;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    z-index: 4001;
+}
+
 </style>
 </head>
 <body>
 
-<div id="loader" class="loader-overlay visible">
+<div id="loader" class="loader-overlay">
     <div class="spinner"></div>
 </div>
 
@@ -652,12 +701,21 @@ body {
                     <button id="img2img-button" class="icon-btn" title="Image to Image"><i class="fas fa-paint-brush"></i></button>
                     <button id="create-image-button" class="icon-btn" title="Create Image"><i class="fas fa-image"></i></button>
                     <button id="mic-button" class="icon-btn" title="Speech to Text"><i class="fas fa-microphone"></i></button>
+                    <button id="reddit-story-button" class="icon-btn" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i></button>
                     <button id="send-button" class="icon-btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
         </footer>
     </main>
 </div>
+
+<!-- NEW: Reddit Story Video Player -->
+<div id="story-overlay" class="modal-overlay" style="background-color: black; z-index: 4000;">
+    <video id="story-video" playsinline loop muted></video>
+    <div id="story-captions-container"></div>
+    <button id="close-story-btn" class="close-modal-btn">&times;</button>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
@@ -666,7 +724,7 @@ body {
     // --- Configuration ---
     const OPENAI_MODEL = "gpt-4.1-mini";
     const GPT_4_1_MODEL = "gpt-4.1";
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://fiber-sms-work-ya.trycloudflare.com";
+    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://remarks-cat-cheapest-irish.trycloudflare.com";
     const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
 
     // --- UI & Storage Keys ---
@@ -677,6 +735,7 @@ body {
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
     const WALLPAPER_STORAGE_KEY = "graxybot_minimalist_wallpaper_v1";
     const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
+    const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4']; // NEW: Video files
 
     // --- DOM Element References ---
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
@@ -687,6 +746,7 @@ body {
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
     let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
     let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
+    let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn; // NEW: Reddit Story elements
 
     // --- Application State ---
     let chats = {};
@@ -699,6 +759,7 @@ body {
     let currentWallpaper = null;
     let generatedWallpaperData = null;
     let img2imgBaseImageData = null;
+    let currentSpeechUtterance = null; // NEW: To control speech synthesis
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -762,21 +823,24 @@ body {
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
         if (img2imgButton) img2imgButton.disabled = isBusy;
+        if (redditStoryButton) redditStoryButton.disabled = isBusy;
         settingsButton.disabled = isBusy;
     }
-    function getSystemPrompt(currentModelName) {
-        let basePrompt = `You are Graxybot, a helpful AI assistant.
-You are currently running on the ${currentModelName} model.
-Your creator is 'thegraxisreal'.
-IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.
-When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.
-Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.
-Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.
-Keep your responses concise, helpful, and slightly informal.
-Refer to yourself as Graxybot.
-IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., 'draw a cat'), you should fulfill that request directly instead of referring them to the buttons.
-When asked for code, default to HTML.
-When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\``;
+    function getSystemPrompt(currentModelName, isRedditStory = false) {
+        let basePrompt = `You are Graxybot, a helpful AI assistant.\nYou are currently running on the ${currentModelName} model.\nYour creator is 'thegraxisreal'.`;
+
+        if (isRedditStory) {
+            basePrompt += `\nIMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It should be engaging and suitable for a voiceover. Do not include a title or subreddit name. Just write the story.`;
+        } else {
+            basePrompt += `\nIMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\nWhen receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\nThose restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\nProvide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\nKeep your responses concise, helpful, and slightly informal.\nRefer to yourself as Graxybot.\nIMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\nWhen asked for code, default to HTML.\nWhen generating code blocks, always use markdown format with language identifiers like \
+\
+\
+python ... \
+\
+\
+`;
+        }
+
         if (userPersonality.name) {
              basePrompt += `\nAddress the user as "${userPersonality.name}".`;
         }
@@ -1123,7 +1187,16 @@ When generating code blocks, always use markdown format with language identifier
             }
         }
     }
-    async function sendMessageToOpenAI(messages, modelName) {
+    async function sendMessageToOpenAI(messages, modelName, stream = true) {
+        if (!stream) {
+            const response = await fetch(OPENAI_PROXY_ENDPOINT, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelName, messages, stream: false })
+            });
+            if (!response.ok) throw new Error(`Proxy error: ${response.statusText}`);
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
         const botMessageElement = displayMessage([], 'bot');
         const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
         
@@ -1441,6 +1514,103 @@ When generating code blocks, always use markdown format with language identifier
         }
     }
 
+    // --- NEW: Reddit Story Functions ---
+    async function handleRedditStoryGeneration() {
+        const promptText = messageInput.value.trim();
+        if (!promptText) {
+            showToast("Please enter a topic for the story.", "error");
+            return;
+        }
+
+        displayMessage([{ text: `Tell me a Reddit story about ${promptText}` }], 'user');
+        addMessageToHistory('user', [{ text: `Tell me a Reddit story about ${promptText}` }]);
+        messageInput.value = '';
+        updateActionButtonsState();
+        isRequestInProgress = true;
+        showThinkingIndicator("Writing your story...");
+
+        try {
+            const systemPrompt = getSystemPrompt(OPENAI_MODEL, true);
+            const messages = [{ role: "system", content: systemPrompt }, { role: "user", content: promptText }];
+            const storyText = await sendMessageToOpenAI(messages, OPENAI_MODEL, false);
+            
+            removeThinkingIndicator();
+            displayMessage([{ text: storyText }], 'bot', false, null, null, 'fa-book-open');
+            addMessageToHistory('model', [{ text: storyText }]);
+
+            playStoryWithVideo(storyText);
+
+        } catch (error) {
+            removeThinkingIndicator();
+            displayMessage([{ text: `Error generating story: ${error.message}` }], 'bot', true);
+        } finally {
+            isRequestInProgress = false;
+            updateActionButtonsState();
+        }
+    }
+
+    function playStoryWithVideo(text) {
+        if ('speechSynthesis' in window === false) {
+            showToast("Speech synthesis is not supported in your browser.", "error");
+            return;
+        }
+
+        // Stop any currently playing story
+        window.speechSynthesis.cancel();
+
+        storyOverlay.classList.add('visible');
+        const randomVideo = BACKGROUND_VIDEOS[Math.floor(Math.random() * BACKGROUND_VIDEOS.length)];
+        storyVideo.src = randomVideo;
+        storyVideo.play().catch(e => console.error("Video autoplay failed:", e));
+
+        const words = text.split(/\s+/);
+        const spans = words.map(word => {
+            const span = document.createElement('span');
+            span.textContent = word + ' ';
+            return span;
+        });
+        storyCaptionsContainer.innerHTML = '';
+        spans.forEach(span => storyCaptionsContainer.appendChild(span));
+
+        currentSpeechUtterance = new SpeechSynthesisUtterance(text);
+        
+        currentSpeechUtterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                const wordIndex = text.substr(0, event.charIndex).split(/\s+/).length - 1;
+                if (wordIndex >= 0) {
+                    spans.forEach((span, i) => {
+                        span.classList.toggle('highlight', i === wordIndex);
+                    });
+                }
+            }
+        };
+
+        currentSpeechUtterance.onend = () => {
+            storyCaptionsContainer.innerHTML = '';
+            storyOverlay.classList.remove('visible');
+            storyVideo.pause();
+            currentSpeechUtterance = null;
+        };
+
+        currentSpeechUtterance.onerror = (e) => {
+            console.error("Speech synthesis error:", e);
+            showToast(`Speech error: ${e.error}`, 'error');
+            closeStoryPlayer();
+        };
+
+        window.speechSynthesis.speak(currentSpeechUtterance);
+    }
+
+    function closeStoryPlayer() {
+        if (currentSpeechUtterance) {
+            window.speechSynthesis.cancel();
+            currentSpeechUtterance = null;
+        }
+        storyOverlay.classList.remove('visible');
+        storyVideo.pause();
+        storyVideo.src = '';
+    }
+
     // --- Tutorial Functions ---
     let currentTutorialStep = 0;
     let tutorialSteps = [];
@@ -1630,6 +1800,11 @@ When generating code blocks, always use markdown format with language identifier
         removeImageButton = document.getElementById('remove-image-button');
         micButton = document.getElementById('mic-button');
         menuToggle = document.getElementById('menu-toggle');
+        redditStoryButton = document.getElementById('reddit-story-button');
+        storyOverlay = document.getElementById('story-overlay');
+        storyVideo = document.getElementById('story-video');
+        storyCaptionsContainer = document.getElementById('story-captions-container');
+        closeStoryBtn = document.getElementById('close-story-btn');
         
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
@@ -1686,6 +1861,8 @@ When generating code blocks, always use markdown format with language identifier
             menuBackdrop.classList.remove('visible');
         });
         sendButton.addEventListener('click', handleSendMessage);
+        redditStoryButton.addEventListener('click', handleRedditStoryGeneration);
+        closeStoryBtn.addEventListener('click', closeStoryPlayer);
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
         messageInput.addEventListener('input', updateActionButtonsState);
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
