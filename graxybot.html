@@ -623,6 +623,8 @@ body {
         <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
         <label for="response-style-input">How do you want Graxybot to respond?</label>
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
+        <label for="voice-select">Choose a voice for Reddit stories:</label>
+        <select id="voice-select"></select>
         <button id="save-personality-btn">Save Settings</button>
         <button id="open-wallpaper-modal-btn" class="secondary-btn">Customize Chat Wallpaper</button>
         <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
@@ -741,7 +743,7 @@ body {
     const USER_ICON_CLASS = "fas fa-user";
     const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
-    const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
+    const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v4";
     const WALLPAPER_STORAGE_KEY = "graxybot_minimalist_wallpaper_v1";
     const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
     const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4']; // NEW: Video files
@@ -751,7 +753,7 @@ body {
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
-    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+    let personalityOverlay, userNameInput, responseStyleInput, voiceSelect, savePersonalityBtn, closePersonalityModalBtn;
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
     let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
     let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
@@ -764,7 +766,7 @@ body {
     let isImageGenerationModeActive = false;
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
-    let userPersonality = { name: null, responseStyle: null };
+    let userPersonality = { name: null, responseStyle: null, selectedVoice: null };
     let currentWallpaper = null;
     let generatedWallpaperData = null;
     let img2imgBaseImageData = null;
@@ -796,7 +798,13 @@ body {
                 localStorage.removeItem(CURRENT_CHAT_ID_KEY);
             }
             const storedPersonality = localStorage.getItem(PERSONALITY_STORAGE_KEY);
-            if (storedPersonality) userPersonality = JSON.parse(storedPersonality);
+            if (storedPersonality) {
+                userPersonality = JSON.parse(storedPersonality);
+                // Ensure selectedVoice is initialized even if not present in old storage
+                if (userPersonality.selectedVoice === undefined) {
+                    userPersonality.selectedVoice = null;
+                }
+            }
             
             const storedWallpaper = localStorage.getItem(WALLPAPER_STORAGE_KEY);
             if (storedWallpaper) {
@@ -1369,6 +1377,7 @@ python ... \
     function showPersonalityModal() {
         userNameInput.value = userPersonality.name || '';
         responseStyleInput.value = userPersonality.responseStyle || '';
+        populateVoiceList(); // Populate voices when modal is shown
         personalityOverlay.classList.add('visible');
     }
     function hidePersonalityModal() {
@@ -1377,9 +1386,47 @@ python ... \
     function handleSavePersonality() {
         userPersonality.name = userNameInput.value.trim() || null;
         userPersonality.responseStyle = responseStyleInput.value.trim() || '';
+        userPersonality.selectedVoice = voiceSelect.value || null; // Save selected voice
         savePersonalitySettings();
         showToast("Personality saved!", "success");
         hidePersonalityModal();
+    }
+
+    // NEW: Voice selection functions
+    function populateVoiceList() {
+        const voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = ''; // Clear existing options
+        
+        // Add a default option
+        const defaultOption = document.createElement('option');
+        defaultOption.textContent = 'Default Voice';
+        defaultOption.value = '';
+        voiceSelect.appendChild(defaultOption);
+
+        let selectedVoiceFound = false;
+
+        voices.forEach(voice => {
+            const option = document.createElement('option');
+            option.textContent = `${voice.name} (${voice.lang})`;
+            option.value = voice.voiceURI;
+            if (userPersonality.selectedVoice === voice.voiceURI) {
+                option.selected = true;
+                selectedVoiceFound = true;
+            }
+            voiceSelect.appendChild(option);
+        });
+
+        // If the previously selected voice is no longer available, reset to default
+        if (userPersonality.selectedVoice && !selectedVoiceFound) {
+            userPersonality.selectedVoice = null;
+            savePersonalitySettings();
+            voiceSelect.value = '';
+        }
+    }
+
+    // Ensure voices are loaded before populating the list
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = populateVoiceList;
     }
 
     // --- Wallpaper Functions ---
@@ -1593,6 +1640,12 @@ python ... \
         });
 
         currentSpeechUtterance = new SpeechSynthesisUtterance(text);
+        if (userPersonality.selectedVoice) {
+            const selectedVoice = window.speechSynthesis.getVoices().find(voice => voice.voiceURI === userPersonality.selectedVoice);
+            if (selectedVoice) {
+                currentSpeechUtterance.voice = selectedVoice;
+            }
+        }
         
         currentSpeechUtterance.onboundary = (event) => {
             if (event.name === 'word') {
@@ -1871,6 +1924,7 @@ python ... \
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
+        voiceSelect = document.getElementById('voice-select'); // NEW
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
         openWallpaperModalBtn = document.getElementById('open-wallpaper-modal-btn');
@@ -1906,6 +1960,7 @@ python ... \
             loadChat(currentChatId); 
         }
         updateActionButtonsState();
+        populateVoiceList(); // Populate voices on load
 
         // Add Event Listeners
         newChatBtn.addEventListener('click', () => {
