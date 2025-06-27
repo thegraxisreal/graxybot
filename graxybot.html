@@ -1607,14 +1607,18 @@ python ... \
         
         // NEW: Randomly select a Google English voice
         const voices = window.speechSynthesis.getVoices();
+        console.log("All available voices:", voices);
+
         const googleEnglishVoices = voices.filter(voice => 
             voice.name.includes('Google') && 
             (voice.lang === 'en-US' || voice.lang === 'en-GB')
         );
+        console.log("Filtered Google English voices:", googleEnglishVoices);
 
         if (googleEnglishVoices.length > 0) {
             const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
             currentSpeechUtterance.voice = randomVoice;
+            console.log("Selected voice:", randomVoice);
         } else {
             console.warn("No Google English voices found. Using default browser voice.");
         }
