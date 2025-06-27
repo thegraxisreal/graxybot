@@ -1572,28 +1572,47 @@ python ... \
             return;
         }
 
-        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
         storyOverlay.classList.add('visible');
         storyVideo.muted = true; // Ensure video is muted for autoplay
 
-        const words = text.split(/\s+/);
-        const spans = words.map(word => {
-            const span = document.createElement('span');
-            span.textContent = word + ' ';
-            return span;
-        });
+        // Clear previous captions and prepare for new ones
         storyCaptionsContainer.innerHTML = '';
-        spans.forEach(span => storyCaptionsContainer.appendChild(span));
+        const words = text.split(/(\s+)/); // Split by word and keep delimiters
+        const wordSpans = [];
+        let charIndex = 0;
+
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = word;
+            span.dataset.charIndex = charIndex; // Store the starting character index of the word
+            span.dataset.wordIndex = index; // Store the word index
+            wordSpans.push(span);
+            storyCaptionsContainer.appendChild(span);
+            charIndex += word.length;
+        });
 
         currentSpeechUtterance = new SpeechSynthesisUtterance(text);
         
         currentSpeechUtterance.onboundary = (event) => {
             if (event.name === 'word') {
-                const wordIndex = text.substr(0, event.charIndex).split(/\s+/).length - 1;
-                if (wordIndex >= 0) {
-                    spans.forEach((span, i) => {
-                        span.classList.toggle('highlight', i === wordIndex);
-                    });
+                // Find the span that corresponds to the current word being spoken
+                let currentWordSpan = null;
+                for (let i = 0; i < wordSpans.length; i++) {
+                    const spanCharIndex = parseInt(wordSpans[i].dataset.charIndex);
+                    // Check if the event's charIndex falls within this word's boundaries
+                    if (event.charIndex >= spanCharIndex && event.charIndex < (spanCharIndex + wordSpans[i].textContent.length)) {
+                        currentWordSpan = wordSpans[i];
+                        break;
+                    }
+                }
+
+                // Remove highlight from previous word and add to current word
+                wordSpans.forEach(span => span.classList.remove('highlight'));
+                if (currentWordSpan) {
+                    currentWordSpan.classList.add('highlight');
+                    // Optional: Scroll captions into view if they go off screen
+                    currentWordSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
         };
@@ -1605,6 +1624,7 @@ python ... \
             storyVideo.currentTime = 0;
             clearInterval(videoPlaybackInterval);
             currentSpeechUtterance = null;
+            wordSpans.forEach(span => span.classList.remove('highlight')); // Ensure all highlights are removed
         };
 
         currentSpeechUtterance.onerror = (e) => {
@@ -1615,7 +1635,7 @@ python ... \
 
         window.speechSynthesis.speak(currentSpeechUtterance);
 
-        // Video playback logic
+        // Video playback logic (remains largely the same)
         currentVideoIndex = 0;
         function playNextVideoSegment() {
             if (BACKGROUND_VIDEOS.length === 0) {
