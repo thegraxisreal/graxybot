@@ -834,6 +834,7 @@ body {
         if (img2imgButton) img2imgButton.disabled = isBusy;
         if (redditStoryButton) redditStoryButton.disabled = isBusy;
         settingsButton.disabled = isBusy;
+        console.log(`updateActionButtonsState: isRequestInProgress=${isRequestInProgress}, isListening=${isListening}, isBusy=${isBusy}`);
     }
     function getSystemPrompt(currentModelName, isRedditStory = false) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
@@ -1197,6 +1198,7 @@ python ... \
         }
     }
     async function sendMessageToOpenAI(messages, modelName, stream = true) {
+        console.log("sendMessageToOpenAI: Start");
         const botMessageElement = stream ? displayMessage([], 'bot') : null;
         const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
         
@@ -1247,19 +1249,25 @@ python ... \
             if (paragraph) {
                 processAndAppendText(fullResponseText, paragraph); // Final render after stream ends
             }
+            console.log("sendMessageToOpenAI: End (Success)");
             return fullResponseText;
         } catch (error) {
             if (paragraph) {
                 paragraph.textContent = `Error: ${error.message}`;
                 paragraph.parentElement.classList.add('error-message');
             }
+            console.error("sendMessageToOpenAI: Error", error);
             throw error;
         }
     }
     
     async function handleSendMessage() {
+        console.log("handleSendMessage: Start");
         const messageText = messageInput.value.trim();
-        if (!messageText && !selectedImageData) return;
+        if (!messageText && !selectedImageData) {
+            console.log("handleSendMessage: No message or image, returning.");
+            return;
+        }
         
         setChatActiveState(false);
         const imageWasAttached = !!selectedImageData;
@@ -1278,12 +1286,14 @@ python ... \
 
         if (shouldGenerateImage) {
             isRequestInProgress = true; updateActionButtonsState();
+            console.log("handleSendMessage: Triggering image generation.");
             await triggerStableDiffusionGeneration(currentPrompt, false);
             isRequestInProgress = false; updateActionButtonsState();
 
         } else {
             isRequestInProgress = true; 
             updateActionButtonsState();
+            console.log("handleSendMessage: Sending message to OpenAI.");
             
             const modelToUse = currentPrompt.toLowerCase().includes("code") || imageWasAttached ? GPT_4_1_MODEL : OPENAI_MODEL;
             
@@ -1303,6 +1313,7 @@ python ... \
             } finally {
                 isRequestInProgress = false;
                 updateActionButtonsState();
+                console.log("handleSendMessage: End.");
             }
         }
     }
