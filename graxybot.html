@@ -839,9 +839,8 @@ body {
     function getSystemPrompt(currentModelName, isRedditStory = false) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
 
-        if (isRedditStory) {
-            basePrompt += `\n IMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It should be engaging and suitable for a voiceover. Do not include a title or subreddit name. Just write the story.`;
-        } else {
+        if (isRedditStory) {            basePrompt += `
+ IMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It should be engaging and suitable for a voiceover. Format the story by inserting a newline character after approximately every 5 to 7 words. Do not include a title or subreddit name. Just write the story.`;        } else {
             basePrompt += `\n IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\n When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\n Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\n Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\n Keep your responses concise, helpful, and slightly informal.\n Refer to yourself as Graxybot.\n IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\n When asked for code, default to HTML.\n When generating code blocks, always use markdown format with language identifiers like \
 \
 \
@@ -1587,121 +1586,69 @@ python ... \
         storyOverlay.classList.add('visible');
         storyVideo.muted = true; // Ensure video is muted for autoplay
 
-        // Clear previous captions and prepare for new ones
-        storyCaptionsContainer.innerHTML = '';
-        const words = text.split(/\s+/).filter(word => word.length > 0); // Split by actual words, filter empty strings
-        const wordSpans = [];
-        const CHUNK_SIZE = 5; // Number of words per caption chunk
+        // Split the text into lines based on the AI's formatting
+        const lines = text.split(/\n+/).filter(line => line.trim().length > 0);
+        let currentLineIndex = 0;
 
-        // Create all word spans and initially hide them with opacity
-        words.forEach((word, index) => {
-            const span = document.createElement('span');
-            span.textContent = word + ' '; // Add space back for display
-            span.style.opacity = '0'; // Initially hide all words
-            span.style.transition = 'opacity 0.1s ease-in-out'; // Smooth transition
-            wordSpans.push(span);
-            storyCaptionsContainer.appendChild(span);
-        });
+        const speakNextLine = () => {
+            if (currentLineIndex < lines.length) {
+                const lineText = lines[currentLineIndex].trim();
+                storyCaptionsContainer.textContent = lineText; // Display the current line
 
-        currentSpeechUtterance = new SpeechSynthesisUtterance(text);
-        
-        // Function to get voices, ensuring they are loaded
-        const getVoicesAsync = () => {
-            return new Promise(resolve => {
-                let voices = window.speechSynthesis.getVoices();
-                if (voices.length) {
-                    resolve(voices);
-                } else {
-                    window.speechSynthesis.onvoiceschanged = () => {
-                        voices = window.speechSynthesis.getVoices();
-                        resolve(voices);
-                    };
-                }
-            });
-        };
+                currentSpeechUtterance = new SpeechSynthesisUtterance(lineText);
+                
+                // Function to get voices, ensuring they are loaded
+                const getVoicesAsync = () => {
+                    return new Promise(resolve => {
+                        let voices = window.speechSynthesis.getVoices();
+                        if (voices.length) {
+                            resolve(voices);
+                        } else {
+                            window.speechSynthesis.onvoiceschanged = () => {
+                                voices = window.speechSynthesis.getVoices();
+                                resolve(voices);
+                            };
+                        }
+                    });
+                };
 
-        getVoicesAsync().then(voices => {
-            console.log("All available voices (after load):");
-            voices.forEach(voice => console.log(voice.name, voice.lang));
+                getVoicesAsync().then(voices => {
+                    const googleEnglishVoices = voices.filter(voice => 
+                        voice.name.includes('Google') && 
+                        (voice.lang === 'en-US' || voice.lang === 'en-GB')
+                    );
 
-            const googleEnglishVoices = voices.filter(voice => 
-                voice.name.includes('Google') && 
-                (voice.lang === 'en-US' || voice.lang === 'en-GB')
-            );
-            console.log("Filtered Google English voices (after load):");
-            googleEnglishVoices.forEach(voice => console.log(voice.name, voice.lang));
-
-            if (googleEnglishVoices.length > 0) {
-                const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
-                currentSpeechUtterance.voice = randomVoice;
-                console.log("Selected voice:", randomVoice);
-            } else {
-                console.warn("No Google English voices found. Using default browser voice.");
-            }
-            window.speechSynthesis.speak(currentSpeechUtterance);
-        });
-
-        currentSpeechUtterance.onboundary = (event) => {
-            if (event.name === 'word') {
-                console.log("onboundary event fired. charIndex:", event.charIndex);
-                // Calculate the index of the spoken word in the 'words' array
-                let charCount = 0;
-                let spokenWordIndex = -1;
-                for (let i = 0; i < words.length; i++) {
-                    // Account for the space after each word when calculating charCount
-                    const wordLengthWithSpace = words[i].length + (i < words.length - 1 ? 1 : 0); 
-                    if (event.charIndex >= charCount && event.charIndex < charCount + wordLengthWithSpace) {
-                        spokenWordIndex = i;
-                        break;
-                    }
-                    charCount += wordLengthWithSpace;
-                }
-
-                console.log("Calculated spokenWordIndex:", spokenWordIndex);
-
-                if (spokenWordIndex === -1) return; // Should not happen if logic is correct
-
-                // Calculate the start and end index of the current 5-word chunk
-                const chunkStartIndex = Math.floor(spokenWordIndex / CHUNK_SIZE) * CHUNK_SIZE;
-                const chunkEndIndex = Math.min(chunkStartIndex + CHUNK_SIZE -1, words.length - 1); // Corrected chunkEndIndex
-
-                console.log(`Chunk: [${chunkStartIndex}, ${chunkEndIndex}]`);
-
-                // Hide all words, then show only the current chunk and highlight the spoken word
-                wordSpans.forEach((span, idx) => {
-                    span.classList.remove('highlight');
-                    if (idx >= chunkStartIndex && idx <= chunkEndIndex) {
-                        span.style.opacity = '1'; // Show words in the current chunk
-                        console.log(`Showing word: ${span.textContent.trim()} (index: ${idx})`);
+                    if (googleEnglishVoices.length > 0) {
+                        const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
+                        currentSpeechUtterance.voice = randomVoice;
                     } else {
-                        span.style.opacity = '0'; // Hide words outside the current chunk
+                        console.warn("No Google English voices found. Using default browser voice.");
                     }
+                    window.speechSynthesis.speak(currentSpeechUtterance);
                 });
 
-                // Highlight the current word within the visible chunk
-                if (wordSpans[spokenWordIndex]) {
-                    wordSpans[spokenWordIndex].classList.add('highlight');
-                    console.log(`Highlighting word: ${wordSpans[spokenWordIndex].textContent.trim()}`);
-                    // Optional: Scroll captions into view if they go off screen
-                    wordSpans[spokenWordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                currentSpeechUtterance.onend = () => {
+                    currentLineIndex++;
+                    speakNextLine(); // Speak the next line when the current one ends
+                };
+
+                currentSpeechUtterance.onerror = (e) => {
+                    console.error("Speech synthesis error:", e);
+                    showToast(`Speech error: ${e.error}`, 'error');
+                    closeStoryPlayer();
+                };
+            } else {
+                // All lines have been spoken
+                storyCaptionsContainer.innerHTML = '';
+                storyOverlay.classList.remove('visible');
+                storyVideo.pause();
+                storyVideo.currentTime = 0;
+                clearInterval(videoPlaybackInterval);
+                currentSpeechUtterance = null;
             }
         };
 
-        currentSpeechUtterance.onend = () => {
-            storyCaptionsContainer.innerHTML = '';
-            storyOverlay.classList.remove('visible');
-            storyVideo.pause();
-            storyVideo.currentTime = 0;
-            clearInterval(videoPlaybackInterval);
-            currentSpeechUtterance = null;
-        };
-
-        currentSpeechUtterance.onerror = (e) => {
-            console.error("Speech synthesis error:", e);
-            showToast(`Speech error: ${e.error}`, 'error');
-            closeStoryPlayer();
-        };
+        speakNextLine(); // Start speaking the first line
 
         // Video playback logic (remains largely the same)
         currentVideoIndex = 0;
