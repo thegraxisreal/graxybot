@@ -1589,6 +1589,38 @@ python ... \
         // Split the text into lines based on the AI's formatting
         const lines = text.split(/\n+/).filter(line => line.trim().length > 0);
         let currentLineIndex = 0;
+        let selectedStoryVoice = null; // Variable to store the selected voice for this story
+
+        // Function to get voices, ensuring they are loaded
+        const getVoicesAsync = () => {
+            return new Promise(resolve => {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length) {
+                    resolve(voices);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        voices = window.speechSynthesis.getVoices();
+                        resolve(voices);
+                    };
+                }
+            });
+        };
+
+        // Select a random Google English voice once for the entire story
+        getVoicesAsync().then(voices => {
+            const googleEnglishVoices = voices.filter(voice => 
+                voice.name.includes('Google') && 
+                (voice.lang === 'en-US' || voice.lang === 'en-GB')
+            );
+
+            if (googleEnglishVoices.length > 0) {
+                selectedStoryVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
+                console.log("Selected voice for this story:", selectedStoryVoice);
+            } else {
+                console.warn("No Google English voices found. Using default browser voice.");
+            }
+            speakNextLine(); // Start speaking after voice is selected
+        });
 
         const speakNextLine = () => {
             if (currentLineIndex < lines.length) {
@@ -1596,36 +1628,10 @@ python ... \
                 storyCaptionsContainer.textContent = lineText; // Display the current line
 
                 currentSpeechUtterance = new SpeechSynthesisUtterance(lineText);
-                
-                // Function to get voices, ensuring they are loaded
-                const getVoicesAsync = () => {
-                    return new Promise(resolve => {
-                        let voices = window.speechSynthesis.getVoices();
-                        if (voices.length) {
-                            resolve(voices);
-                        } else {
-                            window.speechSynthesis.onvoiceschanged = () => {
-                                voices = window.speechSynthesis.getVoices();
-                                resolve(voices);
-                            };
-                        }
-                    });
-                };
-
-                getVoicesAsync().then(voices => {
-                    const googleEnglishVoices = voices.filter(voice => 
-                        voice.name.includes('Google') && 
-                        (voice.lang === 'en-US' || voice.lang === 'en-GB')
-                    );
-
-                    if (googleEnglishVoices.length > 0) {
-                        const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
-                        currentSpeechUtterance.voice = randomVoice;
-                    } else {
-                        console.warn("No Google English voices found. Using default browser voice.");
-                    }
-                    window.speechSynthesis.speak(currentSpeechUtterance);
-                });
+                if (selectedStoryVoice) {
+                    currentSpeechUtterance.voice = selectedStoryVoice;
+                }
+                window.speechSynthesis.speak(currentSpeechUtterance);
 
                 currentSpeechUtterance.onend = () => {
                     currentLineIndex++;
@@ -1647,8 +1653,6 @@ python ... \
                 currentSpeechUtterance = null;
             }
         };
-
-        speakNextLine(); // Start speaking the first line
 
         // Video playback logic (remains largely the same)
         currentVideoIndex = 0;
