@@ -1589,15 +1589,16 @@ python ... \
 
         // Clear previous captions and prepare for new ones
         storyCaptionsContainer.innerHTML = '';
-        const allWords = text.split(/(\s+)/); // Split by word and keep delimiters
+        const words = text.split(/\s+/).filter(word => word.length > 0); // Split by actual words, filter empty strings
         const wordSpans = [];
         const CHUNK_SIZE = 5; // Number of words per caption chunk
 
-        // Create all word spans and initially hide them
-        allWords.forEach((word, index) => {
+        // Create all word spans and initially hide them with opacity
+        words.forEach((word, index) => {
             const span = document.createElement('span');
-            span.textContent = word;
-            span.style.display = 'none'; // Initially hide all words
+            span.textContent = word + ' '; // Add space back for display
+            span.style.opacity = '0'; // Initially hide all words
+            span.style.transition = 'opacity 0.1s ease-in-out'; // Smooth transition
             wordSpans.push(span);
             storyCaptionsContainer.appendChild(span);
         });
@@ -1642,34 +1643,45 @@ python ... \
 
         currentSpeechUtterance.onboundary = (event) => {
             if (event.name === 'word') {
-                // Determine the actual word index in the full text (considering spaces as words)
-                let spokenWordIndex = 0;
+                console.log("onboundary event fired. charIndex:", event.charIndex);
+                // Calculate the index of the spoken word in the 'words' array
                 let charCount = 0;
-                for(let i = 0; i < allWords.length; i++) {
-                    if (charCount === event.charIndex) {
+                let spokenWordIndex = -1;
+                for (let i = 0; i < words.length; i++) {
+                    // Account for the space after each word when calculating charCount
+                    const wordLengthWithSpace = words[i].length + (i < words.length - 1 ? 1 : 0); 
+                    if (event.charIndex >= charCount && event.charIndex < charCount + wordLengthWithSpace) {
                         spokenWordIndex = i;
                         break;
                     }
-                    charCount += allWords[i].length;
+                    charCount += wordLengthWithSpace;
                 }
+
+                console.log("Calculated spokenWordIndex:", spokenWordIndex);
+
+                if (spokenWordIndex === -1) return; // Should not happen if logic is correct
 
                 // Calculate the start and end index of the current 5-word chunk
                 const chunkStartIndex = Math.floor(spokenWordIndex / CHUNK_SIZE) * CHUNK_SIZE;
-                const chunkEndIndex = Math.min(chunkStartIndex + CHUNK_SIZE, wordSpans.length) - 1;
+                const chunkEndIndex = Math.min(chunkStartIndex + CHUNK_SIZE -1, words.length - 1); // Corrected chunkEndIndex
 
-                // Hide all words, then show only the current chunk
+                console.log(`Chunk: [${chunkStartIndex}, ${chunkEndIndex}]`);
+
+                // Hide all words, then show only the current chunk and highlight the spoken word
                 wordSpans.forEach((span, idx) => {
-                    span.classList.remove('highlight'); // Remove highlight from all
+                    span.classList.remove('highlight');
                     if (idx >= chunkStartIndex && idx <= chunkEndIndex) {
-                        span.style.display = ''; // Show words in the current chunk
+                        span.style.opacity = '1'; // Show words in the current chunk
+                        console.log(`Showing word: ${span.textContent.trim()} (index: ${idx})`);
                     } else {
-                        span.style.display = 'none'; // Hide words outside the current chunk
+                        span.style.opacity = '0'; // Hide words outside the current chunk
                     }
                 });
 
                 // Highlight the current word within the visible chunk
                 if (wordSpans[spokenWordIndex]) {
                     wordSpans[spokenWordIndex].classList.add('highlight');
+                    console.log(`Highlighting word: ${wordSpans[spokenWordIndex].textContent.trim()}`);
                     // Optional: Scroll captions into view if they go off screen
                     wordSpans[spokenWordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
