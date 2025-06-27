@@ -1605,23 +1605,41 @@ python ... \
 
         currentSpeechUtterance = new SpeechSynthesisUtterance(text);
         
-        // NEW: Randomly select a Google English voice
-        const voices = window.speechSynthesis.getVoices();
-        console.log("All available voices:", voices);
+        // Function to get voices, ensuring they are loaded
+        const getVoicesAsync = () => {
+            return new Promise(resolve => {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length) {
+                    resolve(voices);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        voices = window.speechSynthesis.getVoices();
+                        resolve(voices);
+                    };
+                }
+            });
+        };
 
-        const googleEnglishVoices = voices.filter(voice => 
-            voice.name.includes('Google') && 
-            (voice.lang === 'en-US' || voice.lang === 'en-GB')
-        );
-        console.log("Filtered Google English voices:", googleEnglishVoices);
+        getVoicesAsync().then(voices => {
+            console.log("All available voices (after load):");
+            voices.forEach(voice => console.log(voice.name, voice.lang));
 
-        if (googleEnglishVoices.length > 0) {
-            const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
-            currentSpeechUtterance.voice = randomVoice;
-            console.log("Selected voice:", randomVoice);
-        } else {
-            console.warn("No Google English voices found. Using default browser voice.");
-        }
+            const googleEnglishVoices = voices.filter(voice => 
+                voice.name.includes('Google') && 
+                (voice.lang === 'en-US' || voice.lang === 'en-GB')
+            );
+            console.log("Filtered Google English voices (after load):");
+            googleEnglishVoices.forEach(voice => console.log(voice.name, voice.lang));
+
+            if (googleEnglishVoices.length > 0) {
+                const randomVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
+                currentSpeechUtterance.voice = randomVoice;
+                console.log("Selected voice:", randomVoice);
+            } else {
+                console.warn("No Google English voices found. Using default browser voice.");
+            }
+            window.speechSynthesis.speak(currentSpeechUtterance);
+        });
 
         currentSpeechUtterance.onboundary = (event) => {
             if (event.name === 'word') {
@@ -1661,8 +1679,6 @@ python ... \
             showToast(`Speech error: ${e.error}`, 'error');
             closeStoryPlayer();
         };
-
-        window.speechSynthesis.speak(currentSpeechUtterance);
 
         // Video playback logic (remains largely the same)
         currentVideoIndex = 0;
