@@ -722,6 +722,7 @@ body {
         <video id="story-video" playsinline loop muted></video>
     </div>
     <div id="story-captions-container"></div>
+    <button id="download-story-btn" class="icon-btn" title="Download Video"><i class="fas fa-download"></i></button>
     <button id="close-story-btn" class="close-modal-btn">&times;</button>
 </div>
 
@@ -755,7 +756,7 @@ body {
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
     let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
     let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
-    let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn; // NEW: Reddit Story elements
+    let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn; // NEW: Reddit Story elements
 
     // --- Application State ---
     let chats = {};
@@ -1886,6 +1887,7 @@ python ... \
         storyVideo = document.getElementById('story-video');
         storyCaptionsContainer = document.getElementById('story-captions-container');
         closeStoryBtn = document.getElementById('close-story-btn');
+        downloadStoryBtn = document.getElementById('download-story-btn'); // NEW
         
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
@@ -1944,6 +1946,19 @@ python ... \
         sendButton.addEventListener('click', handleSendMessage);
         redditStoryButton.addEventListener('click', handleRedditStoryGeneration);
         closeStoryBtn.addEventListener('click', closeStoryPlayer);
+        downloadStoryBtn.addEventListener('click', () => {
+            if (storyVideo.src) {
+                const a = document.createElement('a');
+                a.href = storyVideo.src;
+                a.download = 'graxybot_story_video.mp4'; // You can make this dynamic if needed
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast("Downloading video...", "info");
+            } else {
+                showToast("No video to download.", "error");
+            }
+        });
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
         messageInput.addEventListener('input', updateActionButtonsState);
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
