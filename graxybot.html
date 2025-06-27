@@ -1589,7 +1589,7 @@ python ... \
 
         // Split the text into lines based on the AI's formatting
         const lines = text.split(/\n+/).filter(line => line.trim().length > 0);
-        let currentLineIndex = 0;
+        const utterances = [];
         let selectedStoryVoice = null; // Variable to store the selected voice for this story
 
         // Function to get voices, ensuring they are loaded
@@ -1607,7 +1607,6 @@ python ... \
             });
         };
 
-        // Select a random Google English voice once for the entire story
         getVoicesAsync().then(voices => {
             const googleEnglishVoices = voices.filter(voice => 
                 voice.name.includes('Google') && 
@@ -1616,44 +1615,42 @@ python ... \
 
             if (googleEnglishVoices.length > 0) {
                 selectedStoryVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
-                console.log("Selected voice for this story:", selectedStoryVoice);
             } else {
                 console.warn("No Google English voices found. Using default browser voice.");
             }
-            speakNextLine(); // Start speaking after voice is selected
-        });
 
-        const speakNextLine = () => {
-            if (currentLineIndex < lines.length) {
-                const lineText = lines[currentLineIndex].trim();
-                storyCaptionsContainer.textContent = lineText; // Display the current line
-
-                currentSpeechUtterance = new SpeechSynthesisUtterance(lineText);
+            // Create all utterances and queue them
+            lines.forEach((lineText, index) => {
+                const utterance = new SpeechSynthesisUtterance(lineText);
                 if (selectedStoryVoice) {
-                    currentSpeechUtterance.voice = selectedStoryVoice;
+                    utterance.voice = selectedStoryVoice;
                 }
-                window.speechSynthesis.speak(currentSpeechUtterance);
 
-                currentSpeechUtterance.onend = () => {
-                    currentLineIndex++;
-                    speakNextLine(); // Speak the next line when the current one ends
+                utterance.onstart = () => {
+                    storyCaptionsContainer.textContent = lineText; // Display caption when line starts speaking
                 };
 
-                currentSpeechUtterance.onerror = (e) => {
-                    console.error("Speech synthesis error:", e);
+                utterance.onerror = (e) => {
+                    console.error("Speech synthesis error for line:", lineText, e);
                     showToast(`Speech error: ${e.error}`, 'error');
                     closeStoryPlayer();
                 };
-            } else {
-                // All lines have been spoken
-                storyCaptionsContainer.innerHTML = '';
-                storyOverlay.classList.remove('visible');
-                storyVideo.pause();
-                storyVideo.currentTime = 0;
-                clearInterval(videoPlaybackInterval);
-                currentSpeechUtterance = null;
-            }
-        };
+
+                // Only the last utterance triggers the full cleanup
+                if (index === lines.length - 1) {
+                    utterance.onend = () => {
+                        storyCaptionsContainer.innerHTML = '';
+                        storyOverlay.classList.remove('visible');
+                        storyVideo.pause();
+                        storyVideo.currentTime = 0;
+                        clearInterval(videoPlaybackInterval);
+                        currentSpeechUtterance = null; // Clear reference
+                    };
+                }
+                utterances.push(utterance);
+                window.speechSynthesis.speak(utterance); // Add to queue
+            });
+        });
 
         // Video playback logic (remains largely the same)
         currentVideoIndex = 0;
