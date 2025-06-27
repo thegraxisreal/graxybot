@@ -1589,23 +1589,18 @@ python ... \
 
         // Clear previous captions and prepare for new ones
         storyCaptionsContainer.innerHTML = '';
-        const allWords = text.split(/(\s+)/).filter(s => s.trim().length > 0); // Split by word and keep delimiters, filter empty strings
+        const allWords = text.split(/(\s+)/); // Split by word and keep delimiters
+        const wordSpans = [];
         const CHUNK_SIZE = 5; // Number of words per caption chunk
-        let captionChunks = [];
-        let currentWordIndexInFullText = 0;
 
-        for (let i = 0; i < allWords.length; i += CHUNK_SIZE) {
-            const chunkWords = allWords.slice(i, i + CHUNK_SIZE);
-            const chunkText = chunkWords.join('');
-            captionChunks.push({
-                text: chunkText,
-                startWordIndex: currentWordIndexInFullText,
-                endWordIndex: currentWordIndexInFullText + chunkWords.length - 1
-            });
-            currentWordIndexInFullText += chunkWords.length;
-        }
-
-        let currentChunkDisplayIndex = -1; // To track which chunk is currently displayed
+        // Create all word spans and initially hide them
+        allWords.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.textContent = word;
+            span.style.display = 'none'; // Initially hide all words
+            wordSpans.push(span);
+            storyCaptionsContainer.appendChild(span);
+        });
 
         currentSpeechUtterance = new SpeechSynthesisUtterance(text);
         
@@ -1647,37 +1642,37 @@ python ... \
 
         currentSpeechUtterance.onboundary = (event) => {
             if (event.name === 'word') {
-                // Determine the actual word index in the full text
-                const spokenWordIndex = text.substr(0, event.charIndex).split(/\s+/).length - 1;
-                
-                // Find which chunk this word belongs to
-                const newChunkIndex = captionChunks.findIndex(chunk => 
-                    spokenWordIndex >= chunk.startWordIndex && spokenWordIndex <= chunk.endWordIndex
-                );
-
-                if (newChunkIndex !== -1 && newChunkIndex !== currentChunkDisplayIndex) {
-                    // Display the new chunk
-                    storyCaptionsContainer.textContent = captionChunks[newChunkIndex].text;
-                    currentChunkDisplayIndex = newChunkIndex;
+                // Determine the actual word index in the full text (considering spaces as words)
+                let spokenWordIndex = 0;
+                let charCount = 0;
+                for(let i = 0; i < allWords.length; i++) {
+                    if (charCount === event.charIndex) {
+                        spokenWordIndex = i;
+                        break;
+                    }
+                    charCount += allWords[i].length;
                 }
 
-                // Highlight the current word within the displayed chunk
-                // This requires re-creating spans for the current chunk's text
-                const currentChunkText = storyCaptionsContainer.textContent;
-                const currentChunkWords = currentChunkText.split(/(\s+)/).filter(s => s.trim().length > 0);
-                
-                // Calculate the index of the spoken word within the current chunk
-                const relativeWordIndex = spokenWordIndex - captionChunks[currentChunkDisplayIndex].startWordIndex;
+                // Calculate the start and end index of the current 5-word chunk
+                const chunkStartIndex = Math.floor(spokenWordIndex / CHUNK_SIZE) * CHUNK_SIZE;
+                const chunkEndIndex = Math.min(chunkStartIndex + CHUNK_SIZE, wordSpans.length) - 1;
 
-                storyCaptionsContainer.innerHTML = ''; // Clear for re-population
-                currentChunkWords.forEach((word, idx) => {
-                    const span = document.createElement('span');
-                    span.textContent = word + (idx < currentChunkWords.length - 1 ? ' ' : ''); // Add space back
-                    if (idx === relativeWordIndex) {
-                        span.classList.add('highlight');
+                // Hide all words, then show only the current chunk
+                wordSpans.forEach((span, idx) => {
+                    span.classList.remove('highlight'); // Remove highlight from all
+                    if (idx >= chunkStartIndex && idx <= chunkEndIndex) {
+                        span.style.display = ''; // Show words in the current chunk
+                    } else {
+                        span.style.display = 'none'; // Hide words outside the current chunk
                     }
-                    storyCaptionsContainer.appendChild(span);
                 });
+
+                // Highlight the current word within the visible chunk
+                if (wordSpans[spokenWordIndex]) {
+                    wordSpans[spokenWordIndex].classList.add('highlight');
+                    // Optional: Scroll captions into view if they go off screen
+                    wordSpans[spokenWordIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         };
 
