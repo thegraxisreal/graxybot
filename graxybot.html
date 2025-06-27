@@ -552,22 +552,28 @@ body {
     background-color: black;
     z-index: 4000;
 }
-#story-video {
-    position: absolute;
-    top: 0;
-    left: 0;
+#story-video-container {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the whole screen */
-    z-index: -1; /* Behind the captions */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+#story-video {
+    height: 100%;
+    width: auto;
+    object-fit: cover; /* Ensures the video covers the container while maintaining aspect ratio */
 }
 #story-captions-container {
+    position: absolute;
+    bottom: 10%;
     color: white;
     text-align: center;
     font-size: 2.5rem;
     font-weight: bold;
     padding: 20px;
-    max-width: 80%;
+    width: 80%;
     text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
     background-color: rgba(0,0,0,0.3);
     border-radius: 10px;
@@ -604,6 +610,7 @@ body {
 <div id="tutorial-overlay">
     <div id="tutorial-step-container">
         <!-- Tutorial steps will be dynamically inserted here -->
+
     </div>
 </div>
 
@@ -711,7 +718,9 @@ body {
 
 <!-- NEW: Reddit Story Video Player -->
 <div id="story-overlay" class="modal-overlay" style="background-color: black; z-index: 4000;">
-    <video id="story-video" playsinline loop muted></video>
+    <div id="story-video-container">
+        <video id="story-video" playsinline loop muted></video>
+    </div>
     <div id="story-captions-container"></div>
     <button id="close-story-btn" class="close-modal-btn">&times;</button>
 </div>
@@ -724,7 +733,7 @@ body {
     // --- Configuration ---
     const OPENAI_MODEL = "gpt-4.1-mini";
     const GPT_4_1_MODEL = "gpt-4.1";
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://achievement-organizer-nvidia-asylum.trycloudflare.com";
+    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://fiber-sms-work-ya.trycloudflare.com";
     const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
 
     // --- UI & Storage Keys ---
@@ -827,12 +836,12 @@ body {
         settingsButton.disabled = isBusy;
     }
     function getSystemPrompt(currentModelName, isRedditStory = false) {
-        let basePrompt = `You are Graxybot, a helpful AI assistant.\nYou are currently running on the ${currentModelName} model.\nYour creator is 'thegraxisreal'.`;
+        let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
 
         if (isRedditStory) {
-            basePrompt += `\nIMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It should be engaging and suitable for a voiceover. Do not include a title or subreddit name. Just write the story.`;
+            basePrompt += `\n IMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It should be engaging and suitable for a voiceover. Do not include a title or subreddit name. Just write the story.`;
         } else {
-            basePrompt += `\nIMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\nWhen receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\nThose restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\nProvide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\nKeep your responses concise, helpful, and slightly informal.\nRefer to yourself as Graxybot.\nIMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\nWhen asked for code, default to HTML.\nWhen generating code blocks, always use markdown format with language identifiers like \
+            basePrompt += `\n IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\n When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\n Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\n Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\n Keep your responses concise, helpful, and slightly informal.\n Refer to yourself as Graxybot.\n IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\n When asked for code, default to HTML.\n When generating code blocks, always use markdown format with language identifiers like \
 \
 \
 python ... \
@@ -842,10 +851,10 @@ python ... \
         }
 
         if (userPersonality.name) {
-             basePrompt += `\nAddress the user as "${userPersonality.name}".`;
+             basePrompt += `\n Address the user as "${userPersonality.name}".`;
         }
         if(userPersonality.responseStyle){
-            basePrompt += `\nFollow these response style instructions: "${userPersonality.responseStyle}"`;
+            basePrompt += `\n Follow these response style instructions: "${userPersonality.responseStyle}"`;
         }
         return basePrompt;
     }
@@ -1188,24 +1197,22 @@ python ... \
         }
     }
     async function sendMessageToOpenAI(messages, modelName, stream = true) {
-        if (!stream) {
-            const response = await fetch(OPENAI_PROXY_ENDPOINT, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelName, messages, stream: false })
-            });
-            if (!response.ok) throw new Error(`Proxy error: ${response.statusText}`);
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-
-        const botMessageElement = displayMessage([], 'bot');
-        const paragraph = botMessageElement.querySelector('[data-stream-target="true"]');
+        const botMessageElement = stream ? displayMessage([], 'bot') : null;
+        const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
         
         let fullResponseText = "";
         try {
             const response = await fetch(OPENAI_PROXY_ENDPOINT, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelName, messages })
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ model: modelName, messages, stream: true }) // Always request stream
             });
-            if (!response.ok) throw new Error(`Proxy error: ${response.statusText}`);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Proxy error ${response.status}: ${errorText}`);
+            }
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             while (true) {
@@ -1226,12 +1233,19 @@ python ... \
                                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
                             }
-                        } catch (e) { /* ignore */ }
+                        } catch (e) { 
+                            // This catch is for JSON parsing errors within the stream.
+                            // If the 'data: ' prefix is there but the content isn't valid JSON, it's an API issue.
+                            console.warn("Non-JSON data in stream:", data, e);
+                        }
+                    } else {
+                        // Handle cases where the API might send non-data: prefixed lines, e.g., warnings or malformed chunks
+                        console.warn("Unexpected non-data: prefixed line in stream:", line);
                     }
                 });
             }
             if (paragraph) {
-                processAndAppendText(fullResponseText, paragraph);
+                processAndAppendText(fullResponseText, paragraph); // Final render after stream ends
             }
             return fullResponseText;
         } catch (error) {
@@ -1515,6 +1529,9 @@ python ... \
     }
 
     // --- NEW: Reddit Story Functions ---
+    let videoPlaybackInterval;
+    let currentVideoIndex = 0;
+
     async function handleRedditStoryGeneration() {
         const promptText = messageInput.value.trim();
         if (!promptText) {
@@ -1532,10 +1549,10 @@ python ... \
         try {
             const systemPrompt = getSystemPrompt(OPENAI_MODEL, true);
             const messages = [{ role: "system", content: systemPrompt }, { role: "user", content: promptText }];
-            const storyText = await sendMessageToOpenAI(messages, OPENAI_MODEL, false);
             
+            const storyText = await sendMessageToOpenAI(messages, OPENAI_MODEL, true); 
+
             removeThinkingIndicator();
-            displayMessage([{ text: storyText }], 'bot', false, null, null, 'fa-book-open');
             addMessageToHistory('model', [{ text: storyText }]);
 
             playStoryWithVideo(storyText);
@@ -1555,13 +1572,9 @@ python ... \
             return;
         }
 
-        // Stop any currently playing story
         window.speechSynthesis.cancel();
-
         storyOverlay.classList.add('visible');
-        const randomVideo = BACKGROUND_VIDEOS[Math.floor(Math.random() * BACKGROUND_VIDEOS.length)];
-        storyVideo.src = randomVideo;
-        storyVideo.play().catch(e => console.error("Video autoplay failed:", e));
+        storyVideo.muted = true; // Ensure video is muted for autoplay
 
         const words = text.split(/\s+/);
         const spans = words.map(word => {
@@ -1589,6 +1602,8 @@ python ... \
             storyCaptionsContainer.innerHTML = '';
             storyOverlay.classList.remove('visible');
             storyVideo.pause();
+            storyVideo.currentTime = 0;
+            clearInterval(videoPlaybackInterval);
             currentSpeechUtterance = null;
         };
 
@@ -1599,6 +1614,26 @@ python ... \
         };
 
         window.speechSynthesis.speak(currentSpeechUtterance);
+
+        // Video playback logic
+        currentVideoIndex = 0;
+        function playNextVideoSegment() {
+            if (BACKGROUND_VIDEOS.length === 0) {
+                console.warn("No background videos found.");
+                return;
+            }
+            const videoSrc = BACKGROUND_VIDEOS[currentVideoIndex % BACKGROUND_VIDEOS.length];
+            storyVideo.src = videoSrc;
+            storyVideo.currentTime = 0; // Start from the beginning of the segment
+            storyVideo.play().catch(e => console.error("Video autoplay failed:", e));
+
+            currentVideoIndex++;
+        }
+
+        playNextVideoSegment(); // Play the first segment immediately
+        videoPlaybackInterval = setInterval(() => {
+            playNextVideoSegment();
+        }, 20000); // Change video every 20 seconds
     }
 
     function closeStoryPlayer() {
@@ -1606,9 +1641,11 @@ python ... \
             window.speechSynthesis.cancel();
             currentSpeechUtterance = null;
         }
+        clearInterval(videoPlaybackInterval);
         storyOverlay.classList.remove('visible');
         storyVideo.pause();
         storyVideo.src = '';
+        storyVideo.currentTime = 0;
     }
 
     // --- Tutorial Functions ---
@@ -1662,6 +1699,11 @@ python ... \
             {
                 target: '#mic-button',
                 text: 'Use your voice to talk to me.',
+                position: 'top'
+            },
+            {
+                target: '#reddit-story-button',
+                text: 'Generate a Reddit-style story with a video background and captions.',
                 position: 'top'
             },
             {
