@@ -734,7 +734,7 @@ body {
     // --- Configuration ---
     const OPENAI_MODEL = "gpt-4.1-mini";
     const GPT_4_1_MODEL = "gpt-4.1";
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://schema-responsibilities-checklist-ron.trycloudflare.com";
+    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://fiber-sms-work-ya.trycloudflare.com";
     const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
 
     // --- UI & Storage Keys ---
@@ -770,6 +770,7 @@ body {
     let generatedWallpaperData = null;
     let img2imgBaseImageData = null;
     let currentSpeechUtterance = null; // NEW: To control speech synthesis
+    let lastStoryVoiceName = null; // NEW: To ensure voice rotation for stories
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -1566,7 +1567,7 @@ python ... \
             removeThinkingIndicator();
             addMessageToHistory('model', [{ text: storyText }]);
 
-            playStoryWithVideo(storyText);
+            await playStoryWithVideo(storyText);
 
         } catch (error) {
             removeThinkingIndicator();
@@ -1577,7 +1578,7 @@ python ... \
         }
     }
 
-    function playStoryWithVideo(text) {
+    async function playStoryWithVideo(text) {
         if ('speechSynthesis' in window === false) {
             showToast("Speech synthesis is not supported in your browser.", "error");
             return;
@@ -1589,10 +1590,9 @@ python ... \
 
         // Split the text into lines based on the AI's formatting
         const lines = text.split(/\n+/).filter(line => line.trim().length > 0);
-        const utterances = [];
-        let selectedStoryVoice = null; // Variable to store the selected voice for this story
+        let currentLineIndex = 0;
 
-        // Function to get voices, ensuring they are loaded
+        // --- Voice Selection (Happens ONCE per story) ---
         const getVoicesAsync = () => {
             return new Promise(resolve => {
                 let voices = window.speechSynthesis.getVoices();
@@ -1607,70 +1607,78 @@ python ... \
             });
         };
 
-        getVoicesAsync().then(voices => {
-            const googleEnglishVoices = voices.filter(voice => 
-                voice.name.includes('Google') && 
-                (voice.lang === 'en-US' || voice.lang === 'en-GB')
-            );
+        const voices = await getVoicesAsync();
+        let availableVoices = voices.filter(voice => 
+            voice.name.includes('Google') && 
+            (voice.lang === 'en-US' || voice.lang === 'en-GB')
+        );
 
-            if (googleEnglishVoices.length > 0) {
-                selectedStoryVoice = googleEnglishVoices[Math.floor(Math.random() * googleEnglishVoices.length)];
-            } else {
-                console.warn("No Google English voices found. Using default browser voice.");
+        // Filter out the last used voice if possible
+        if (availableVoices.length > 1 && lastStoryVoiceName) {
+            availableVoices = availableVoices.filter(v => v.name !== lastStoryVoiceName);
+        }
+
+        let storyVoice = null;
+        if (availableVoices.length > 0) {
+            storyVoice = availableVoices[Math.floor(Math.random() * availableVoices.length)];
+            lastStoryVoiceName = storyVoice.name; // Remember the voice for next time
+            console.log(`Selected voice for the story: ${storyVoice.name}`);
+        } else {
+            console.warn("No unique Google English voices found. Using default or repeating voice.");
+            // Fallback to any available voice if filtering removed all options
+            const allGoogleVoices = voices.filter(voice => voice.name.includes('Google') && (voice.lang === 'en-US' || voice.lang === 'en-GB'));
+            if (allGoogleVoices.length > 0) {
+                storyVoice = allGoogleVoices[Math.floor(Math.random() * allGoogleVoices.length)];
+                lastStoryVoiceName = storyVoice.name;
             }
+        }
+        // --- End of Voice Selection ---
 
-            // Create all utterances and queue them
-            lines.forEach((lineText, index) => {
-                const utterance = new SpeechSynthesisUtterance(lineText);
-                if (selectedStoryVoice) {
-                    utterance.voice = selectedStoryVoice;
+        const speakNextLine = () => {
+            if (currentLineIndex < lines.length) {
+                const lineText = lines[currentLineIndex].trim();
+                storyCaptionsContainer.textContent = lineText;
+
+                currentSpeechUtterance = new SpeechSynthesisUtterance(lineText);
+                
+                // Use the pre-selected voice for every line
+                if (storyVoice) {
+                    currentSpeechUtterance.voice = storyVoice;
                 }
 
-                utterance.onstart = () => {
-                    storyCaptionsContainer.textContent = lineText; // Display caption when line starts speaking
+                window.speechSynthesis.speak(currentSpeechUtterance);
+
+                currentSpeechUtterance.onend = () => {
+                    currentLineIndex++;
+                    speakNextLine();
                 };
 
-                utterance.onerror = (e) => {
-                    console.error("Speech synthesis error for line:", lineText, e);
+                currentSpeechUtterance.onerror = (e) => {
+                    console.error("Speech synthesis error:", e);
                     showToast(`Speech error: ${e.error}`, 'error');
                     closeStoryPlayer();
                 };
+            } else {
+                // Story finished
+                closeStoryPlayer();
+            }
+        };
 
-                // Only the last utterance triggers the full cleanup
-                if (index === lines.length - 1) {
-                    utterance.onend = () => {
-                        storyCaptionsContainer.innerHTML = '';
-                        storyOverlay.classList.remove('visible');
-                        storyVideo.pause();
-                        storyVideo.currentTime = 0;
-                        clearInterval(videoPlaybackInterval);
-                        currentSpeechUtterance = null; // Clear reference
-                    };
-                }
-                utterances.push(utterance);
-                window.speechSynthesis.speak(utterance); // Add to queue
-            });
-        });
+        speakNextLine(); // Start the speech chain
 
-        // Video playback logic (remains largely the same)
+        // Video playback logic
         currentVideoIndex = 0;
         function playNextVideoSegment() {
-            if (BACKGROUND_VIDEOS.length === 0) {
-                console.warn("No background videos found.");
-                return;
-            }
+            if (BACKGROUND_VIDEOS.length === 0) return;
             const videoSrc = BACKGROUND_VIDEOS[currentVideoIndex % BACKGROUND_VIDEOS.length];
             storyVideo.src = videoSrc;
-            storyVideo.currentTime = 0; // Start from the beginning of the segment
+            storyVideo.currentTime = 0;
             storyVideo.play().catch(e => console.error("Video autoplay failed:", e));
-
             currentVideoIndex++;
         }
 
-        playNextVideoSegment(); // Play the first segment immediately
-        videoPlaybackInterval = setInterval(() => {
-            playNextVideoSegment();
-        }, 20000); // Change video every 20 seconds
+        playNextVideoSegment();
+        videoPlaybackInterval = setInterval(playNextVideoSegment, 20000);
     }
 
     function closeStoryPlayer() {
