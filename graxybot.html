@@ -596,6 +596,58 @@ body {
     z-index: 4001;
 }
 
+#story-watermark {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    opacity: 0.4;
+    z-index: 4001;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+#story-outro {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 4002; /* Higher than captions and watermark */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease;
+}
+#story-outro.visible {
+    opacity: 1;
+    visibility: visible;
+}
+.outro-line-1, .outro-line-2 {
+    color: white;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.outro-line-1 {
+    font-size: 3.5rem;
+    color: var(--primary);
+    transition-delay: 0.5s;
+}
+.outro-line-2 {
+    font-size: 1.8rem;
+    margin-top: 1rem;
+    transition-delay: 0.8s;
+}
+#story-outro.visible .outro-line-1,
+#story-outro.visible .outro-line-2 {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 </style>
 </head>
 <body>
@@ -722,6 +774,11 @@ body {
         <video id="story-video" playsinline loop muted></video>
     </div>
     <div id="story-captions-container"></div>
+    <div id="story-watermark">Graxybot</div>
+    <div id="story-outro">
+        <div class="outro-line-1">Made with Graxybot</div>
+        <div class="outro-line-2">Make your own at Graxybot.com</div>
+    </div>
     <button id="download-story-btn" class="icon-btn" title="Download Video"><i class="fas fa-download"></i></button>
     <button id="close-story-btn" class="close-modal-btn">&times;</button>
 </div>
@@ -1660,8 +1717,8 @@ python ... \
                     closeStoryPlayer();
                 };
             } else {
-                // Story finished
-                closeStoryPlayer();
+                // Story finished, trigger the outro
+                showOutro();
             }
         };
 
@@ -1682,6 +1739,16 @@ python ... \
         videoPlaybackInterval = setInterval(playNextVideoSegment, 20000);
     }
 
+    function showOutro() {
+        const storyOutro = document.getElementById('story-outro');
+        storyOutro.classList.add('visible');
+
+        // Wait for the outro animation to play, then close the player
+        setTimeout(() => {
+            closeStoryPlayer();
+        }, 4000); // Display outro for 4 seconds
+    }
+
     function closeStoryPlayer() {
         if (currentSpeechUtterance) {
             window.speechSynthesis.cancel();
@@ -1692,6 +1759,10 @@ python ... \
         storyVideo.pause();
         storyVideo.src = '';
         storyVideo.currentTime = 0;
+
+        // Also hide the outro screen when closing
+        const storyOutro = document.getElementById('story-outro');
+        storyOutro.classList.remove('visible');
     }
 
     // --- Tutorial Functions ---
