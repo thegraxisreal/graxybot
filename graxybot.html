@@ -158,6 +158,61 @@ body {
     z-index: 1;
 }
 
+.chat-input-container {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chat-input-area {
+    transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* New styles for initial view */
+.main-content.initial-view {
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
+    padding-bottom: 0; /* Remove padding that might affect centering */
+}
+
+.main-content.initial-view .chat-top-bar {
+    background-color: transparent; /* Make top bar transparent */
+    border-bottom: none; /* Remove border */
+    position: static; /* Allow flexbox to position it */
+    display: flex; /* Use flexbox for internal alignment */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    height: auto; /* Auto height */
+    padding: 0; /* Remove padding */
+}
+
+.main-content.initial-view #chat-title {
+    position: static; /* Allow flexbox to position it */
+    font-size: 3rem; /* Keep large size */
+    margin-bottom: 20px; /* Space between title and input */
+    transform: none; /* Reset any previous transforms */
+    top: auto; /* Reset fixed positioning */
+    left: auto; /* Reset fixed positioning */
+}
+
+.main-content.initial-view .chat-input-container {
+    position: static; /* Allow flexbox to position it */
+    width: 100%; /* Ensure it takes full width */
+    bottom: auto; /* Reset absolute positioning */
+    left: auto; /* Reset absolute positioning */
+    background-color: transparent;
+    backdrop-filter: none;
+    border-top: none;
+}
+
+.main-content.initial-view .chat-input-area {
+    max-width: 700px;
+    margin: 0 auto;
+    background-color: var(--background);
+}
+
+.main-content.initial-view .chat-messages {
+    display: none; /* Hide messages in initial view */
+}
+
 .chat-top-bar {
     padding: 0.75rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
@@ -171,9 +226,7 @@ body {
     position: relative; 
     z-index: 10;
 }
-.menu-toggle {
-    display: none;
-}
+
 
 #chat-title {
     position: fixed;
@@ -191,26 +244,12 @@ body {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#chat-title.title-center {
-    top: 55%;
-    left: 50%;
-    font-size: 3rem;
-    transform: translate(-50%, -50%);
-    position: fixed;
-}
-
 @media (max-width: 768px) {
     #chat-title {
         left: 4.5rem;
         top: 1rem;
         font-size: 1.2rem;
         transform: none;
-    }
-    #chat-title.title-center {
-        left: 50%;
-        top: 50%;
-        font-size: 2.5rem;
-        transform: translate(-50%, -50%);
     }
 }
 
@@ -273,6 +312,7 @@ body {
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
+    position: relative; /* Needed for menu positioning */
 }
 .chat-input-area {
     display: flex; align-items: center; background-color: #f9fafb;
@@ -299,6 +339,81 @@ body {
 #send-button { background-color: var(--primary); color: white; }
 #send-button:hover { background-color: var(--primary-light); }
 #send-button:disabled { background-color: #9ca3af; opacity: 0.7; }
+
+/* New Action Menu Styles */
+.action-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+#action-menu-toggle {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#action-menu-toggle.active {
+    transform: rotate(135deg);
+    background-color: #eef2ff;
+    color: var(--primary);
+}
+.action-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+    background-color: var(--background);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    visibility: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    z-index: 10;
+}
+.action-menu.visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+.action-menu .menu-item {
+    width: auto; /* Auto-adjust width */
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between icon and text */
+    padding: 0 15px; /* Add padding */
+    justify-content: flex-start; /* Align content to the left */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.action-menu .menu-item span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Icon Colors */
+.menu-item-image i { color: #8B5CF6; }
+.menu-item-attach i { color: #3B82F6; }
+.menu-item-reddit i { color: #FF4500; }
+.menu-item-mic i { color: #EF4444; }
+
+.menu-item:hover i {
+    color: white !important;
+}
+
+.menu-item-image:hover { background-color: #8B5CF6; }
+.menu-item-attach:hover { background-color: #3B82F6; }
+.menu-item-reddit:hover { background-color: #FF4500; }
+.menu-item-mic:hover { background-color: #EF4444; }
+
+.menu-item:hover span {
+    color: white;
+}
+
 #image-upload-input { display: none; }
 #image-preview-area {
     margin-bottom: 10px; position: relative; display: inline-block; max-width: 100px;
@@ -700,25 +815,7 @@ body {
     </div>
 </div>
 
-<!-- Image-to-Image Modal -->
-<div id="img2img-overlay" class="modal-overlay">
-    <div id="img2img-modal-content" class="modal-content">
-        <button class="close-modal-btn" id="close-img2img-modal-btn">&times;</button>
-        <h2>Image to Image</h2>
-        <label>Upload an image to transform:</label>
-        <div id="img2img-preview" class="modal-preview-box">
-            <div class="spinner modal-spinner" id="img2img-spinner"></div>
-            <span class="upload-text">Click to upload</span>
-            <img id="img2img-image-preview" src="" alt="Image to image preview" style="display: none;"/>
-        </div>
-        <input type="file" id="img2img-upload-input" accept="image/*" style="display:none;">
 
-        <label for="img2img-prompt-input" style="margin-top: 20px;">Describe the changes you want:</label>
-        <textarea id="img2img-prompt-input" rows="3" placeholder="e.g., Make it a watercolor painting, add a cat"></textarea>
-        
-        <button id="generate-img2img-btn" disabled>Generate</button>
-    </div>
-</div>
 
 
 <div class="chat-app" id="chat-app">
@@ -740,9 +837,7 @@ body {
 
     <main class="main-content" id="main-content">
         <div class="chat-top-bar">
-             <button class="icon-btn menu-toggle" id="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
+             
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
@@ -755,12 +850,16 @@ body {
             <div class="chat-input-area">
                 <input type="text" id="message-input" placeholder="Ask me anything...">
                 <div class="input-actions">
-                    <button id="image-upload-button" class="icon-btn" title="Attach Image"><i class="fas fa-paperclip"></i></button>
-                    <input type="file" id="image-upload-input" accept="image/*">
-                    <button id="img2img-button" class="icon-btn" title="Image to Image"><i class="fas fa-paint-brush"></i></button>
-                    <button id="create-image-button" class="icon-btn" title="Create Image"><i class="fas fa-image"></i></button>
-                    <button id="mic-button" class="icon-btn" title="Speech to Text"><i class="fas fa-microphone"></i></button>
-                    <button id="reddit-story-button" class="icon-btn" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i></button>
+                    <div class="action-menu-container">
+                        <div class="action-menu" id="action-menu">
+                            <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span></button>
+                            <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
+                            <button id="reddit-story-button" class="icon-btn menu-item menu-item-reddit" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i><span>Reddit Story</span></button>
+                            <button id="mic-button" class="icon-btn menu-item menu-item-mic" title="Voice Mode"><i class="fas fa-microphone"></i><span>Voice Mode</span></button>
+                        </div>
+                        <button id="action-menu-toggle" class="icon-btn" title="More Actions"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                     <button id="send-button" class="icon-btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -808,10 +907,10 @@ body {
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
-    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, menuToggle, mainContent, menuBackdrop;
+    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
     let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
-    let img2imgButton, img2imgOverlay, closeImg2ImgModalBtn, img2imgPreview, img2imgUploadInput, img2imgSpinner, img2imgImagePreview, img2imgPromptInput, generateImg2ImgBtn;
+    let actionMenuToggle, actionMenu;
     let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
     let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn; // NEW: Reddit Story elements
 
@@ -825,7 +924,6 @@ body {
     let userPersonality = { name: null, responseStyle: null };
     let currentWallpaper = null;
     let generatedWallpaperData = null;
-    let img2imgBaseImageData = null;
     let currentSpeechUtterance = null; // NEW: To control speech synthesis
     let lastStoryVoiceName = null; // NEW: To ensure voice rotation for stories
     
@@ -890,7 +988,7 @@ body {
         micButton.classList.toggle('active', isListening);
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
-        if (img2imgButton) img2imgButton.disabled = isBusy;
+        if (actionMenuToggle) actionMenuToggle.disabled = isBusy;
         if (redditStoryButton) redditStoryButton.disabled = isBusy;
         settingsButton.disabled = isBusy;
         console.log(`updateActionButtonsState: isRequestInProgress=${isRequestInProgress}, isListening=${isListening}, isBusy=${isBusy}`);
@@ -1171,9 +1269,9 @@ python ... \
     
     function setChatActiveState(isActive) {
         if (isActive) {
-            chatTitle.classList.add('title-center');
+            mainContent.classList.add('initial-view');
         } else {
-            chatTitle.classList.remove('title-center');
+            mainContent.classList.remove('initial-view');
         }
     }
 
@@ -1513,90 +1611,7 @@ python ... \
         showToast("Wallpaper reset.", "success");
     }
 
-    // --- Image-to-Image Functions ---
-    function showImg2ImgModal() {
-        img2imgOverlay.classList.add('visible');
-        img2imgPromptInput.value = '';
-        img2imgImagePreview.style.display = 'none';
-        img2imgImagePreview.src = '';
-        img2imgPreview.querySelector('.upload-text').style.display = 'block';
-        img2imgUploadInput.value = '';
-        img2imgBaseImageData = null;
-        generateImg2ImgBtn.disabled = true;
-    }
-    function hideImg2ImgModal() {
-        img2imgOverlay.classList.remove('visible');
-    }
-    function handleImg2ImgSelection(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            showToast("Invalid image file type.", 'error'); return;
-        }
-        try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                img2imgBaseImageData = reader.result.split(',')[1];
-                img2imgImagePreview.src = reader.result;
-                img2imgImagePreview.style.display = 'block';
-                img2imgPreview.querySelector('.upload-text').style.display = 'none';
-                generateImg2ImgBtn.disabled = !img2imgPromptInput.value.trim();
-            };
-        } catch (e) {
-            showToast("Error processing image.", 'error');
-            img2imgBaseImageData = null;
-        }
-    }
-    async function handleImg2ImgGeneration() {
-        const prompt = img2imgPromptInput.value.trim();
-        if (!prompt || !img2imgBaseImageData) {
-            showToast("Please upload an image and provide a prompt.", "error");
-            return;
-        }
-
-        hideImg2ImgModal();
-        isRequestInProgress = true;
-        updateActionButtonsState();
-        showThinkingIndicator(`Transforming image: "${prompt.substring(0, 40)}..."`);
-        
-        const originalImageSrc = img2imgImagePreview.src;
-        displayMessage([{ text: prompt }], 'user', false, originalImageSrc);
-        addMessageToHistory('user', [{ text: prompt }], originalImageSrc);
-
-        const payload = {
-            init_images: [img2imgBaseImageData],
-            prompt: prompt,
-            negative_prompt: "blurry, low quality, deformed",
-            steps: 30,
-            cfg_scale: 7,
-            denoising_strength: 0.75
-        };
-
-        try {
-            const response = await fetch(`${DEFAULT_STABLE_DIFFUSION_API_URL}/sdapi/v1/img2img`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-            });
-            removeThinkingIndicator();
-            if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-            const data = await response.json();
-            if (data.images && data.images.length > 0) {
-                const imageSrc = `data:image/png;base64,${data.images[0]}`;
-                displayMessage([], 'bot', false, null, imageSrc, 'fa-magic', prompt);
-                addMessageToHistory('model', [{text: 'Image transformed'}], null, imageSrc, prompt);
-            } else {
-                throw new Error('No images in API response.');
-            }
-        } catch (error) {
-            removeThinkingIndicator();
-            displayMessage([{ text: `Image Transformation Error: ${error.message}` }], 'bot', true);
-            console.error("Img2Img Error:", error);
-        } finally {
-            isRequestInProgress = false;
-            updateActionButtonsState();
-        }
-    }
+    
 
     // --- NEW: Reddit Story Functions ---
     let videoPlaybackInterval;
@@ -1804,11 +1819,6 @@ python ... \
                 position: 'top'
             },
             {
-                target: '#img2img-button',
-                text: 'Send me pictures to edit.',
-                position: 'top'
-            },
-            {
                 target: '#create-image-button',
                 text: 'Ask me to create an image, or press this to enter image mode.',
                 position: 'top'
@@ -1924,11 +1934,7 @@ python ... \
 
     function handleWipeData() {
         if (confirm("Are you sure you want to delete ALL chats, settings, and stored data? This cannot be undone.")) {
-            localStorage.removeItem(CHATS_STORAGE_KEY);
-            localStorage.removeItem(CURRENT_CHAT_ID_KEY);
-            localStorage.removeItem(PERSONALITY_STORAGE_KEY);
-            localStorage.removeItem(WALLPAPER_STORAGE_KEY);
-            localStorage.removeItem(TUTORIAL_COMPLETED_KEY);
+            localStorage.clear();
             
             showToast("All data has been wiped.", "success");
             setTimeout(() => window.location.reload(), 1500);
@@ -1958,7 +1964,6 @@ python ... \
         imagePreview = document.getElementById('image-preview');
         removeImageButton = document.getElementById('remove-image-button');
         micButton = document.getElementById('mic-button');
-        menuToggle = document.getElementById('menu-toggle');
         redditStoryButton = document.getElementById('reddit-story-button');
         storyOverlay = document.getElementById('story-overlay');
         storyVideo = document.getElementById('story-video');
@@ -1983,20 +1988,25 @@ python ... \
         saveWallpaperBtn = document.getElementById('save-wallpaper-btn');
         removeWallpaperBtn = document.getElementById('remove-wallpaper-btn');
         
-        img2imgButton = document.getElementById('img2img-button');
-        img2imgOverlay = document.getElementById('img2img-overlay');
-        closeImg2ImgModalBtn = document.getElementById('close-img2img-modal-btn');
-        img2imgPreview = document.getElementById('img2img-preview');
-        img2imgUploadInput = document.getElementById('img2img-upload-input');
-        img2imgSpinner = document.getElementById('img2img-spinner');
-        img2imgImagePreview = document.getElementById('img2img-image-preview');
-        img2imgPromptInput = document.getElementById('img2img-prompt-input');
-        generateImg2ImgBtn = document.getElementById('generate-img2img-btn');
+        actionMenuToggle = document.getElementById('action-menu-toggle');
+        actionMenu = document.getElementById('action-menu');
 
         tutorialOverlay = document.getElementById('tutorial-overlay');
         tutorialStepContainer = document.getElementById('tutorial-step-container');
         wipeDataBtn = document.getElementById('wipe-data-btn');
         
+        // --- Event Listeners ---
+        actionMenuToggle.addEventListener('click', () => {
+            actionMenu.classList.toggle('visible');
+            actionMenuToggle.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!actionMenu.contains(e.target) && !actionMenuToggle.contains(e.target)) {
+                actionMenu.classList.remove('visible');
+                actionMenuToggle.classList.remove('active');
+            }
+        });
         loadData();
         renderChatList();
         setChatActiveState(true); 
@@ -2012,10 +2022,7 @@ python ... \
             handleNewChat(true);
         });
         settingsButton.addEventListener('click', showPersonalityModal);
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('visible');
-            menuBackdrop.classList.toggle('visible');
-        });
+        
         menuBackdrop.addEventListener('click', () => {
              sidebar.classList.remove('visible');
             menuBackdrop.classList.remove('visible');
