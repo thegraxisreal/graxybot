@@ -927,6 +927,9 @@ body {
 </head>
 <body>
 
+<!-- Add the audio element for background music -->
+<audio id="background-music" loop src="backround.mp3"></audio>
+
 <div id="loader" class="loader-overlay">
     <div class="spinner"></div>
 </div>
@@ -947,6 +950,9 @@ body {
         <label for="response-style-input">How do you want Graxybot to respond?</label>
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
         <button id="save-personality-btn">Save Settings</button>
+        <button id="mute-music-btn" class="secondary-btn" style="margin-top: 10px;">
+            <i class="fas fa-volume-up"></i> <span>Mute Music</span>
+        </button>
         <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
     </div>
 </div>
@@ -1077,8 +1083,9 @@ body {
     const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
-    const THEME_STORAGE_KEY = "graxybot_theme_v1"; // Renamed from WALLPAPER_STORAGE_KEY
+    const THEME_STORAGE_KEY = "graxybot_theme_v1";
     const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
+    const MUSIC_MUTED_KEY = "graxybot_music_muted_v1";
     const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4'];
 
     // --- DOM Element References ---
@@ -1086,7 +1093,7 @@ body {
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop, menuToggleBtn;
-    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
+    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, muteMusicBtn;
     // New Theme elements
     let themesButton, themesOverlay, closeThemesModalBtn, themePromptInput, generateThemeBtn;
     let themePreview, themeSpinner, themeImagePreview, saveThemeBtn, removeThemeBtn, themeContainer;
@@ -1108,6 +1115,9 @@ body {
     let generatedThemeData = null; // Holds temporary generated image data
     let currentSpeechUtterance = null;
     let lastStoryVoiceName = null;
+    // Music state variables
+    let backgroundMusic, inactivityTimer, audioFadeInterval;
+    let isMusicMuted = false;
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -1142,6 +1152,10 @@ body {
                 currentTheme = JSON.parse(storedTheme);
                 applyTheme(currentTheme.type, currentTheme.data);
             }
+
+            const storedMuteState = localStorage.getItem(MUSIC_MUTED_KEY);
+            isMusicMuted = storedMuteState === 'true';
+
         } catch (error) {
             console.error("Error loading data:", error);
             chats = {}; currentChatId = null;
@@ -1418,10 +1432,12 @@ body {
         if (clearUI) {
             chatMessagesContainer.innerHTML = '';
             setChatActiveState(true);
+            startInactivityTimer(); // Restart music timer for new chat screen
         }
     }
     function handleSelectChat(id) {
         if (id === currentChatId) return;
+        stopMusicAndTimer(); // Stop music when switching to a chat
         sidebar.classList.remove('visible');
         menuBackdrop.classList.remove('visible');
         loadChat(id);
@@ -1433,6 +1449,7 @@ body {
                 currentChatId = null;
                 chatMessagesContainer.innerHTML = '';
                 setChatActiveState(true);
+                startInactivityTimer(); // Restart music timer if we go back to initial view
             }
             saveChats();
             renderChatList();
@@ -1588,6 +1605,7 @@ body {
     }
     
     async function handleSendMessage() {
+        stopMusicAndTimer(); // Stop music when a message is sent
         console.log("handleSendMessage: Start");
         const messageText = messageInput.value.trim();
         if (!messageText && !selectedImageData) {
@@ -2189,6 +2207,75 @@ body {
         }
     }
 
+    // --- Background Music Functions ---
+    function updateMuteButtonUI() {
+        if (isMusicMuted) {
+            muteMusicBtn.innerHTML = `<i class="fas fa-volume-mute"></i> <span>Unmute Music</span>`;
+        } else {
+            muteMusicBtn.innerHTML = `<i class="fas fa-volume-up"></i> <span>Mute Music</span>`;
+        }
+    }
+
+    const fadeOutMusic = () => {
+        if (!backgroundMusic || backgroundMusic.paused) return;
+        clearInterval(audioFadeInterval);
+        audioFadeInterval = setInterval(() => {
+            const newVolume = backgroundMusic.volume - 0.05;
+            if (newVolume > 0) {
+                backgroundMusic.volume = newVolume;
+            } else {
+                backgroundMusic.volume = 0;
+                backgroundMusic.pause();
+                backgroundMusic.currentTime = 10; // Reset to 10s mark
+                clearInterval(audioFadeInterval);
+            }
+        }, 50); // Fade out over 1 second
+    };
+
+    const fadeInMusic = () => {
+        // Only play if not muted, in initial view, and music is paused
+        if (isMusicMuted || !mainContent.classList.contains('initial-view') || !backgroundMusic || !backgroundMusic.paused) {
+            return;
+        }
+        clearInterval(audioFadeInterval);
+        backgroundMusic.volume = 0;
+        backgroundMusic.currentTime = 10; // Start at 10 seconds
+        
+        try {
+            const playPromise = backgroundMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Background music autoplay was prevented.", error);
+                });
+            }
+        } catch (e) {
+            console.error("Error playing background music:", e);
+        }
+
+        audioFadeInterval = setInterval(() => {
+            const newVolume = backgroundMusic.volume + 0.05;
+            if (newVolume < 1.0) {
+                backgroundMusic.volume = newVolume;
+            } else {
+                backgroundMusic.volume = 1.0;
+                clearInterval(audioFadeInterval);
+            }
+        }, 50); // Fade in over 1 second
+    };
+
+    const startInactivityTimer = () => {
+        clearTimeout(inactivityTimer);
+        // Only set the timer if we're in the initial view.
+        if (mainContent.classList.contains('initial-view')) {
+            inactivityTimer = setTimeout(fadeInMusic, 5000);
+        }
+    };
+
+    const stopMusicAndTimer = () => {
+        clearTimeout(inactivityTimer);
+        fadeOutMusic();
+    };
+
     // --- Initialization Sequence ---
     document.addEventListener('DOMContentLoaded', () => {
         // Assign DOM elements
@@ -2227,6 +2314,7 @@ body {
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+        muteMusicBtn = document.getElementById('mute-music-btn');
         
         themesOverlay = document.getElementById('themes-overlay');
         closeThemesModalBtn = document.getElementById('close-themes-modal-btn');
@@ -2247,6 +2335,9 @@ body {
         tutorialStepContainer = document.getElementById('tutorial-step-container');
         wipeDataBtn = document.getElementById('wipe-data-btn');
         
+        // Music element
+        backgroundMusic = document.getElementById('background-music');
+
         // --- Event Listeners ---
         actionMenuToggle.addEventListener('click', () => {
             actionMenu.classList.toggle('visible');
@@ -2261,17 +2352,18 @@ body {
         });
         
         loadData();
+        updateMuteButtonUI();
         renderChatList();
         setChatActiveState(true); 
         if (currentChatId && chats[currentChatId]?.history.length > 0) {
             loadChat(currentChatId); 
+        } else {
+            startInactivityTimer(); // Start timer only if no active chat is loaded
         }
         updateActionButtonsState();
 
         newChatBtn.addEventListener('click', () => {
-            // Check if there is a current chat and if it's empty.
             if (currentChatId && chats[currentChatId] && chats[currentChatId].history.length === 0) {
-                // If the user is in a new, empty chat, don't create another one.
                 showToast("Send a message to start the current chat first.", 'info');
                 sidebar.classList.remove('visible');
                 menuBackdrop.classList.remove('visible');
@@ -2310,7 +2402,10 @@ body {
             }
         });
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
-        messageInput.addEventListener('input', updateActionButtonsState);
+        messageInput.addEventListener('input', () => {
+            updateActionButtonsState();
+            stopMusicAndTimer(); // Stop music as soon as user starts typing
+        });
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
         imageUploadButton.addEventListener('click', () => imageUploadInput.click());
         imageUploadInput.addEventListener('change', handleImageSelection);
@@ -2319,6 +2414,14 @@ body {
         
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
+        muteMusicBtn.addEventListener('click', () => {
+            isMusicMuted = !isMusicMuted;
+            localStorage.setItem(MUSIC_MUTED_KEY, isMusicMuted);
+            updateMuteButtonUI();
+            if (isMusicMuted) {
+                stopMusicAndTimer();
+            }
+        });
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
         
         closeThemesModalBtn.addEventListener('click', hideThemesModal);
@@ -2341,4 +2444,4 @@ body {
     });
 </script>
 </body>
-</ht
+</html>
