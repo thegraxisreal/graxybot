@@ -366,10 +366,15 @@ body {
     color: var(--primary);
     z-index: 10;
     top: 1rem;
-    left: 4.5rem;
+    left: 1.5rem; /* Adjusted for mobile */
     font-size: 1.2rem;
     transform: none;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-toggle {
+    display: none; /* Hidden by default on desktop */
+    z-index: 11; /* Make sure it's above other top-bar content */
 }
 
 @media (max-width: 768px) {
@@ -378,6 +383,9 @@ body {
         top: 1rem;
         font-size: 1.2rem;
         transform: none;
+    }
+    .menu-toggle {
+        display: inline-flex;
     }
 }
 
@@ -804,12 +812,6 @@ body {
     .main-content {
         width: 100%;
     }
-    .menu-toggle {
-        display: block;
-    }
-    #chat-title {
-        left: 4.5rem;
-    }
     #chat-title.title-center {
         left: 50%;
         font-size: 2.5rem;
@@ -1012,6 +1014,9 @@ body {
     <main class="main-content" id="main-content">
         <div id="theme-container"></div>
         <div class="chat-top-bar">
+             <button class="icon-btn menu-toggle" id="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
@@ -1080,7 +1085,7 @@ body {
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
-    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop;
+    let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop, menuToggleBtn;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
     // New Theme elements
     let themesButton, themesOverlay, closeThemesModalBtn, themePromptInput, generateThemeBtn;
@@ -2199,6 +2204,7 @@ body {
         themesButton = document.getElementById('themes-button');
         chatTitle = document.getElementById('chat-title');
         menuBackdrop = document.getElementById('menu-backdrop');
+        menuToggleBtn = document.getElementById('menu-toggle-btn');
         chatMessagesContainer = document.getElementById('chat-messages');
         messageInput = document.getElementById('message-input');
         sendButton = document.getElementById('send-button');
@@ -2278,6 +2284,11 @@ body {
         settingsButton.addEventListener('click', showPersonalityModal);
         themesButton.addEventListener('click', showThemesModal);
         
+        menuToggleBtn.addEventListener('click', () => {
+            sidebar.classList.add('visible');
+            menuBackdrop.classList.add('visible');
+        });
+        
         menuBackdrop.addEventListener('click', () => {
              sidebar.classList.remove('visible');
             menuBackdrop.classList.remove('visible');
@@ -2330,4 +2341,4 @@ body {
     });
 </script>
 </body>
-</html>
+</ht
