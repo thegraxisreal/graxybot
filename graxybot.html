@@ -31,8 +31,8 @@
     --sidebar-width: 260px;
     --danger-color: #ef4444;
     --danger-color-hover: #dc2626;
-    --success-color: #22c55e; /* Added for download button */
-    --success-color-hover: #16a34a; /* Added for download button hover */
+    --success-color: #22c55e;
+    --success-color-hover: #16a34a;
 }
 
 html, body {
@@ -142,7 +142,7 @@ body {
     border-top: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem; /* Reduced gap */
 }
 
 .download-btn {
@@ -167,31 +167,38 @@ body {
     background: var(--success-color-hover);
 }
 
+.sidebar-footer-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
 .sidebar-footer-link {
+    flex-grow: 1; /* Make buttons share space */
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: none;
-    border: none;
+    justify-content: center; /* Center content */
+    gap: 8px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
     cursor: pointer;
     color: var(--text-secondary);
     padding: 8px 12px;
-    width: 100%;
-    text-align: left;
     border-radius: 6px;
     font-size: 0.9rem;
     font-weight: 500;
+    transition: all 0.2s ease;
 }
 .sidebar-footer-link:hover {
     background-color: var(--hover-bg);
     color: var(--text-primary);
+    border-color: #d1d5db;
 }
 .sidebar-footer-link i {
     width: 16px;
     text-align: center;
 }
 
-/* --- Main Content & Wallpaper --- */
+/* --- Main Content & Themes --- */
 .main-content {
     display: flex;
     flex-direction: column;
@@ -204,7 +211,78 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     transition: background-image 0.5s ease-in-out;
+    background-color: #f0f4f8; /* Default background color */
+    overflow: hidden; /* Important for theme containers */
 }
+
+#theme-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none; /* Allow clicks to go through to chat */
+    overflow: hidden;
+}
+
+/* Grass Theme */
+#grass-theme-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25%; /* Adjust height of grass area */
+    pointer-events: all; /* Capture mouse for interaction */
+}
+#grass-svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.grass-blade {
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transform-origin: bottom center;
+}
+
+/* Clouds Theme */
+#clouds-theme-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #87CEEB; /* Sky blue */
+    background: linear-gradient(to bottom, #87CEEB 0%, #B2FFFF 100%);
+    pointer-events: all;
+}
+.cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    transition: transform 0.5s ease-out;
+    animation: drift linear infinite;
+}
+.cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+}
+.cloud-1 { width: 200px; height: 60px; top: 10%; animation-duration: 75s; }
+.cloud-1::before { width: 100px; height: 100px; top: -50px; left: 30px; }
+.cloud-1::after { width: 120px; height: 80px; top: -30px; right: 20px; }
+.cloud-2 { width: 300px; height: 80px; top: 25%; animation-duration: 90s; animation-delay: -20s; }
+.cloud-2::before { width: 150px; height: 150px; top: -70px; left: 50px; }
+.cloud-2::after { width: 180px; height: 100px; top: -40px; right: 40px; }
+.cloud-3 { width: 150px; height: 50px; top: 50%; animation-duration: 60s; animation-delay: -40s; }
+.cloud-3::before { width: 80px; height: 80px; top: -40px; left: 20px; }
+@keyframes drift {
+    from { transform: translateX(-250px) translateY(0); }
+    to { transform: translateX(110vw) translateY(0); }
+}
+
 
 .chat-messages, .chat-input-container {
     position: relative;
@@ -219,38 +297,37 @@ body {
     transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* New styles for initial view */
 .main-content.initial-view {
-    justify-content: center; /* Center content vertically */
-    align-items: center; /* Center content horizontally */
-    padding-bottom: 0; /* Remove padding that might affect centering */
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 0;
 }
 
 .main-content.initial-view .chat-top-bar {
-    background-color: transparent; /* Make top bar transparent */
-    border-bottom: none; /* Remove border */
-    position: static; /* Allow flexbox to position it */
-    display: flex; /* Use flexbox for internal alignment */
-    flex-direction: column; /* Stack items vertically */
-    align-items: center; /* Center items horizontally */
-    height: auto; /* Auto height */
-    padding: 0; /* Remove padding */
+    background-color: transparent;
+    border-bottom: none;
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    padding: 0;
 }
 
 .main-content.initial-view #chat-title {
-    position: static; /* Allow flexbox to position it */
-    font-size: 3rem; /* Keep large size */
-    margin-bottom: 20px; /* Space between title and input */
-    transform: none; /* Reset any previous transforms */
-    top: auto; /* Reset fixed positioning */
-    left: auto; /* Reset fixed positioning */
+    position: static;
+    font-size: 3rem;
+    margin-bottom: 20px;
+    transform: none;
+    top: auto;
+    left: auto;
 }
 
 .main-content.initial-view .chat-input-container {
-    position: static; /* Allow flexbox to position it */
-    width: 100%; /* Ensure it takes full width */
-    bottom: auto; /* Reset absolute positioning */
-    left: auto; /* Reset absolute positioning */
+    position: static;
+    width: 100%;
+    bottom: auto;
+    left: auto;
     background-color: transparent;
     backdrop-filter: none;
     border-top: none;
@@ -263,7 +340,7 @@ body {
 }
 
 .main-content.initial-view .chat-messages {
-    display: none; /* Hide messages in initial view */
+    display: none;
 }
 
 .chat-top-bar {
@@ -288,12 +365,10 @@ body {
     font-weight: 700;
     color: var(--primary);
     z-index: 10;
-    
     top: 1rem;
     left: 4.5rem;
     font-size: 1.2rem;
     transform: none;
-
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -314,7 +389,6 @@ body {
     flex-direction: column;
 }
 
-/* --- Message Bubbles --- */
 .message-content-wrapper {
     display: flex;
     gap: 10px;
@@ -344,7 +418,6 @@ body {
     display: block; background-color: var(--input-bg);
 }
 
-/* Thinking Indicator & Code Block */
 .thinking-indicator .message { padding: 15px 18px; display: flex; align-items: center; gap: 8px; }
 .thinking-indicator span {
     display: inline-block; width: 8px; height: 8px; background-color: var(--text-secondary);
@@ -359,13 +432,12 @@ body {
 .code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; }
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; }
 
-/* Chat Input */
 .chat-input-container {
     padding: 1rem 1.5rem;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
-    position: relative; /* Needed for menu positioning */
+    position: relative;
 }
 .chat-input-area {
     display: flex; align-items: center; background-color: #f9fafb;
@@ -393,7 +465,6 @@ body {
 #send-button:hover { background-color: var(--primary-light); }
 #send-button:disabled { background-color: #9ca3af; opacity: 0.7; }
 
-/* New Action Menu Styles */
 .action-menu-container {
     position: relative;
     display: flex;
@@ -432,14 +503,14 @@ body {
     visibility: visible;
 }
 .action-menu .menu-item {
-    width: auto; /* Auto-adjust width */
+    width: auto;
     height: 44px;
     display: flex;
     align-items: center;
-    gap: 10px; /* Space between icon and text */
-    padding: 0 15px; /* Add padding */
-    justify-content: flex-start; /* Align content to the left */
-    white-space: nowrap; /* Prevent text wrapping */
+    gap: 10px;
+    padding: 0 15px;
+    justify-content: flex-start;
+    white-space: nowrap;
 }
 
 .action-menu .menu-item span {
@@ -448,7 +519,6 @@ body {
     color: var(--text-primary);
 }
 
-/* Icon Colors */
 .menu-item-image i { color: #8B5CF6; }
 .menu-item-attach i { color: #3B82F6; }
 .menu-item-reddit i { color: #FF4500; }
@@ -478,7 +548,6 @@ body {
     font-size: 0.8rem; line-height: 20px; text-align: center; cursor: pointer;
 }
 
-/* Loader, Toast, Modals */
 .loader-overlay {
     position: fixed; inset: 0; background-color: rgba(255, 255, 255, 0.9);
     display: flex; justify-content: center; align-items: center; z-index: 2002;
@@ -493,7 +562,7 @@ body {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #toast-container {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    z-index: 3002; /* Higher than tutorial overlay */
+    z-index: 3002;
     pointer-events: none;
 }
 .toast-message {
@@ -505,7 +574,7 @@ body {
 }
 .toast-message.show { opacity: 1; transform: translateY(0); }
 
-/* --- Settings & Wallpaper Modals --- */
+/* --- Settings & Themes Modals --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--modal-bg); z-index: 1002;
@@ -515,7 +584,7 @@ body {
 .modal-overlay.visible { opacity: 1; visibility: visible; }
 .modal-content {
     background: var(--background); padding: 30px; border-radius: 12px;
-    max-width: 450px; width: 90%; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    max-width: 500px; width: 90%; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     position: relative; transform: scale(0.95); transition: transform 0.3s ease;
 }
 .modal-overlay.visible .modal-content { transform: scale(1); }
@@ -547,6 +616,56 @@ body {
 .modal-content .danger-btn:hover {
     background-color: var(--danger-color-hover);
 }
+
+/* Themes Modal Specifics */
+#themes-modal-content .theme-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.theme-box {
+    height: 120px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    background-color: var(--input-bg);
+}
+.theme-box:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.theme-box.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+.theme-box .theme-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    z-index: 2;
+}
+.theme-box .theme-icon {
+    font-size: 1.8rem;
+    color: var(--primary);
+    z-index: 2;
+}
+#grass-theme-box { background: linear-gradient(to top, #90ee90, #c1ffc1); }
+#clouds-theme-box { background: linear-gradient(to bottom, #87CEEB, #B2FFFF); }
+
+#generate-theme-container {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
 .modal-preview-box {
     margin-top: 15px;
     height: 150px;
@@ -560,21 +679,9 @@ body {
     background-position: center;
     position: relative;
     overflow: hidden;
-    cursor: pointer;
 }
-.modal-preview-box:hover {
-    border-color: var(--primary);
-}
-.modal-preview-box .modal-spinner {
-    display: none;
-}
-.modal-preview-box img {
-    max-width: 100%; max-height: 100%;
-}
-.modal-preview-box .upload-text {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
+.modal-preview-box .modal-spinner { display: none; }
+.modal-preview-box img { max-width: 100%; max-height: 100%; }
 
 /* --- Tutorial Styles --- */
 #tutorial-overlay {
@@ -631,7 +738,7 @@ body {
     text-align: center;
     font-size: 1rem;
 }
-.tutorial-step button, .tutorial-pointer button { /* UPDATED: Unified button style */
+.tutorial-step button, .tutorial-pointer button {
     width: 100%;
     padding: 12px;
     background-color: var(--primary);
@@ -655,12 +762,11 @@ body {
 .tutorial-pointer p {
     margin: 0 0 10px 0;
 }
-.tutorial-pointer::after { /* The arrow */
+.tutorial-pointer::after {
     content: '';
     position: absolute;
     border-style: solid;
 }
-/* Arrow pointing up */
 .tutorial-pointer.arrow-bottom::after {
     top: 100%;
     left: 50%;
@@ -668,7 +774,6 @@ body {
     border-width: 10px;
     border-color: white transparent transparent transparent;
 }
-/* Arrow pointing down */
 .tutorial-pointer.arrow-top::after {
     bottom: 100%;
     left: 50%;
@@ -678,7 +783,7 @@ body {
 }
 .highlighted-element {
     position: relative;
-    z-index: 3001; /* Must be higher than the overlay */
+    z-index: 3001;
     box-shadow: 0 0 0 4px var(--primary-light), 0 0 20px 10px rgba(79, 70, 229, 0.5);
     border-radius: 8px;
     transition: box-shadow 0.3s ease;
@@ -703,7 +808,7 @@ body {
         display: block;
     }
     #chat-title {
-        left: 4.5rem; /* Readjust for mobile to clear menu icon */
+        left: 4.5rem;
     }
     #chat-title.title-center {
         left: 50%;
@@ -711,7 +816,7 @@ body {
     }
 }
 
-/* --- NEW: Reddit Story Player Styles --- */
+/* --- Reddit Story Player Styles --- */
 #story-overlay {
     flex-direction: column;
     justify-content: center;
@@ -731,7 +836,7 @@ body {
 #story-video {
     height: 100%;
     width: auto;
-    object-fit: cover; /* Ensures the video covers the container while maintaining aspect ratio */
+    object-fit: cover;
 }
 #story-captions-container {
     position: absolute;
@@ -747,7 +852,7 @@ body {
     border-radius: 10px;
 }
 #story-captions-container .highlight {
-    color: #ffc107; /* A bright yellow for the highlighted word */
+    color: #ffc107;
 }
 #close-story-btn {
     position: absolute;
@@ -784,7 +889,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 4002; /* Higher than captions and watermark */
+    z-index: 4002;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease;
@@ -826,15 +931,11 @@ body {
 
 <div id="toast-container"></div>
 
-<!-- NEW: Tutorial HTML -->
 <div id="tutorial-overlay">
-    <div id="tutorial-step-container">
-        <!-- Tutorial steps will be dynamically inserted here -->
-
-    </div>
+    <div id="tutorial-step-container"></div>
 </div>
 
-<!-- Personality/Settings Modal -->
+<!-- Settings Modal -->
 <div id="personality-overlay" class="modal-overlay">
     <div id="personality-modal-content" class="modal-content">
         <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
@@ -844,32 +945,42 @@ body {
         <label for="response-style-input">How do you want Graxybot to respond?</label>
         <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
         <button id="save-personality-btn">Save Settings</button>
-        <button id="open-wallpaper-modal-btn" class="secondary-btn">Customize Chat Wallpaper</button>
         <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
     </div>
 </div>
 
-<!-- Wallpaper Modal -->
-<div id="wallpaper-overlay" class="modal-overlay">
-    <div id="wallpaper-modal-content" class="modal-content">
-        <button class="close-modal-btn" id="close-wallpaper-modal-btn">&times;</button>
-        <h2>Chat Wallpaper</h2>
-        <label for="wallpaper-prompt-input">Enter a prompt for your wallpaper:</label>
-        <input type="text" id="wallpaper-prompt-input" placeholder="e.g., a serene mountain lake at dawn">
-        <button id="generate-wallpaper-btn">Generate Image</button>
+<!-- Themes Modal -->
+<div id="themes-overlay" class="modal-overlay">
+    <div id="themes-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-themes-modal-btn">&times;</button>
+        <h2>Chat Themes</h2>
         
-        <div id="wallpaper-preview" class="modal-preview-box">
-            <div class="spinner modal-spinner" id="wallpaper-spinner"></div>
-            <img id="wallpaper-image-preview" src="" alt="Wallpaper preview" style="display: none;"/>
+        <div class="theme-options">
+            <div class="theme-box" id="grass-theme-box" data-theme="grass">
+                <i class="fas fa-leaf theme-icon"></i>
+                <span class="theme-name">Grass</span>
+            </div>
+            <div class="theme-box" id="clouds-theme-box" data-theme="clouds">
+                <i class="fas fa-cloud theme-icon"></i>
+                <span class="theme-name">Clouds</span>
+            </div>
         </div>
 
-        <button id="save-wallpaper-btn" style="margin-top: 15px;" disabled>Save Wallpaper</button>
-        <button id="remove-wallpaper-btn" class="secondary-btn">Remove Wallpaper</button>
+        <div id="generate-theme-container">
+            <label for="theme-prompt-input">Or generate a custom theme:</label>
+            <input type="text" id="theme-prompt-input" placeholder="e.g., a serene mountain lake at dawn">
+            <button id="generate-theme-btn">Generate Image</button>
+            
+            <div id="theme-preview" class="modal-preview-box">
+                <div class="spinner modal-spinner" id="theme-spinner"></div>
+                <img id="theme-image-preview" src="" alt="Theme preview" style="display: none;"/>
+            </div>
+        </div>
+
+        <button id="save-theme-btn" class="secondary-btn" disabled>Save Generated Theme</button>
+        <button id="remove-theme-btn" class="danger-btn">Remove Theme</button>
     </div>
 </div>
-
-
-
 
 <div class="chat-app" id="chat-app">
      <div id="menu-backdrop"></div>
@@ -881,21 +992,26 @@ body {
         </div>
         <ul class="chat-list" id="chat-list">
         </ul>
-        <!-- UPDATED SIDEBAR FOOTER -->
         <div class="sidebar-footer">
             <button id="download-desktop-btn" class="download-btn" onclick="window.open('download.html', '_blank')">
                 <i class="fas fa-download"></i> Download Graxybot Desktop
             </button>
-            <button class="sidebar-footer-link" id="settings-button">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </button>
+            <div class="sidebar-footer-controls">
+                <button class="sidebar-footer-link" id="themes-button">
+                    <i class="fas fa-palette"></i>
+                    <span>Themes</span>
+                </button>
+                <button class="sidebar-footer-link" id="settings-button">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+            </div>
         </div>
     </aside>
 
     <main class="main-content" id="main-content">
+        <div id="theme-container"></div>
         <div class="chat-top-bar">
-             
             <h1 id="chat-title">Graxybot</h1>
         </div>
         <div class="chat-messages" id="chat-messages">
@@ -925,7 +1041,6 @@ body {
     </main>
 </div>
 
-<!-- NEW: Reddit Story Video Player -->
 <div id="story-overlay" class="modal-overlay" style="background-color: black; z-index: 4000;">
     <div id="story-video-container">
         <video id="story-video" playsinline loop muted></video>
@@ -957,9 +1072,9 @@ body {
     const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
-    const WALLPAPER_STORAGE_KEY = "graxybot_minimalist_wallpaper_v1";
+    const THEME_STORAGE_KEY = "graxybot_theme_v1"; // Renamed from WALLPAPER_STORAGE_KEY
     const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
-    const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4']; // NEW: Video files
+    const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4'];
 
     // --- DOM Element References ---
     let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
@@ -967,10 +1082,14 @@ body {
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop;
     let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
-    let openWallpaperModalBtn, wallpaperOverlay, closeWallpaperModalBtn, wallpaperPromptInput, generateWallpaperBtn, wallpaperPreview, wallpaperSpinner, wallpaperImagePreview, saveWallpaperBtn, removeWallpaperBtn;
+    // New Theme elements
+    let themesButton, themesOverlay, closeThemesModalBtn, themePromptInput, generateThemeBtn;
+    let themePreview, themeSpinner, themeImagePreview, saveThemeBtn, removeThemeBtn, themeContainer;
+    let grassThemeBox, cloudsThemeBox;
+    
     let actionMenuToggle, actionMenu;
     let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
-    let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn; // NEW: Reddit Story elements
+    let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn;
 
     // --- Application State ---
     let chats = {};
@@ -980,10 +1099,10 @@ body {
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
-    let currentWallpaper = null;
-    let generatedWallpaperData = null;
-    let currentSpeechUtterance = null; // NEW: To control speech synthesis
-    let lastStoryVoiceName = null; // NEW: To ensure voice rotation for stories
+    let currentTheme = { type: 'none' }; // e.g., { type: 'grass' }, { type: 'clouds' }, { type: 'generated', data: '...' }
+    let generatedThemeData = null; // Holds temporary generated image data
+    let currentSpeechUtterance = null;
+    let lastStoryVoiceName = null;
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -1013,10 +1132,10 @@ body {
             const storedPersonality = localStorage.getItem(PERSONALITY_STORAGE_KEY);
             if (storedPersonality) userPersonality = JSON.parse(storedPersonality);
             
-            const storedWallpaper = localStorage.getItem(WALLPAPER_STORAGE_KEY);
-            if (storedWallpaper) {
-                currentWallpaper = storedWallpaper;
-                applyWallpaper(currentWallpaper);
+            const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            if (storedTheme) {
+                currentTheme = JSON.parse(storedTheme);
+                applyTheme(currentTheme.type, currentTheme.data);
             }
         } catch (error) {
             console.error("Error loading data:", error);
@@ -1049,21 +1168,17 @@ body {
         if (actionMenuToggle) actionMenuToggle.disabled = isBusy;
         if (redditStoryButton) redditStoryButton.disabled = isBusy;
         settingsButton.disabled = isBusy;
-        console.log(`updateActionButtonsState: isRequestInProgress=${isRequestInProgress}, isListening=${isListening}, isBusy=${isBusy}`);
+        themesButton.disabled = isBusy;
     }
     function getSystemPrompt(currentModelName, isRedditStory = false) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
 
-        if (isRedditStory) {            basePrompt += `
+        if (isRedditStory) {
+            basePrompt += `
  IMPORTANT: You are a master storyteller. Generate a compelling, first-person story in the style of a Reddit post. The story should have a clear beginning, a build-up of suspense or drama, and a satisfying conclusion or twist. It must be engaging and suitable for a voiceover. CRITICAL FORMATTING RULE: To ensure a natural-sounding voiceover, break the story into lines of approximately 5 to 7 words each. However, you MUST insert the newline character (
-) ONLY at the end of a complete sentence or at a natural pause point in a sentence (like after a comma). This means a line might occasionally be shorter or longer to respect grammatical structure. Do NOT break lines in the middle of a phrase. Do NOT include any introductory phrases like "Okay, here's a story for you:". Start directly with the story content.`;        } else {
-            basePrompt += `\n IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\n When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\n Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\n Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\n Keep your responses concise, helpful, and slightly informal.\n Refer to yourself as Graxybot.\n IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\n When asked for code, default to HTML.\n When generating code blocks, always use markdown format with language identifiers like \
-\
-\
-python ... \
-\
-\
-`;
+) ONLY at the end of a complete sentence or at a natural pause point in a sentence (like after a comma). This means a line might occasionally be shorter or longer to respect grammatical structure. Do NOT break lines in the middle of a phrase. Do NOT include any introductory phrases like "Okay, here's a story for you:". Start directly with the story content.`;
+        } else {
+            basePrompt += `\n IMPORTANT: When answering any questions about Global history or geography, or solving social studies homework sheets, all answers should be 1 or 2 words, formatted in all lowercase, with absolutely no restating of the question.\n When receiving said social studies sheets, questions 1-5 should be answered in 1 or 2 words in all lowercase, and the ending questions that are longer should be answered in 1 or 2 sentences, all at a 9th-grade level for those problems.\n Those restrictions only apply to global history questions. All other questions should be answered in lowercase and at a normal level.\n Provide only the final answer, without revealing your internal thought process or reasoning steps unless explicitly asked to explain.\n Keep your responses concise, helpful, and slightly informal.\n Refer to yourself as Graxybot.\n IMPORTANT: If the user asks you to generate an image or video/animation, let them know they can do that by pressing the buttons at the bottom of the screen, BUT if their prompt seems to ask directly for an image (e.g., \'draw a cat\'), you should fulfill that request directly instead of referring them to the buttons.\n When asked for code, default to HTML.\n When generating code blocks, always use markdown format with language identifiers like \`\`\`python ... \`\`\``;
         }
 
         if (userPersonality.name) {
@@ -1158,13 +1273,12 @@ python ... \
     }
     
     function processAndAppendText(text, targetElement) {
-        targetElement.innerHTML = ''; // Clear the element first.
+        targetElement.innerHTML = '';
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
         let lastIndex = 0;
         let match;
 
         while ((match = codeBlockRegex.exec(text)) !== null) {
-            // Append text before the code block
             const precedingText = text.substring(lastIndex, match.index);
             if (precedingText) {
                 const textSpan = document.createElement('span');
@@ -1172,7 +1286,6 @@ python ... \
                 targetElement.appendChild(textSpan);
             }
 
-            // Handle the code block
             const lang = match[1]?.trim().toLowerCase() || 'plaintext';
             const code = match[2].trim();
             
@@ -1188,7 +1301,6 @@ python ... \
             const buttonContainer = document.createElement('div');
             buttonContainer.className = 'code-block-buttons';
 
-            // Add Run button for HTML
             if (lang === 'html') {
                 const runButton = document.createElement('button');
                 runButton.innerHTML = '<i class="fas fa-play"></i> Run';
@@ -1197,7 +1309,6 @@ python ... \
                 buttonContainer.appendChild(runButton);
             }
 
-            // Add Copy button for all code blocks
             const copyButton = document.createElement('button');
             copyButton.innerHTML = '<i class="fas fa-copy"></i> Copy';
             copyButton.title = 'Copy Code';
@@ -1220,7 +1331,6 @@ python ... \
             lastIndex = codeBlockRegex.lastIndex;
         }
 
-        // Append any remaining text after the last code block
         const remainingText = text.substring(lastIndex);
         if (remainingText) {
             const textSpan = document.createElement('span');
@@ -1228,7 +1338,6 @@ python ... \
             targetElement.appendChild(textSpan);
         }
 
-        // Highlight syntax
         if (window.Prism) {
             setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
         }
@@ -1376,22 +1485,22 @@ python ... \
         return keywords.some(keyword => lowercasedPrompt.includes(keyword));
     }
 
-    async function triggerStableDiffusionGeneration(promptText, isForWallpaper = false) {
-        if(!isForWallpaper) showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
+    async function triggerStableDiffusionGeneration(promptText, isForTheme = false) {
+        if(!isForTheme) showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
         isRequestInProgress = true; 
-        if(!isForWallpaper) updateActionButtonsState();
+        if(!isForTheme) updateActionButtonsState();
 
         const payload = { prompt: promptText, negative_prompt: "blurry, low quality, deformed", steps: 25 };
         try {
             const response = await fetch(`${DEFAULT_STABLE_DIFFUSION_API_URL}/sdapi/v1/txt2img`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
-            if(!isForWallpaper) removeThinkingIndicator();
+            if(!isForTheme) removeThinkingIndicator();
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const data = await response.json();
             if (data.images && data.images.length > 0) {
                 const imageSrc = `data:image/png;base64,${data.images[0]}`;
-                if (isForWallpaper) {
+                if (isForTheme) {
                     return imageSrc;
                 } else {
                     displayMessage([], 'bot', false, null, imageSrc, 'fa-palette', promptText);
@@ -1399,14 +1508,14 @@ python ... \
                 }
             } else { throw new Error('No images in API response.'); }
         } catch (error) {
-            if(!isForWallpaper) {
+            if(!isForTheme) {
                 removeThinkingIndicator();
                 displayMessage([{ text: `Image Generation Error: ${error.message}` }], 'bot', true);
             }
             throw error;
         } finally {
             isRequestInProgress = false; 
-            if(!isForWallpaper) {
+            if(!isForTheme) {
                 deactivateImageGenerationMode(); 
                 updateActionButtonsState();
             }
@@ -1422,7 +1531,7 @@ python ... \
             const response = await fetch(OPENAI_PROXY_ENDPOINT, {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ model: modelName, messages, stream: true }) // Always request stream
+                body: JSON.stringify({ model: modelName, messages, stream: true })
             });
 
             if (!response.ok) {
@@ -1446,23 +1555,20 @@ python ... \
                             if (content) {
                                 fullResponseText += content;
                                 if (paragraph) {
-                                   processAndAppendText(fullResponseText, paragraph); // Use the safe function to render stream
+                                   processAndAppendText(fullResponseText, paragraph);
                                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
                             }
                         } catch (e) { 
-                            // This catch is for JSON parsing errors within the stream.
-                            // If the 'data: ' prefix is there but the content isn't valid JSON, it's an API issue.
                             console.warn("Non-JSON data in stream:", data, e);
                         }
                     } else {
-                        // Handle cases where the API might send non-data: prefixed lines, e.g., warnings or malformed chunks
                         console.warn("Unexpected non-data: prefixed line in stream:", line);
                     }
                 });
             }
             if (paragraph) {
-                processAndAppendText(fullResponseText, paragraph); // Final render after stream ends
+                processAndAppendText(fullResponseText, paragraph);
             }
             console.log("sendMessageToOpenAI: End (Success)");
             return fullResponseText;
@@ -1559,7 +1665,6 @@ python ... \
             isListening = false;
             updateActionButtonsState(); 
             messageInput.placeholder = "Ask me anything..."; 
-            // Automatically send if there's content
             if(messageInput.value.trim()) {
                 handleSendMessage(); 
             }
@@ -1608,70 +1713,172 @@ python ... \
         hidePersonalityModal();
     }
 
-    // --- Wallpaper Functions ---
-    function showWallpaperModal() {
-        hidePersonalityModal();
-        wallpaperOverlay.classList.add('visible');
-        wallpaperPromptInput.value = '';
-        wallpaperImagePreview.style.display = 'none';
-        saveWallpaperBtn.disabled = true;
-        generatedWallpaperData = null;
+    // --- Theme Functions ---
+    function showThemesModal() {
+        themesOverlay.classList.add('visible');
+        themePromptInput.value = '';
+        themeImagePreview.style.display = 'none';
+        saveThemeBtn.disabled = true;
+        generatedThemeData = null;
+        updateActiveThemeBox();
     }
-    function hideWallpaperModal() {
-        wallpaperOverlay.classList.remove('visible');
+    function hideThemesModal() {
+        themesOverlay.classList.remove('visible');
     }
-    async function handleGenerateWallpaper() {
-        const prompt = wallpaperPromptInput.value.trim();
+
+    function updateActiveThemeBox() {
+        document.querySelectorAll('.theme-box').forEach(box => {
+            box.classList.toggle('active', box.dataset.theme === currentTheme.type);
+        });
+    }
+    
+    function saveAndApplyTheme(type, data = null) {
+        currentTheme = { type, data };
+        localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(currentTheme));
+        applyTheme(type, data);
+        updateActiveThemeBox();
+    }
+
+    function applyTheme(type, data) {
+        // Clear existing theme elements and listeners
+        themeContainer.innerHTML = '';
+        mainContent.style.backgroundImage = '';
+        mainContent.removeEventListener('mousemove', handleGrassInteraction);
+        mainContent.removeEventListener('mousemove', handleCloudInteraction);
+
+        switch(type) {
+            case 'grass':
+                mainContent.style.backgroundColor = '#c1ffc1';
+                createGrassTheme();
+                break;
+            case 'clouds':
+                createCloudsTheme();
+                break;
+            case 'generated':
+                if (data) mainContent.style.backgroundImage = `url(${data})`;
+                break;
+            case 'none':
+            default:
+                 mainContent.style.backgroundColor = '#f0f4f8'; // Default bg
+                break;
+        }
+    }
+
+    function createGrassTheme() {
+        const grassContainer = document.createElement('div');
+        grassContainer.id = 'grass-theme-container';
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute('id', 'grass-svg');
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('viewBox', '0 0 100 10');
+        
+        for (let i = 0; i < 150; i++) {
+            const path = document.createElementNS(svgNS, "path");
+            const x = Math.random() * 100;
+            const h = 2 + Math.random() * 8;
+            const w = 0.2 + Math.random() * 0.3;
+            const sway = (Math.random() - 0.5) * 2;
+            path.setAttribute('d', `M ${x} 10 Q ${x+sway} ${10-h/2}, ${x} ${10-h}`);
+            path.setAttribute('stroke', `hsl(120, ${60 + Math.random()*20}%, ${30 + Math.random()*20}%)`);
+            path.setAttribute('stroke-width', w);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('class', 'grass-blade');
+            path.style.animation = `sway ${2 + Math.random() * 4}s ease-in-out ${Math.random() * -6}s infinite alternate`;
+            svg.appendChild(path);
+        }
+        
+        grassContainer.appendChild(svg);
+        themeContainer.appendChild(grassContainer);
+        mainContent.addEventListener('mousemove', handleGrassInteraction);
+    }
+    
+    function handleGrassInteraction(e) {
+        const containerRect = e.currentTarget.getBoundingClientRect();
+        const mouseX = e.clientX - containerRect.left;
+        const blades = document.querySelectorAll('.grass-blade');
+        blades.forEach(blade => {
+            const bladeBox = blade.getBBox();
+            const bladeX = (bladeBox.x / 100) * containerRect.width;
+            const dist = Math.abs(mouseX - bladeX);
+            if (dist < 50) {
+                const angle = (mouseX - bladeX) * 0.3 * (1 - dist / 50);
+                blade.style.transform = `rotate(${angle}deg)`;
+            } else {
+                blade.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+
+    function createCloudsTheme() {
+        const cloudContainer = document.createElement('div');
+        cloudContainer.id = 'clouds-theme-container';
+        for(let i=1; i<=3; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = `cloud cloud-${i}`;
+            cloudContainer.appendChild(cloud);
+        }
+        themeContainer.appendChild(cloudContainer);
+        mainContent.addEventListener('mousemove', handleCloudInteraction);
+    }
+
+    function handleCloudInteraction(e) {
+        const containerRect = e.currentTarget.getBoundingClientRect();
+        const mouseX = e.clientX - containerRect.left;
+        const mouseY = e.clientY - containerRect.top;
+        const clouds = document.querySelectorAll('.cloud');
+        clouds.forEach((cloud, index) => {
+            const moveX = (mouseX - containerRect.width / 2) / (20 + index * 10);
+            const moveY = (mouseY - containerRect.height / 2) / (20 + index * 10);
+            cloud.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`;
+        });
+    }
+
+
+    async function handleGenerateTheme() {
+        const prompt = themePromptInput.value.trim();
         if (!prompt) {
-            showToast("Please enter a prompt for the wallpaper.", "error");
+            showToast("Please enter a prompt for the theme.", "error");
             return;
         }
-        wallpaperSpinner.style.display = 'block';
-        wallpaperImagePreview.style.display = 'none';
-        generateWallpaperBtn.disabled = true;
-        saveWallpaperBtn.disabled = true;
+        themeSpinner.style.display = 'block';
+        themeImagePreview.style.display = 'none';
+        generateThemeBtn.disabled = true;
+        saveThemeBtn.disabled = true;
         try {
             const imageSrc = await triggerStableDiffusionGeneration(prompt, true);
             if(imageSrc){
-                generatedWallpaperData = imageSrc;
-                wallpaperImagePreview.src = imageSrc;
-                wallpaperImagePreview.style.display = 'block';
-                saveWallpaperBtn.disabled = false;
+                generatedThemeData = imageSrc;
+                themeImagePreview.src = imageSrc;
+                themeImagePreview.style.display = 'block';
+                saveThemeBtn.disabled = false;
             } else {
-                 showToast("Failed to generate wallpaper. Please try again.", "error");
+                 showToast("Failed to generate theme. Please try again.", "error");
             }
         } catch (error) {
-            console.error("Wallpaper generation error:", error);
+            console.error("Theme generation error:", error);
             showToast(`Error: ${error.message}`, "error");
         } finally {
-            wallpaperSpinner.style.display = 'none';
-            generateWallpaperBtn.disabled = false;
+            themeSpinner.style.display = 'none';
+            generateThemeBtn.disabled = false;
         }
     }
-    function saveWallpaper() {
-        if (generatedWallpaperData) {
-            currentWallpaper = generatedWallpaperData;
-            localStorage.setItem(WALLPAPER_STORAGE_KEY, currentWallpaper);
-            applyWallpaper(currentWallpaper);
-            showToast("Wallpaper saved!", "success");
-            hideWallpaperModal();
-        }
-    }
-    function applyWallpaper(imageDataUrl) {
-        if(mainContent && imageDataUrl) {
-            mainContent.style.backgroundImage = `url(${imageDataUrl})`;
-        }
-    }
-    function handleResetWallpaper() {
-        mainContent.style.backgroundImage = '';
-        localStorage.removeItem(WALLPAPER_STORAGE_KEY);
-        currentWallpaper = null;
-        showToast("Wallpaper reset.", "success");
-    }
-
     
+    function handleSaveGeneratedTheme() {
+        if (generatedThemeData) {
+            saveAndApplyTheme('generated', generatedThemeData);
+            showToast("Theme saved!", "success");
+            hideThemesModal();
+        }
+    }
 
-    // --- NEW: Reddit Story Functions ---
+    function handleRemoveTheme() {
+        saveAndApplyTheme('none');
+        showToast("Theme removed.", "success");
+        hideThemesModal();
+    }
+    
+    // --- Reddit Story Functions ---
     let videoPlaybackInterval;
     let currentVideoIndex = 0;
 
@@ -1715,15 +1922,13 @@ python ... \
             return;
         }
 
-        window.speechSynthesis.cancel(); // Stop any ongoing speech
+        window.speechSynthesis.cancel();
         storyOverlay.classList.add('visible');
-        storyVideo.muted = true; // Ensure video is muted for autoplay
+        storyVideo.muted = true;
 
-        // Split the text into lines based on the AI's formatting
         const lines = text.split(/\n+/).filter(line => line.trim().length > 0);
         let currentLineIndex = 0;
 
-        // --- Voice Selection (Happens ONCE per story) ---
         const getVoicesAsync = () => {
             return new Promise(resolve => {
                 let voices = window.speechSynthesis.getVoices();
@@ -1744,7 +1949,6 @@ python ... \
             (voice.lang === 'en-US' || voice.lang === 'en-GB')
         );
 
-        // Filter out the last used voice if possible
         if (availableVoices.length > 1 && lastStoryVoiceName) {
             availableVoices = availableVoices.filter(v => v.name !== lastStoryVoiceName);
         }
@@ -1752,18 +1956,14 @@ python ... \
         let storyVoice = null;
         if (availableVoices.length > 0) {
             storyVoice = availableVoices[Math.floor(Math.random() * availableVoices.length)];
-            lastStoryVoiceName = storyVoice.name; // Remember the voice for next time
-            console.log(`Selected voice for the story: ${storyVoice.name}`);
+            lastStoryVoiceName = storyVoice.name;
         } else {
-            console.warn("No unique Google English voices found. Using default or repeating voice.");
-            // Fallback to any available voice if filtering removed all options
             const allGoogleVoices = voices.filter(voice => voice.name.includes('Google') && (voice.lang === 'en-US' || voice.lang === 'en-GB'));
             if (allGoogleVoices.length > 0) {
                 storyVoice = allGoogleVoices[Math.floor(Math.random() * allGoogleVoices.length)];
                 lastStoryVoiceName = storyVoice.name;
             }
         }
-        // --- End of Voice Selection ---
 
         const speakNextLine = () => {
             if (currentLineIndex < lines.length) {
@@ -1772,7 +1972,6 @@ python ... \
 
                 currentSpeechUtterance = new SpeechSynthesisUtterance(lineText);
                 
-                // Use the pre-selected voice for every line
                 if (storyVoice) {
                     currentSpeechUtterance.voice = storyVoice;
                 }
@@ -1790,14 +1989,12 @@ python ... \
                     closeStoryPlayer();
                 };
             } else {
-                // Story finished, trigger the outro
                 showOutro();
             }
         };
 
-        speakNextLine(); // Start the speech chain
+        speakNextLine();
 
-        // Video playback logic
         currentVideoIndex = 0;
         function playNextVideoSegment() {
             if (BACKGROUND_VIDEOS.length === 0) return;
@@ -1815,11 +2012,9 @@ python ... \
     function showOutro() {
         const storyOutro = document.getElementById('story-outro');
         storyOutro.classList.add('visible');
-
-        // Wait for the outro animation to play, then close the player
         setTimeout(() => {
             closeStoryPlayer();
-        }, 4000); // Display outro for 4 seconds
+        }, 4000);
     }
 
     function closeStoryPlayer() {
@@ -1833,7 +2028,6 @@ python ... \
         storyVideo.src = '';
         storyVideo.currentTime = 0;
 
-        // Also hide the outro screen when closing
         const storyOutro = document.getElementById('story-outro');
         storyOutro.classList.remove('visible');
     }
@@ -1872,8 +2066,13 @@ python ... \
                 position: 'top'
             },
             {
+                target: '#themes-button',
+                text: "Personalize your chat background with interactive and generated themes here.",
+                position: 'top'
+            },
+            {
                 target: '#settings-button',
-                text: "Here is where you can personalize Graxybot, change your chat background, and manage memory.",
+                text: "Here is where you can set your name and manage your data.",
                 position: 'top'
             },
             {
@@ -1894,7 +2093,6 @@ python ... \
     }
 
     function showTutorialStep() {
-        // Run the 'after' hook of the *previous* step before doing anything else
         const previousStep = tutorialSteps[currentTutorialStep - 1];
         if (previousStep && previousStep.onAfter) {
             previousStep.onAfter();
@@ -1910,7 +2108,6 @@ python ... \
 
         const step = tutorialSteps[currentTutorialStep];
 
-        // Run the 'before' hook of the *current* step
         if (step.onBefore) {
             step.onBefore();
         }
@@ -1926,11 +2123,10 @@ python ... \
             if (!targetElement) {
                 console.warn(`Tutorial target not found: ${step.target}`);
                 currentTutorialStep++;
-                showTutorialStep(); // Skip to the next step
+                showTutorialStep();
                 return;
             }
 
-            // A short delay to ensure the onBefore action (like opening a menu) has rendered
             setTimeout(() => {
                 targetElement.classList.add('highlighted-element');
             
@@ -1952,7 +2148,6 @@ python ... \
                     leftPos = targetRect.left + targetRect.width / 2 - pointerRect.width / 2;
                 }
 
-                // Adjust for screen edges
                 if (leftPos < 10) {
                     leftPos = 10;
                 } else if (leftPos + pointerRect.width > window.innerWidth) {
@@ -1966,12 +2161,11 @@ python ... \
                     currentTutorialStep++;
                     showTutorialStep();
                 };
-            }, 50); // 50ms delay for menu to open
+            }, 50);
         }
     }
 
     function endTutorial() {
-        // Run the 'after' hook of the last step just in case the tutorial is closed early
         const lastStep = tutorialSteps[currentTutorialStep - 1];
         if (lastStep && lastStep.onAfter) {
             lastStep.onAfter();
@@ -1998,9 +2192,11 @@ python ... \
         chatApp = document.getElementById('chat-app');
         sidebar = document.getElementById('sidebar');
         mainContent = document.getElementById('main-content');
+        themeContainer = document.getElementById('theme-container');
         newChatBtn = document.getElementById('new-chat-btn');
         chatList = document.getElementById('chat-list');
         settingsButton = document.getElementById('settings-button');
+        themesButton = document.getElementById('themes-button');
         chatTitle = document.getElementById('chat-title');
         menuBackdrop = document.getElementById('menu-backdrop');
         chatMessagesContainer = document.getElementById('chat-messages');
@@ -2018,25 +2214,26 @@ python ... \
         storyVideo = document.getElementById('story-video');
         storyCaptionsContainer = document.getElementById('story-captions-container');
         closeStoryBtn = document.getElementById('close-story-btn');
-        downloadStoryBtn = document.getElementById('download-story-btn'); // NEW
+        downloadStoryBtn = document.getElementById('download-story-btn');
         
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
-        openWallpaperModalBtn = document.getElementById('open-wallpaper-modal-btn');
         
-        wallpaperOverlay = document.getElementById('wallpaper-overlay');
-        closeWallpaperModalBtn = document.getElementById('close-wallpaper-modal-btn');
-        wallpaperPromptInput = document.getElementById('wallpaper-prompt-input');
-        generateWallpaperBtn = document.getElementById('generate-wallpaper-btn');
-        wallpaperPreview = document.getElementById('wallpaper-preview');
-        wallpaperSpinner = document.getElementById('wallpaper-spinner');
-        wallpaperImagePreview = document.getElementById('wallpaper-image-preview');
-        saveWallpaperBtn = document.getElementById('save-wallpaper-btn');
-        removeWallpaperBtn = document.getElementById('remove-wallpaper-btn');
-        
+        themesOverlay = document.getElementById('themes-overlay');
+        closeThemesModalBtn = document.getElementById('close-themes-modal-btn');
+        themePromptInput = document.getElementById('theme-prompt-input');
+        generateThemeBtn = document.getElementById('generate-theme-btn');
+        themePreview = document.getElementById('theme-preview');
+        themeSpinner = document.getElementById('theme-spinner');
+        themeImagePreview = document.getElementById('theme-image-preview');
+        saveThemeBtn = document.getElementById('save-theme-btn');
+        removeThemeBtn = document.getElementById('remove-theme-btn');
+        grassThemeBox = document.getElementById('grass-theme-box');
+        cloudsThemeBox = document.getElementById('clouds-theme-box');
+
         actionMenuToggle = document.getElementById('action-menu-toggle');
         actionMenu = document.getElementById('action-menu');
 
@@ -2056,6 +2253,7 @@ python ... \
                 actionMenuToggle.classList.remove('active');
             }
         });
+        
         loadData();
         renderChatList();
         setChatActiveState(true); 
@@ -2064,13 +2262,21 @@ python ... \
         }
         updateActionButtonsState();
 
-        // Add Event Listeners
         newChatBtn.addEventListener('click', () => {
+            // Check if there is a current chat and if it's empty.
+            if (currentChatId && chats[currentChatId] && chats[currentChatId].history.length === 0) {
+                // If the user is in a new, empty chat, don't create another one.
+                showToast("Send a message to start the current chat first.", 'info');
+                sidebar.classList.remove('visible');
+                menuBackdrop.classList.remove('visible');
+                return;
+            }
             sidebar.classList.remove('visible');
             menuBackdrop.classList.remove('visible');
             handleNewChat(true);
         });
         settingsButton.addEventListener('click', showPersonalityModal);
+        themesButton.addEventListener('click', showThemesModal);
         
         menuBackdrop.addEventListener('click', () => {
              sidebar.classList.remove('visible');
@@ -2083,7 +2289,7 @@ python ... \
             if (storyVideo.src) {
                 const a = document.createElement('a');
                 a.href = storyVideo.src;
-                a.download = 'graxybot_story_video.mp4'; // You can make this dynamic if needed
+                a.download = 'graxybot_story_video.mp4';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -2103,36 +2309,15 @@ python ... \
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
-        openWallpaperModalBtn.addEventListener('click', showWallpaperModal);
         
-        const resetWallpaperSettingsBtn = document.querySelector('#personality-modal-content .danger-btn');
-        if(resetWallpaperSettingsBtn) resetWallpaperSettingsBtn.addEventListener('click', handleResetWallpaper);
+        closeThemesModalBtn.addEventListener('click', hideThemesModal);
+        themesOverlay.addEventListener('click', (e) => { if(e.target === themesOverlay) hideThemesModal(); });
+        generateThemeBtn.addEventListener('click', handleGenerateTheme);
+        saveThemeBtn.addEventListener('click', handleSaveGeneratedTheme);
+        removeThemeBtn.addEventListener('click', handleRemoveTheme);
+        grassThemeBox.addEventListener('click', () => saveAndApplyTheme('grass'));
+        cloudsThemeBox.addEventListener('click', () => saveAndApplyTheme('clouds'));
 
-        closeWallpaperModalBtn.addEventListener('click', hideWallpaperModal);
-        wallpaperOverlay.addEventListener('click', (e) => { if(e.target === wallpaperOverlay) hideWallpaperModal(); });
-        generateWallpaperBtn.addEventListener('click', handleGenerateWallpaper);
-        saveWallpaperBtn.addEventListener('click', saveWallpaper);
-        removeWallpaperBtn.addEventListener('click', () => {
-            handleResetWallpaper();
-            hideWallpaperModal();
-        });
-
-        // This is a placeholder for a function that might exist in the full script.
-        // If img2imgButton is not defined, this will cause an error.
-        // Based on the provided HTML, img2imgButton is not defined.
-        // I will comment this part out to prevent errors.
-        /*
-        img2imgButton.addEventListener('click', showImg2ImgModal);
-        closeImg2ImgModalBtn.addEventListener('click', hideImg2ImgModal);
-        img2imgOverlay.addEventListener('click', (e) => { if(e.target === img2imgOverlay) hideImg2ImgModal(); });
-        img2imgPreview.addEventListener('click', () => img2imgUploadInput.click());
-        img2imgUploadInput.addEventListener('change', handleImg2ImgSelection);
-        generateImg2ImgBtn.addEventListener('click', handleImg2ImgGeneration);
-        img2imgPromptInput.addEventListener('input', () => {
-            generateImg2ImgBtn.disabled = !(img2imgBaseImageData && img2imgPromptInput.value.trim());
-        });
-        */
-        
         wipeDataBtn.addEventListener('click', handleWipeData);
 
         loader.classList.remove('visible');
