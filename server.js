@@ -33,7 +33,7 @@ app.post('/openai/chat', async (req, res) => {
   // This is secure as it's never exposed in client-side code.
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   // Get the model from the request body, or default to gpt-4.1-mini
-  const model = req.body.model || "gpt-4.1-mini";
+  const model = req.body.model || "gpt-5-mini";
 
   // Basic validation to ensure the API key is set
   if (!OPENAI_API_KEY) {
