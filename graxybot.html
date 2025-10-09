@@ -435,6 +435,11 @@ body {
 .thinking-indicator span:nth-child(2) { animation-delay: 0.1s; }
 .thinking-indicator span:nth-child(3) { animation-delay: 0.2s; }
 @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-4px); opacity: 1; } }
+@keyframes imagePromptAura {
+    0% { transform: scale(0.98); opacity: 0.55; }
+    50% { transform: scale(1.04); opacity: 0.85; }
+    100% { transform: scale(0.98); opacity: 0.55; }
+}
 .code-block-container { background-color: var(--code-bg); border-radius: 8px; margin: 10px 0; overflow: hidden; }
 .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--code-header-bg); padding: 5px 15px; color: #ccc; font-size: 0.85rem; }
 .code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; }
@@ -452,6 +457,36 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: visible;
+    transition: border-color 0.3s ease, background 0.3s ease;
+}
+.chat-input-area::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: linear-gradient(120deg, rgba(139, 92, 246, 0.35), rgba(34, 211, 238, 0.35), rgba(250, 204, 21, 0.35));
+    filter: blur(12px);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+.chat-input-area.image-mode-active {
+    border-color: rgba(139, 92, 246, 0.55);
+    background-color: rgba(249, 250, 251, 0.95);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(139, 92, 246, 0.22);
+}
+.chat-input-area.image-mode-active::after {
+    opacity: 1;
+    animation: imagePromptAura 3.5s ease-in-out infinite;
+}
+.chat-input-area.image-mode-busy {
+    border-color: rgba(148, 163, 184, 0.6);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.chat-input-area.image-mode-busy::after {
+    opacity: 0;
 }
 #message-input {
     flex-grow: 1; border: none; outline: none; background: transparent;
@@ -528,6 +563,7 @@ body {
 }
 
 .menu-item-image i { color: #8B5CF6; }
+.menu-item-me i { color: #FACC15; }
 .menu-item-attach i { color: #3B82F6; }
 .menu-item-reddit i { color: #FF4500; }
 .menu-item-mic i { color: #EF4444; }
@@ -537,12 +573,123 @@ body {
 }
 
 .menu-item-image:hover { background-color: #8B5CF6; }
+.menu-item-me:hover { background-color: #FACC15; }
 .menu-item-attach:hover { background-color: #3B82F6; }
 .menu-item-reddit:hover { background-color: #FF4500; }
 .menu-item-mic:hover { background-color: #EF4444; }
 
 .menu-item:hover span {
     color: white;
+}
+
+.floating-coach {
+    position: absolute;
+    right: -12px;
+    bottom: 64px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.9rem;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    z-index: 1200;
+}
+.floating-coach::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 26px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.12));
+}
+.floating-coach.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.floating-coach .coach-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    max-width: 220px;
+}
+.floating-coach .coach-arrow {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.image-build-message .message {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.image-build-preview {
+    width: 220px;
+    height: 220px;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-build-swatch {
+    width: 150%;
+    height: 150%;
+    filter: blur(22px);
+    opacity: 0.9;
+    animation: imageBuildSwirl 2.8s ease-in-out infinite alternate;
+}
+.image-build-glow {
+    position: absolute;
+    inset: 18%;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.25);
+    filter: blur(28px);
+    animation: imageBuildGlow 1.9s ease-in-out infinite alternate;
+}
+.image-build-caption {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+.image-build-caption strong {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+.image-build-caption .caption-prompt {
+    display: block;
+    margin-top: 4px;
+    font-style: italic;
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
+@keyframes imageBuildSwirl {
+    0% { transform: rotate(0deg) scale(1); }
+    100% { transform: rotate(25deg) scale(1.08); }
+}
+@keyframes imageBuildGlow {
+    0% { opacity: 0.45; transform: scale(0.95); }
+    100% { opacity: 0.75; transform: scale(1.05); }
 }
 
 #image-upload-input { display: none; }
@@ -554,6 +701,51 @@ body {
     position: absolute; top: -5px; right: -5px; background-color: rgba(0, 0, 0, 0.6);
     color: white; border: none; border-radius: 50%; width: 20px; height: 20px;
     font-size: 0.8rem; line-height: 20px; text-align: center; cursor: pointer;
+}
+.me-active-banner {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(250, 204, 21, 0.15);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.me-active-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.me-active-info i {
+    color: #facc15;
+    font-size: 1rem;
+}
+.me-active-controls {
+    display: flex;
+    gap: 8px;
+}
+.me-active-controls button {
+    background: transparent;
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.me-active-controls button:hover {
+    background: rgba(250, 204, 21, 0.35);
+}
+.me-input-highlight {
+    border-color: rgba(250, 204, 21, 0.8) !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35) !important;
+    background: #fffdf3 !important;
 }
 
 .loader-overlay {
@@ -597,6 +789,7 @@ body {
 }
 .modal-overlay.visible .modal-content { transform: scale(1); }
 .modal-content h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary); margin-bottom: 20px; }
+.modal-subtitle { margin-bottom: 16px; color: var(--text-secondary); }
 .modal-content label { display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
 .modal-content input, .modal-content textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--border-color);
@@ -623,6 +816,302 @@ body {
 }
 .modal-content .danger-btn:hover {
     background-color: var(--danger-color-hover);
+}
+
+.settings-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+.settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 160px;
+}
+.settings-tab-button {
+    position: relative;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.settings-tab-button:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+.settings-tab-button.active {
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--primary);
+}
+.settings-panels {
+    flex: 1;
+}
+.settings-tab-panel {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+.settings-tab-panel.active {
+    display: block;
+}
+.usage-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.usage-card {
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+.usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+.usage-progress {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(79, 70, 229, 0.12);
+    overflow: hidden;
+}
+.usage-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    transition: width 0.3s ease;
+}
+.usage-progress-bar.at-limit {
+    background: linear-gradient(90deg, var(--danger-color), var(--danger-color-hover));
+}
+.usage-reset {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+.usage-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Me Popup --- */
+#me-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease;
+    z-index: 3000;
+}
+#me-popup.visible {
+    opacity: 1;
+    visibility: visible;
+}
+.me-popup-card {
+    background: var(--background);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    width: min(420px, 90%);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+}
+.me-popup-card h2 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.6rem;
+}
+.me-popup-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.me-media-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+.me-media-preview {
+    width: 220px;
+    height: 220px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+    background: var(--input-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+.me-media-preview.clickable {
+    cursor: pointer;
+}
+.me-media-preview video,
+.me-media-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.me-media-preview img.has-photo {
+    border: 2px solid rgba(250, 204, 21, 0.6);
+}
+.me-control-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+.me-control-row button {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.me-popup-card .primary-btn,
+.me-popup-card .secondary-btn,
+.me-popup-card .danger-btn {
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.me-control-row .primary-btn {
+    background: var(--primary);
+    color: white;
+}
+.me-control-row .secondary-btn {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.me-popup-card .primary-btn {
+    background: var(--primary);
+    color: white;
+}
+.me-popup-card .secondary-btn {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.me-popup-card .danger-btn {
+    background: var(--danger-color);
+    color: white;
+}
+.me-control-row button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+.me-popup-card .primary-btn:hover,
+.me-popup-card .secondary-btn:hover,
+.me-popup-card .danger-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+#me-retake-row {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+#me-retake-row.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.me-popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.me-popup-actions button {
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.me-popup-actions button.primary-btn {
+    background: var(--primary);
+    color: white;
+}
+.me-popup-actions button.secondary-btn {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.me-popup-actions button.danger-btn {
+    background: var(--danger-color);
+    color: white;
+}
+.me-popup-actions button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+.me-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.me-prompt-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.me-prompt-area textarea {
+    width: 100%;
+    min-height: 90px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    background: var(--input-bg);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.me-prompt-area.active textarea {
+    border-color: rgba(250, 204, 21, 0.9);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35);
+    background: #fffdf3;
+}
+.me-prompt-area textarea:focus {
+    border-color: rgba(250, 204, 21, 0.8);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35);
+    outline: none;
+}
+.me-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
 }
 
 /* Themes Modal Specifics */
@@ -690,112 +1179,6 @@ body {
 }
 .modal-preview-box .modal-spinner { display: none; }
 .modal-preview-box img { max-width: 100%; max-height: 100%; }
-
-/* --- Tutorial Styles --- */
-#tutorial-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 3000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease;
-}
-#tutorial-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
-.tutorial-step {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    position: relative;
-    opacity: 0;
-    transform: scale(0.95);
-    transition: opacity 0.3s, transform 0.3s;
-}
-#tutorial-overlay.visible .tutorial-step {
-    opacity: 1;
-    transform: scale(1);
-}
-.tutorial-step h2 {
-    color: var(--primary);
-    margin-top: 0;
-}
-.tutorial-step p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-.tutorial-step input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin: 10px 0 20px;
-    box-sizing: border-box;
-    text-align: center;
-    font-size: 1rem;
-}
-.tutorial-step button, .tutorial-pointer button {
-    width: 100%;
-    padding: 12px;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-top: 10px;
-}
-.tutorial-pointer {
-    position: absolute;
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    max-width: 250px;
-    text-align: center;
-}
-.tutorial-pointer p {
-    margin: 0 0 10px 0;
-}
-.tutorial-pointer::after {
-    content: '';
-    position: absolute;
-    border-style: solid;
-}
-.tutorial-pointer.arrow-bottom::after {
-    top: 100%;
-    left: 50%;
-    margin-left: -10px;
-    border-width: 10px;
-    border-color: white transparent transparent transparent;
-}
-.tutorial-pointer.arrow-top::after {
-    bottom: 100%;
-    left: 50%;
-    margin-left: -10px;
-    border-width: 10px;
-    border-color: transparent transparent white transparent;
-}
-.highlighted-element {
-    position: relative;
-    z-index: 3001;
-    box-shadow: 0 0 0 4px var(--primary-light), 0 0 20px 10px rgba(79, 70, 229, 0.5);
-    border-radius: 8px;
-    transition: box-shadow 0.3s ease;
-}
 
 /* --- Mobile Responsive Styles --- */
 @media (max-width: 768px) {
@@ -927,33 +1310,102 @@ body {
 </head>
 <body>
 
-<!-- Add the audio element for background music -->
-<audio id="background-music" loop src="backround.mp3"></audio>
-
 <div id="loader" class="loader-overlay">
     <div class="spinner"></div>
 </div>
 
 <div id="toast-container"></div>
 
-<div id="tutorial-overlay">
-    <div id="tutorial-step-container"></div>
-</div>
-
 <!-- Settings Modal -->
 <div id="personality-overlay" class="modal-overlay">
     <div id="personality-modal-content" class="modal-content">
         <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
-        <h2>Personalize Graxybot</h2>
-        <label for="user-name-input">What should Graxybot call you?</label>
-        <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
-        <label for="response-style-input">How do you want Graxybot to respond?</label>
-        <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
-        <button id="save-personality-btn">Save Settings</button>
-        <button id="mute-music-btn" class="secondary-btn" style="margin-top: 10px;">
-            <i class="fas fa-volume-up"></i> <span>Mute Music</span>
-        </button>
-        <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
+        <h2>Graxybot Settings</h2>
+        <div class="settings-layout">
+            <div class="settings-tabs">
+                <button class="settings-tab-button active" data-settings-tab="profile">Profile</button>
+                <button class="settings-tab-button" data-settings-tab="usage">Usage</button>
+            </div>
+            <div class="settings-panels">
+                <div class="settings-tab-panel active" id="settings-tab-profile" data-settings-panel="profile">
+                    <label for="user-name-input">What should Graxybot call you?</label>
+                    <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
+                    <label for="response-style-input">How do you want Graxybot to respond?</label>
+                    <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
+                    <button id="save-personality-btn">Save Settings</button>
+                    <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-usage" data-settings-panel="usage">
+                    <div class="usage-section">
+                        <div class="usage-card">
+                            <div class="usage-header">
+                                <span>Chats</span>
+                                <span id="usage-chats-label">0 / 50</span>
+                            </div>
+                            <div class="usage-progress">
+                                <div class="usage-progress-bar" id="usage-chats-bar"></div>
+                            </div>
+                            <div class="usage-reset" id="usage-chats-reset">Full allowance available</div>
+                        </div>
+                        <div class="usage-card">
+                            <div class="usage-header">
+                                <span>Images</span>
+                                <span id="usage-images-label">0 / 20</span>
+                            </div>
+                            <div class="usage-progress">
+                                <div class="usage-progress-bar" id="usage-images-bar"></div>
+                            </div>
+                            <div class="usage-reset" id="usage-images-reset">Full allowance available</div>
+                        </div>
+                        <p class="usage-note">Each limit resets automatically every 2 hours. Invite your friends, but pace the magic.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Initial Name Modal -->
+<div id="initial-name-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h2>hi! what's your name?</h2>
+        <p class="modal-subtitle">graxybot likes to keep it personal.</p>
+        <input type="text" id="initial-name-input" placeholder="type your name...">
+        <button id="initial-name-save-btn">let's chat</button>
+    </div>
+</div>
+
+<!-- Me Popup -->
+<div id="me-popup">
+    <div class="me-popup-card">
+        <button class="me-popup-close" id="me-popup-close-btn">&times;</button>
+        <h2>me mode</h2>
+        <p id="me-popup-subtitle">snap a quick pic so graxybot can remix you into anything.</p>
+
+        <div class="me-media-area" id="me-media-area">
+            <div class="me-media-preview" id="me-media-preview">
+                <span id="me-media-placeholder">no photo yet</span>
+                <img id="me-photo-preview" alt="me preview" style="display:none;">
+            </div>
+            <video id="me-camera-stream" playsinline style="display:none;"></video>
+            <canvas id="me-canvas" width="512" height="512" style="display:none;"></canvas>
+        </div>
+
+        <div class="me-prompt-area" id="me-prompt-area" style="display:none;">
+            <textarea id="me-prompt-input" placeholder="example: put me in a neon cyberpunk world"></textarea>
+            <div class="me-hint">graxybot keeps your picture on this device. hit generate to send it with your prompt.</div>
+        </div>
+
+        <div class="me-control-row">
+            <button id="me-start-camera-btn" class="secondary-btn">open camera</button>
+            <button id="me-upload-btn" class="secondary-btn">upload photo</button>
+        </div>
+        <button id="me-capture-btn" class="primary-btn" style="display:none;">capture photo</button>
+        <div class="me-control-row" id="me-retake-row" style="display:none;">
+            <button id="me-retake-btn" class="secondary-btn">retake photo</button>
+            <button id="me-remove-btn" class="danger-btn">remove photo</button>
+        </div>
+        <input type="file" id="me-upload-input" accept="image/*" style="display:none;">
     </div>
 </div>
 
@@ -1034,8 +1486,22 @@ body {
             </div>
             <div class="chat-input-area">
                 <input type="text" id="message-input" placeholder="Ask me anything...">
+                <div id="me-active-banner" class="me-active-banner">
+                    <div class="me-active-info">
+                        <i class="fas fa-user-astronaut"></i>
+                        <span>me photo locked in. type your remix and hit send.</span>
+                    </div>
+                    <div class="me-active-controls">
+                        <button id="me-inline-retake-btn">retake</button>
+                        <button id="me-inline-remove-btn">remove</button>
+                    </div>
+                </div>
                 <div class="input-actions">
                     <div class="action-menu-container">
+                        <div id="action-coachmark" class="floating-coach">
+                            <span class="coach-text">try the world's fastest image generation</span>
+                            <span class="coach-arrow"><i class="fas fa-arrow-up-right"></i></span>
+                        </div>
                         <div class="action-menu" id="action-menu">
                             <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span></button>
                             <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
@@ -1072,35 +1538,50 @@ body {
 
 <script type="module">
     // --- Configuration ---
-    const OPENAI_MODEL = "gpt-4.1-mini";
-    const GPT_4_1_MODEL = "gpt-5";
-    const DEFAULT_STABLE_DIFFUSION_API_URL = "https://safe-duly-sheep.ngrok-free.app";
+    const GEMINI_CHAT_MODEL = "gemini-2.0-flash";
+    const GEMINI_IMAGE_ENDPOINT = window.location.origin + '/gemini/image';
+    const OPENAI_CHAT_MODEL = "gpt-4.1-mini";
     const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
+    const GEMINI_CHAT_ENDPOINT = window.location.origin + '/gemini/chat';
 
     // --- UI & Storage Keys ---
+    const DEFAULT_CHAT_MODEL = OPENAI_CHAT_MODEL;
     const BOT_ICON_SRC = "graxybot.png";
     const USER_ICON_CLASS = "fas fa-user";
     const CHATS_STORAGE_KEY = "graxybot_minimalist_chats_v3";
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
     const THEME_STORAGE_KEY = "graxybot_theme_v1";
-    const TUTORIAL_COMPLETED_KEY = "graxybot_tutorial_completed_v1";
-    const MUSIC_MUTED_KEY = "graxybot_music_muted_v1";
+    const ME_PROFILE_STORAGE_KEY = "graxybot_me_profile_v1";
+    const USAGE_STORAGE_KEY = "graxybot_usage_stats_v1";
+    const CHAT_USAGE_LIMIT = 50;
+    const IMAGE_USAGE_LIMIT = 20;
+    const USAGE_WINDOW_MS = 2 * 60 * 60 * 1000; // two hours rolling window
     const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4'];
 
     // --- DOM Element References ---
-    let chatApp, chatMessagesContainer, messageInput, sendButton, createImageButton;
+    let chatApp, chatMessagesContainer, messageInput, chatInputArea, sendButton, createImageButton;
     let imageUploadButton, imageUploadInput, imagePreviewArea, imagePreview, removeImageButton;
     let loader, toastContainer, micButton, speechRecognition, isListening = false;
     let sidebar, newChatBtn, chatList, settingsButton, chatTitle, mainContent, menuBackdrop, menuToggleBtn;
-    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn, muteMusicBtn;
+    let personalityOverlay, userNameInput, responseStyleInput, savePersonalityBtn, closePersonalityModalBtn;
     // New Theme elements
     let themesButton, themesOverlay, closeThemesModalBtn, themePromptInput, generateThemeBtn;
     let themePreview, themeSpinner, themeImagePreview, saveThemeBtn, removeThemeBtn, themeContainer;
     let grassThemeBox, cloudsThemeBox;
+    let meButton, mePopup, mePopupCloseBtn, meStartCameraBtn, meCaptureBtn, meUploadBtn, meUploadInput;
+    let meRetakeRow, meRetakeBtn, meRemoveBtn, meMediaPreview, meMediaPlaceholder, mePhotoPreview;
+    let mePromptArea, mePromptInput, meSubtitle, meCameraStreamEl, meCanvas;
+    let meActiveBanner, meInlineRetakeBtn, meInlineRemoveBtn;
     
-    let actionMenuToggle, actionMenu;
-    let tutorialOverlay, tutorialStepContainer, wipeDataBtn;
+    let settingsTabButtons = [];
+    let settingsTabPanels = [];
+    let usageChatsBar, usageChatsLabel, usageChatsReset;
+    let usageImagesBar, usageImagesLabel, usageImagesReset;
+    
+    let actionMenuToggle, actionMenu, actionCoachmark;
+    let wipeDataBtn;
+    let initialNameOverlay, initialNameInput, initialNameSaveBtn;
     let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn;
 
     // --- Application State ---
@@ -1115,9 +1596,13 @@ body {
     let generatedThemeData = null; // Holds temporary generated image data
     let currentSpeechUtterance = null;
     let lastStoryVoiceName = null;
-    // Music state variables
-    let backgroundMusic, inactivityTimer, audioFadeInterval;
-    let isMusicMuted = false;
+    let meProfile = null;
+    let meStream = null;
+    let meIsCapturing = false;
+    let meQuickModeActive = false;
+    let usageStats = { chats: [], images: [] };
+    let usageUpdateInterval = null;
+    let coachmarkHideTimeout = null;
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -1153,9 +1638,6 @@ body {
                 applyTheme(currentTheme.type, currentTheme.data);
             }
 
-            const storedMuteState = localStorage.getItem(MUSIC_MUTED_KEY);
-            isMusicMuted = storedMuteState === 'true';
-
         } catch (error) {
             console.error("Error loading data:", error);
             chats = {}; currentChatId = null;
@@ -1186,8 +1668,21 @@ body {
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
         if (actionMenuToggle) actionMenuToggle.disabled = isBusy;
         if (redditStoryButton) redditStoryButton.disabled = isBusy;
+        if (meButton) meButton.disabled = isBusy;
+        if (meStartCameraBtn) meStartCameraBtn.disabled = isBusy;
+        if (meUploadBtn) meUploadBtn.disabled = isBusy;
+        if (meCaptureBtn) meCaptureBtn.disabled = isBusy;
+        if (meRetakeBtn) meRetakeBtn.disabled = isBusy;
+        if (meRemoveBtn) meRemoveBtn.disabled = isBusy;
+        if (meInlineRetakeBtn) meInlineRetakeBtn.disabled = isBusy;
+        if (meInlineRemoveBtn) meInlineRemoveBtn.disabled = isBusy;
         settingsButton.disabled = isBusy;
         themesButton.disabled = isBusy;
+        if (chatInputArea) {
+            const highlightActive = isImageGenerationModeActive && !isBusy;
+            chatInputArea.classList.toggle('image-mode-active', highlightActive);
+            chatInputArea.classList.toggle('image-mode-busy', isImageGenerationModeActive && isBusy);
+        }
     }
     function getSystemPrompt(currentModelName, isRedditStory = false) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
@@ -1241,6 +1736,8 @@ body {
         }
     }
     function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null) {
+        const usingMeQuickMode = meQuickModeActive && meProfile && meProfile.imageData;
+
         setChatActiveState(false);
         const wrapper = document.createElement('div');
         wrapper.className = 'message-content-wrapper';
@@ -1432,15 +1929,15 @@ body {
         if (clearUI) {
             chatMessagesContainer.innerHTML = '';
             setChatActiveState(true);
-            startInactivityTimer(); // Restart music timer for new chat screen
+            deactivateMeQuickMode();
         }
     }
     function handleSelectChat(id) {
         if (id === currentChatId) return;
-        stopMusicAndTimer(); // Stop music when switching to a chat
         sidebar.classList.remove('visible');
         menuBackdrop.classList.remove('visible');
         loadChat(id);
+        deactivateMeQuickMode();
     }
     function handleDeleteChat(id) {
         if (confirm(`Are you sure you want to delete "${chats[id].title}"?`)) {
@@ -1449,7 +1946,7 @@ body {
                 currentChatId = null;
                 chatMessagesContainer.innerHTML = '';
                 setChatActiveState(true);
-                startInactivityTimer(); // Restart music timer if we go back to initial view
+                deactivateMeQuickMode();
             }
             saveChats();
             renderChatList();
@@ -1496,6 +1993,406 @@ body {
         imageUploadInput.value = '';
         updateActionButtonsState();
     }
+
+    // --- Usage Tracking ---
+    function loadUsageStats() {
+        try {
+            const stored = localStorage.getItem(USAGE_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                usageStats = {
+                    chats: Array.isArray(parsed?.chats) ? parsed.chats : [],
+                    images: Array.isArray(parsed?.images) ? parsed.images : []
+                };
+            } else {
+                usageStats = { chats: [], images: [] };
+            }
+        } catch (error) {
+            console.error("Error loading usage stats:", error);
+            usageStats = { chats: [], images: [] };
+        }
+        pruneUsageStats();
+    }
+
+    function saveUsageStats() {
+        try {
+            localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(usageStats));
+        } catch (error) {
+            console.error("Error saving usage stats:", error);
+        }
+    }
+
+    function pruneUsageStats(save = true) {
+        const now = Date.now();
+        const windowMs = USAGE_WINDOW_MS;
+        usageStats.chats = (usageStats.chats || []).filter(ts => now - ts < windowMs);
+        usageStats.images = (usageStats.images || []).filter(ts => now - ts < windowMs);
+        if (save) saveUsageStats();
+    }
+
+    function getUsageConfig(type) {
+        return type === 'images'
+            ? { limit: IMAGE_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS }
+            : { limit: CHAT_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS };
+    }
+
+    function getUsageStatus(type) {
+        const { limit, windowMs } = getUsageConfig(type);
+        const list = usageStats[type] || [];
+        const now = Date.now();
+        const count = list.length;
+        let remainingMs = windowMs;
+        if (count > 0) {
+            const oldest = Math.min(...list);
+            remainingMs = Math.max(0, windowMs - (now - oldest));
+        }
+        return { count, limit, remainingMs };
+    }
+
+    function tryConsumeUsage(type) {
+        pruneUsageStats(false);
+        const { limit, windowMs } = getUsageConfig(type);
+        usageStats[type] = usageStats[type] || [];
+        const list = usageStats[type];
+        if (list.length >= limit) {
+            const oldest = Math.min(...list);
+            const remainingMs = Math.max(0, windowMs - (Date.now() - oldest));
+            saveUsageStats();
+            return { success: false, remainingMs };
+        }
+        list.push(Date.now());
+        saveUsageStats();
+        updateUsageUI();
+        return { success: true, remainingMs: 0 };
+    }
+
+    function formatDuration(ms) {
+        if (!ms || ms <= 0) return 'a few moments';
+        const totalSeconds = Math.ceil(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h`;
+        return `${Math.max(minutes, 1)}m`;
+    }
+
+    function updateUsageUI() {
+        pruneUsageStats(false);
+        const chatStatus = getUsageStatus('chats');
+        const imageStatus = getUsageStatus('images');
+
+        if (usageChatsLabel) usageChatsLabel.textContent = `${chatStatus.count} / ${chatStatus.limit}`;
+        if (usageImagesLabel) usageImagesLabel.textContent = `${imageStatus.count} / ${imageStatus.limit}`;
+
+        const chatPercent = chatStatus.limit ? Math.min(100, (chatStatus.count / chatStatus.limit) * 100) : 0;
+        const imagePercent = imageStatus.limit ? Math.min(100, (imageStatus.count / imageStatus.limit) * 100) : 0;
+
+        if (usageChatsBar) {
+            usageChatsBar.style.width = `${chatPercent}%`;
+            usageChatsBar.classList.toggle('at-limit', chatStatus.count >= chatStatus.limit);
+        }
+        if (usageImagesBar) {
+            usageImagesBar.style.width = `${imagePercent}%`;
+            usageImagesBar.classList.toggle('at-limit', imageStatus.count >= imageStatus.limit);
+        }
+
+        if (usageChatsReset) {
+            usageChatsReset.textContent = chatStatus.count
+                ? `Resets in ${formatDuration(chatStatus.remainingMs)}`
+                : 'Full allowance available';
+        }
+        if (usageImagesReset) {
+            usageImagesReset.textContent = imageStatus.count
+                ? `Resets in ${formatDuration(imageStatus.remainingMs)}`
+                : 'Full allowance available';
+        }
+    }
+
+    function showActionCoachmark() {
+        if (!actionCoachmark) return;
+        actionCoachmark.classList.add('visible');
+        if (coachmarkHideTimeout) {
+            clearTimeout(coachmarkHideTimeout);
+        }
+        coachmarkHideTimeout = setTimeout(() => hideActionCoachmark(true), 5000);
+    }
+
+    function hideActionCoachmark(removeNode = false) {
+        if (!actionCoachmark) return;
+        actionCoachmark.classList.remove('visible');
+        if (coachmarkHideTimeout) {
+            clearTimeout(coachmarkHideTimeout);
+            coachmarkHideTimeout = null;
+        }
+        if (removeNode) {
+            setTimeout(() => {
+                actionCoachmark?.remove();
+                actionCoachmark = null;
+            }, 400);
+        }
+    }
+
+    function activateSettingsTab(tabId = 'profile') {
+        if (!settingsTabButtons || !settingsTabPanels) return;
+        settingsTabButtons.forEach(btn => {
+            if (!btn) return;
+            btn.classList.toggle('active', btn.dataset.settingsTab === tabId);
+        });
+        settingsTabPanels.forEach(panel => {
+            if (!panel) return;
+            panel.classList.toggle('active', panel.dataset.settingsPanel === tabId);
+        });
+        if (tabId === 'usage') {
+            updateUsageUI();
+        }
+    }
+
+    function saveMeProfile() {
+        try {
+            if (meProfile && meProfile.imageData) {
+                localStorage.setItem(ME_PROFILE_STORAGE_KEY, JSON.stringify(meProfile));
+            } else {
+                localStorage.removeItem(ME_PROFILE_STORAGE_KEY);
+            }
+        } catch (error) {
+            console.error("Error saving me profile:", error);
+        }
+    }
+
+    function loadMeProfileFromStorage() {
+        try {
+            const stored = localStorage.getItem(ME_PROFILE_STORAGE_KEY);
+            meProfile = stored ? JSON.parse(stored) : null;
+        } catch (error) {
+            console.error("Error loading me profile:", error);
+            meProfile = null;
+        }
+        updateMePopupUI();
+    }
+
+    function activateMeQuickMode(focusInput = true) {
+        meQuickModeActive = true;
+        if (messageInput) {
+            if (!messageInput.dataset.prevPlaceholder) {
+                messageInput.dataset.prevPlaceholder = messageInput.placeholder;
+            }
+            messageInput.placeholder = "describe your remix...";
+            messageInput.classList.add('me-input-highlight');
+            if (focusInput) {
+                setTimeout(() => messageInput.focus(), 0);
+            }
+        }
+        if (meActiveBanner) {
+            meActiveBanner.style.display = 'flex';
+        }
+        showToast("me photo ready. type your remix and hit send.", "info", 2200);
+        updateActionButtonsState();
+    }
+
+    function deactivateMeQuickMode() {
+        meQuickModeActive = false;
+        if (messageInput) {
+            messageInput.classList.remove('me-input-highlight');
+        }
+        if (messageInput && messageInput.dataset.prevPlaceholder) {
+            messageInput.placeholder = messageInput.dataset.prevPlaceholder;
+            delete messageInput.dataset.prevPlaceholder;
+        }
+        if (meActiveBanner) {
+            meActiveBanner.style.display = 'none';
+        }
+        updateActionButtonsState();
+    }
+
+    function updateMePopupUI() {
+        if (!mePopup || !meMediaPreview || !meMediaPlaceholder || !mePhotoPreview || !meRetakeRow || !meRetakeBtn || !meRemoveBtn || !meStartCameraBtn || !meUploadBtn || !meSubtitle) return;
+        const hasPhoto = meProfile && meProfile.imageData;
+        const placeholder = meMediaPlaceholder;
+        const photoImg = mePhotoPreview;
+
+        if (!meIsCapturing) {
+            meCameraStreamEl.style.display = 'none';
+            meCaptureBtn.style.display = 'none';
+        }
+
+        if (hasPhoto) {
+            const dataUrl = `data:${meProfile.mimeType || 'image/png'};base64,${meProfile.imageData}`;
+            photoImg.src = dataUrl;
+            photoImg.style.display = 'block';
+            photoImg.classList.add('has-photo');
+            placeholder.style.display = 'none';
+            meMediaPreview.style.display = 'flex';
+            meMediaPreview.classList.add('clickable');
+            if (meRetakeRow) {
+                meRetakeRow.style.display = 'flex';
+                requestAnimationFrame(() => meRetakeRow.classList.add('visible'));
+            }
+            meRetakeBtn.style.display = 'block';
+            meRemoveBtn.style.display = 'block';
+            meStartCameraBtn.style.display = 'none';
+            meUploadBtn.style.display = 'none';
+            meSubtitle.textContent = "ready when you are. describe what you want graxybot to make.";
+        } else {
+            if (!meIsCapturing) {
+                photoImg.style.display = 'none';
+                photoImg.classList.remove('has-photo');
+                placeholder.style.display = 'block';
+                meMediaPreview.style.display = 'flex';
+                meMediaPreview.classList.remove('clickable');
+                mePromptArea.style.display = 'none';
+                if (meRetakeRow) {
+                    meRetakeRow.classList.remove('visible');
+                    setTimeout(() => {
+                        if (meRetakeRow && !meRetakeRow.classList.contains('visible')) {
+                            meRetakeRow.style.display = 'none';
+                        }
+                    }, 200);
+                }
+                meRetakeBtn.style.display = 'none';
+                meRemoveBtn.style.display = 'none';
+                meStartCameraBtn.style.display = 'block';
+                meUploadBtn.style.display = 'block';
+                meSubtitle.textContent = "snap a quick pic so graxybot can remix you into anything.";
+                mePromptInput.value = '';
+            }
+        }
+    }
+
+    function showMePopup() {
+        if (!mePopup) return;
+        mePopup.classList.add('visible');
+        updateMePopupUI();
+        if (mePromptInput && meProfile && meProfile.imageData) {
+            setTimeout(() => mePromptInput.focus(), 0);
+        }
+    }
+
+    function hideMePopup() {
+        if (!mePopup) return;
+        mePopup.classList.remove('visible');
+        stopMeCamera();
+    }
+
+    async function startMeCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast("camera not supported, try uploading a photo.", "error");
+            return;
+        }
+        try {
+            meStream = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 720 } });
+            meCameraStreamEl.srcObject = meStream;
+            await meCameraStreamEl.play();
+            meIsCapturing = true;
+            meCameraStreamEl.style.display = 'block';
+            meMediaPreview.style.display = 'none';
+            meCaptureBtn.style.display = 'block';
+            meStartCameraBtn.style.display = 'none';
+            meUploadBtn.style.display = 'none';
+            mePromptArea.style.display = 'none';
+            meRetakeBtn.style.display = 'none';
+            if (meRetakeRow) {
+                meRetakeRow.style.display = 'none';
+                meRetakeRow.classList.remove('visible');
+            }
+            if (meRemoveBtn) meRemoveBtn.style.display = 'none';
+            meSubtitle.textContent = "line up your face and tap capture.";
+        } catch (error) {
+            console.error("camera error:", error);
+            showToast("couldn't open camera, try uploading instead.", "error");
+            stopMeCamera();
+        }
+    }
+
+    function stopMeCamera() {
+        if (meStream) {
+            meStream.getTracks().forEach(track => track.stop());
+            meStream = null;
+        }
+        meIsCapturing = false;
+        if (meCameraStreamEl) {
+            meCameraStreamEl.pause();
+            meCameraStreamEl.style.display = 'none';
+            meCameraStreamEl.srcObject = null;
+        }
+        meCaptureBtn.style.display = 'none';
+        meUploadBtn.style.display = 'block';
+        meStartCameraBtn.style.display = meProfile && meProfile.imageData ? 'none' : 'block';
+        updateMePopupUI();
+    }
+
+    function handleMeCapture() {
+        if (!meIsCapturing) return;
+        const video = meCameraStreamEl;
+        if (!video.videoWidth || !video.videoHeight) {
+            showToast("camera still warming up. try again.", "error");
+            return;
+        }
+        const canvas = meCanvas;
+        const ctx = canvas.getContext('2d');
+        const size = Math.min(video.videoWidth, video.videoHeight);
+        const sx = (video.videoWidth - size) / 2;
+        const sy = (video.videoHeight - size) / 2;
+        ctx.drawImage(video, sx, sy, size, size, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+        const base64 = dataUrl.split(',')[1];
+        meProfile = {
+            imageData: base64,
+            mimeType: 'image/png',
+            updatedAt: new Date().toISOString()
+        };
+        saveMeProfile();
+        stopMeCamera();
+        hideMePopup();
+        activateMeQuickMode();
+        showToast("me photo saved! type your remix and hit send.", "success", 2500);
+    }
+
+    function handleMeUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast("unsupported image type.", "error");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result;
+            const base64 = result.split(',')[1];
+            meProfile = {
+                imageData: base64,
+                mimeType: file.type,
+                updatedAt: new Date().toISOString()
+            };
+            saveMeProfile();
+            hideMePopup();
+            activateMeQuickMode();
+            showToast("me photo saved! type your remix and hit send.", "success", 2500);
+            meUploadInput.value = '';
+        };
+        reader.onerror = () => {
+            showToast("couldn't read that photo.", "error");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function handleMeGenerate() {
+        if (!meProfile || !meProfile.imageData) {
+            showToast("grab or upload a photo first.", "error");
+            return;
+        }
+        hideMePopup();
+        activateMeQuickMode();
+        showToast("me mode ready. type your remix!", "info", 2000);
+    }
+
+    function handleMeRemove() {
+        meProfile = null;
+        saveMeProfile();
+        mePromptInput.value = '';
+        updateMePopupUI();
+        deactivateMeQuickMode();
+    }
     
     function isImageGenerationRequest(prompt) {
         const lowercasedPrompt = prompt.toLowerCase();
@@ -1507,35 +2404,140 @@ body {
         return keywords.some(keyword => lowercasedPrompt.includes(keyword));
     }
 
-    async function triggerStableDiffusionGeneration(promptText, isForTheme = false) {
-        if(!isForTheme) showThinkingIndicator(`Generating: "${promptText.substring(0, 50)}..."`);
+    function randomVividColor() {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 60 + Math.random() * 20;
+        const lightness = 45 + Math.random() * 10;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    function buildSwirlGradient() {
+        const colors = [randomVividColor(), randomVividColor(), randomVividColor()];
+        const start = Math.floor(Math.random() * 360);
+        return `conic-gradient(from ${start}deg, ${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`;
+    }
+
+    function truncatePromptText(text, maxLength = 68) {
+        if (!text) return '';
+        const trimmed = text.trim();
+        if (trimmed.length <= maxLength) return trimmed;
+        return `${trimmed.substring(0, maxLength - 1)}…`;
+    }
+
+    function showImageGenerationProgress(promptText = '') {
+        removeThinkingIndicator();
+        const wrapper = displayMessage([], 'bot', false, null, null, 'fa-palette');
+        if (!wrapper) return null;
+        wrapper.classList.add('image-build-message');
+        const messageDiv = wrapper.querySelector('.message');
+        if (messageDiv) {
+            messageDiv.innerHTML = '';
+            const preview = document.createElement('div');
+            preview.className = 'image-build-preview';
+
+            const swatch = document.createElement('div');
+            swatch.className = 'image-build-swatch';
+            swatch.style.background = buildSwirlGradient();
+            swatch.style.animationDelay = `${(Math.random() * 1.4).toFixed(2)}s`;
+            preview.appendChild(swatch);
+
+            const glow = document.createElement('div');
+            glow.className = 'image-build-glow';
+            glow.style.animationDelay = `${(Math.random() * 1.2).toFixed(2)}s`;
+            preview.appendChild(glow);
+
+            messageDiv.appendChild(preview);
+
+            const caption = document.createElement('div');
+            caption.className = 'image-build-caption';
+            const title = document.createElement('strong');
+            title.textContent = 'graxybot is painting…';
+            caption.appendChild(title);
+            const trimmedPrompt = truncatePromptText(promptText);
+            if (trimmedPrompt) {
+                const promptLine = document.createElement('span');
+                promptLine.className = 'caption-prompt';
+                promptLine.textContent = `“${trimmedPrompt}”`;
+                caption.appendChild(promptLine);
+            } else {
+                const promptLine = document.createElement('span');
+                promptLine.className = 'caption-prompt';
+                promptLine.textContent = 'dreaming something vivid for you';
+                caption.appendChild(promptLine);
+            }
+            messageDiv.appendChild(caption);
+        }
+        currentThinkingIndicatorElement = wrapper;
+        return wrapper;
+    }
+
+    async function triggerGeminiImageGeneration(promptText, isForTheme = false, referenceImage = null) {
+        if (!isForTheme) {
+            hideActionCoachmark(true);
+            showImageGenerationProgress(promptText);
+        }
         isRequestInProgress = true; 
         if(!isForTheme) updateActionButtonsState();
 
-        const payload = { prompt: promptText, negative_prompt: "blurry, low quality, deformed", steps: 25 };
+        const payload = { prompt: promptText };
+        if (referenceImage && referenceImage.imageData) {
+            payload.referenceImage = {
+                data: referenceImage.imageData,
+                mimeType: referenceImage.mimeType || 'image/png'
+            };
+        }
         try {
-            const response = await fetch(`${DEFAULT_STABLE_DIFFUSION_API_URL}/sdapi/v1/txt2img`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            const response = await fetch(GEMINI_IMAGE_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
+            const responseText = await response.text();
             if(!isForTheme) removeThinkingIndicator();
-            if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-            const data = await response.json();
-            if (data.images && data.images.length > 0) {
-                const imageSrc = `data:image/png;base64,${data.images[0]}`;
+            let parsedData = null;
+            if (responseText) {
+                try {
+                    parsedData = JSON.parse(responseText);
+                } catch (err) {
+                    parsedData = null;
+                }
+            }
+            if (!response.ok) {
+                let errorMessage = `API error ${response.status}`;
+                if (parsedData?.message) {
+                    errorMessage = parsedData.message;
+                } else if (parsedData?.error) {
+                    errorMessage = typeof parsedData.error === 'string' ? parsedData.error : JSON.stringify(parsedData.error);
+                } else if (responseText) {
+                    errorMessage = responseText;
+                }
+                throw new Error(errorMessage);
+            }
+            const data = parsedData || {};
+            if (data.image || data.imageUrl) {
+                const imageSrc = data.image
+                    ? `data:${data.mimeType || 'image/png'};base64,${data.image}`
+                    : data.imageUrl;
                 if (isForTheme) {
                     return imageSrc;
                 } else {
                     displayMessage([], 'bot', false, null, imageSrc, 'fa-palette', promptText);
                     addMessageToHistory('model', [{text: `Image generated`}], null, imageSrc, promptText);
                 }
-            } else { throw new Error('No images in API response.'); }
+            } else {
+                throw new Error('No image data returned from Gemini.');
+            }
         } catch (error) {
+            removeThinkingIndicator();
             if(!isForTheme) {
-                removeThinkingIndicator();
-                displayMessage([{ text: `Image Generation Error: ${error.message}` }], 'bot', true);
+                const friendlyMessage = error.message?.startsWith('API error')
+                    ? `Image generation failed: ${error.message}`
+                    : error.message || 'Image generation failed.';
+                displayMessage([{ text: friendlyMessage }], 'bot', true);
             }
             throw error;
         } finally {
+            removeThinkingIndicator();
             isRequestInProgress = false; 
             if(!isForTheme) {
                 deactivateImageGenerationMode(); 
@@ -1543,8 +2545,8 @@ body {
             }
         }
     }
-    async function sendMessageToOpenAI(messages, modelName, stream = true) {
-        console.log("sendMessageToOpenAI: Start");
+    async function streamOpenAIResponse(messages, modelName, stream = true) {
+        console.log("sendMessageToOpenAI: Start", modelName);
         const botMessageElement = stream ? displayMessage([], 'bot') : null;
         const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
         
@@ -1568,24 +2570,28 @@ body {
                 if (done) break;
                 const chunk = decoder.decode(value);
                 chunk.split('\n').forEach(line => {
-                    if (line.startsWith('data: ')) {
-                        const data = line.substring(6);
-                        if (data === '[DONE]') return;
-                        try {
-                            const json = JSON.parse(data);
-                            const content = json.choices[0]?.delta?.content || '';
-                            if (content) {
-                                fullResponseText += content;
-                                if (paragraph) {
-                                   processAndAppendText(fullResponseText, paragraph);
-                                   chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
-                                }
-                            }
-                        } catch (e) { 
-                            console.warn("Non-JSON data in stream:", data, e);
+                    if (!line.startsWith('data: ')) {
+                        if (line.trim() !== '') {
+                            console.warn("Unexpected non-data: prefixed line in stream:", line);
                         }
-                    } else {
-                        console.warn("Unexpected non-data: prefixed line in stream:", line);
+                        return;
+                    }
+                    const data = line.substring(6);
+                    if (data === '[DONE]') {
+                        return;
+                    }
+                    try {
+                        const json = JSON.parse(data);
+                        const content = json.choices?.[0]?.delta?.content || '';
+                        if (content) {
+                            fullResponseText += content;
+                            if (paragraph) {
+                               processAndAppendText(fullResponseText, paragraph);
+                               chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
+                            }
+                        }
+                    } catch (e) { 
+                        console.warn("Non-JSON data in stream:", data, e);
                     }
                 });
             }
@@ -1603,18 +2609,104 @@ body {
             throw error;
         }
     }
+
+    async function sendMessageToModel(messages, modelName, stream = true) {
+        if (modelName === GEMINI_CHAT_MODEL) {
+            console.log("sendMessageToGemini: Start", modelName);
+            const botMessageElement = stream ? displayMessage([], 'bot') : null;
+            const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
+            let fullResponseText = "";
+            try {
+                const response = await fetch(GEMINI_CHAT_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Proxy error ${response.status}: ${errorText}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    chunk.split('\n').forEach(line => {
+                        if (!line.startsWith('data: ')) {
+                            if (line.trim() !== '') {
+                                console.warn("Unexpected non-data: prefixed line in stream:", line);
+                            }
+                            return;
+                        }
+                        const data = line.substring(6);
+                        if (data === '[DONE]') {
+                            return;
+                        }
+                        try {
+                            const json = JSON.parse(data);
+                            const content = json.choices?.[0]?.delta?.content || '';
+                            if (content) {
+                                fullResponseText += content;
+                                if (paragraph) {
+                                    processAndAppendText(fullResponseText, paragraph);
+                                    chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Non-JSON data in stream:", data, e);
+                        }
+                    });
+                }
+                if (paragraph) {
+                    processAndAppendText(fullResponseText, paragraph);
+                }
+                console.log("sendMessageToGemini: End (Success)");
+                return fullResponseText;
+            } catch (error) {
+                if (paragraph) {
+                    const errMsg = /429|quota|resource_exhausted/i.test(error?.message || '')
+                        ? "nano banana is taking a breather. try again in a bit."
+                        : `Error: ${error.message}`;
+                    paragraph.textContent = errMsg;
+                    paragraph.parentElement.classList.add('error-message');
+                }
+                console.error("sendMessageToGemini: Error", error);
+                throw error;
+            }
+        }
+
+        return streamOpenAIResponse(messages, modelName, stream);
+    }
     
     async function handleSendMessage() {
-        stopMusicAndTimer(); // Stop music when a message is sent
         console.log("handleSendMessage: Start");
         const messageText = messageInput.value.trim();
         if (!messageText && !selectedImageData) {
             console.log("handleSendMessage: No message or image, returning.");
             return;
         }
-        
+
+        hideActionCoachmark(true);
+
+        const usingMeQuickMode = meQuickModeActive && meProfile && meProfile.imageData;
+        const currentPrompt = messageText;
+        const shouldGenerateImage = usingMeQuickMode || isImageGenerationModeActive || isImageGenerationRequest(currentPrompt);
+        const usageType = shouldGenerateImage ? 'images' : 'chats';
+        const usageAttempt = tryConsumeUsage(usageType);
+
+        if (!usageAttempt.success) {
+            const waitText = usageAttempt.remainingMs
+                ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
+                : '';
+            const label = usageType === 'images' ? 'image' : 'chat';
+            showToast(`${label} limit reached.${waitText}`, 'error', 4000);
+            return;
+        }
+
         setChatActiveState(false);
-        const imageWasAttached = !!selectedImageData;
         
         const userMessageParts = [];
         if (messageText) userMessageParts.push({ text: messageText });
@@ -1622,38 +2714,42 @@ body {
         addMessageToHistory('user', userMessageParts, selectedImagePreviewUrl);
         displayMessage(userMessageParts, 'user', false, selectedImagePreviewUrl);
 
-        const currentPrompt = messageText;
         messageInput.value = '';
         removeSelectedImage();
 
-        const shouldGenerateImage = isImageGenerationModeActive || isImageGenerationRequest(currentPrompt);
-
         if (shouldGenerateImage) {
-            isRequestInProgress = true; updateActionButtonsState();
+            isRequestInProgress = true; 
+            updateActionButtonsState();
             console.log("handleSendMessage: Triggering image generation.");
-            await triggerStableDiffusionGeneration(currentPrompt, false);
-            isRequestInProgress = false; updateActionButtonsState();
+            const promptForImage = usingMeQuickMode
+                ? `Use the provided reference photo of this person and transform them accordingly. ${currentPrompt}`
+                : currentPrompt;
+            await triggerGeminiImageGeneration(promptForImage, false, usingMeQuickMode ? meProfile : null);
+            isRequestInProgress = false; 
+            updateActionButtonsState();
+            if (usingMeQuickMode) {
+                deactivateMeQuickMode();
+            }
 
         } else {
             isRequestInProgress = true; 
             updateActionButtonsState();
-            console.log("handleSendMessage: Sending message to OpenAI.");
+            console.log("handleSendMessage: Sending message to model.");
             
-            const modelToUse = currentPrompt.toLowerCase().includes("code") || imageWasAttached ? GPT_4_1_MODEL : OPENAI_MODEL;
-            
+            const modelToUse = DEFAULT_CHAT_MODEL;
             const systemPrompt = getSystemPrompt(modelToUse);
             const historyForAPI = (chats[currentChatId]?.history || [])
                 .slice(-10).map(msg => ({
                     role: msg.role === 'model' ? 'assistant' : 'user',
                     content: msg.parts.map(p => p.text).join(' ')
                 }));
-            const messagesForOpenAI = [{ role: "system", content: systemPrompt }, ...historyForAPI];
+            const messagesForModel = [{ role: "system", content: systemPrompt }, ...historyForAPI];
             
             try {
-                const aiResponse = await sendMessageToOpenAI(messagesForOpenAI, modelToUse);
+                const aiResponse = await sendMessageToModel(messagesForModel, modelToUse);
                 addMessageToHistory('model', [{ text: aiResponse }]);
             } catch (error) {
-                // Error is already displayed by sendMessageToOpenAI
+                // Error is already displayed by sendMessageToModel
             } finally {
                 isRequestInProgress = false;
                 updateActionButtonsState();
@@ -1715,12 +2811,15 @@ body {
         updateActionButtonsState();
     }
     function handleCreateImageButtonClick() {
+        hideActionCoachmark(true);
         isImageGenerationModeActive = !isImageGenerationModeActive;
         messageInput.placeholder = isImageGenerationModeActive ? "Enter image prompt..." : "Ask me anything...";
         updateActionButtonsState();
         messageInput.focus();
     }
     function showPersonalityModal() {
+        activateSettingsTab('profile');
+        updateUsageUI();
         userNameInput.value = userPersonality.name || '';
         responseStyleInput.value = userPersonality.responseStyle || '';
         personalityOverlay.classList.add('visible');
@@ -1734,6 +2833,32 @@ body {
         savePersonalitySettings();
         showToast("Personality saved!", "success");
         hidePersonalityModal();
+    }
+
+    function showInitialNamePrompt() {
+        if (!initialNameOverlay) return;
+        initialNameOverlay.classList.add('visible');
+        if (initialNameInput) {
+            initialNameInput.value = '';
+            setTimeout(() => initialNameInput.focus(), 0);
+        }
+    }
+    function hideInitialNamePrompt() {
+        if (!initialNameOverlay) return;
+        initialNameOverlay.classList.remove('visible');
+    }
+    function handleInitialNameSave() {
+        if (!initialNameInput) return;
+        const name = initialNameInput.value.trim();
+        if (!name) {
+            showToast("please add a name first.", "error");
+            initialNameInput.focus();
+            return;
+        }
+        userPersonality.name = name;
+        savePersonalitySettings();
+        hideInitialNamePrompt();
+        showToast(`hey ${name}!`, "success");
     }
 
     // --- Theme Functions ---
@@ -1869,7 +2994,7 @@ body {
         generateThemeBtn.disabled = true;
         saveThemeBtn.disabled = true;
         try {
-            const imageSrc = await triggerStableDiffusionGeneration(prompt, true);
+            const imageSrc = await triggerGeminiImageGeneration(prompt, true);
             if(imageSrc){
                 generatedThemeData = imageSrc;
                 themeImagePreview.src = imageSrc;
@@ -1912,6 +3037,15 @@ body {
             return;
         }
 
+        const usageAttempt = tryConsumeUsage('chats');
+        if (!usageAttempt.success) {
+            const waitText = usageAttempt.remainingMs
+                ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
+                : '';
+            showToast(`chat limit reached.${waitText}`, "error", 4000);
+            return;
+        }
+
         displayMessage([{ text: `Tell me a Reddit story about ${promptText}` }], 'user');
         addMessageToHistory('user', [{ text: `Tell me a Reddit story about ${promptText}` }]);
         messageInput.value = '';
@@ -1920,10 +3054,10 @@ body {
         showThinkingIndicator("Writing your story...");
 
         try {
-            const systemPrompt = getSystemPrompt(OPENAI_MODEL, true);
+            const systemPrompt = getSystemPrompt(DEFAULT_CHAT_MODEL, true);
             const messages = [{ role: "system", content: systemPrompt }, { role: "user", content: promptText }];
             
-            const storyText = await sendMessageToOpenAI(messages, OPENAI_MODEL, true); 
+            const storyText = await sendMessageToModel(messages, DEFAULT_CHAT_MODEL, true); 
 
             removeThinkingIndicator();
             addMessageToHistory('model', [{ text: storyText }]);
@@ -2055,227 +3189,16 @@ body {
         storyOutro.classList.remove('visible');
     }
 
-    // --- Tutorial Functions ---
-    let currentTutorialStep = 0;
-    let tutorialSteps = [];
-
-    function startTutorial() {
-        tutorialSteps = [
-            {
-                content: `
-                    <div class="tutorial-step">
-                        <h2>Hi, I'm Graxybot!</h2>
-                        <p>What should I call you?</p>
-                        <input type="text" id="tutorial-name-input" placeholder="Enter your name...">
-                        <button id="tutorial-next-btn">Next</button>
-                    </div>`,
-                action: (next) => {
-                    document.getElementById('tutorial-next-btn').onclick = () => {
-                        const name = document.getElementById('tutorial-name-input').value.trim();
-                        if (name) {
-                            userPersonality.name = name;
-                            savePersonalitySettings();
-                            showToast(`Nice to meet you, ${name}!`, 'success');
-                            next();
-                        } else {
-                            showToast('Please enter a name!', 'error');
-                        }
-                    };
-                }
-            },
-            {
-                target: '#message-input',
-                text: 'Put your questions, ideas, and coding projects here.',
-                position: 'top'
-            },
-            {
-                target: '#themes-button',
-                text: "Personalize your chat background with interactive and generated themes here.",
-                position: 'top'
-            },
-            {
-                target: '#settings-button',
-                text: "Here is where you can set your name and manage your data.",
-                position: 'top'
-            },
-            {
-                content: `
-                    <div class="tutorial-step">
-                        <h2>You're all set!</h2>
-                        <p>Enjoy chatting with Graxybot. You can always restart this tutorial or wipe your data from the settings menu.</p>
-                        <button id="tutorial-finish-btn">Let's Go!</button>
-                    </div>`,
-                action: (next) => {
-                    document.getElementById('tutorial-finish-btn').onclick = next;
-                }
-            },
-        ];
-        currentTutorialStep = 0;
-        tutorialOverlay.classList.add('visible');
-        showTutorialStep();
-    }
-
-    function showTutorialStep() {
-        const previousStep = tutorialSteps[currentTutorialStep - 1];
-        if (previousStep && previousStep.onAfter) {
-            previousStep.onAfter();
-        }
-
-        document.querySelectorAll('.highlighted-element').forEach(el => el.classList.remove('highlighted-element'));
-        tutorialStepContainer.innerHTML = '';
-
-        if (currentTutorialStep >= tutorialSteps.length) {
-            endTutorial();
-            return;
-        }
-
-        const step = tutorialSteps[currentTutorialStep];
-
-        if (step.onBefore) {
-            step.onBefore();
-        }
-
-        if (step.content) {
-            tutorialStepContainer.innerHTML = step.content;
-            if (step.action) step.action(() => {
-                currentTutorialStep++;
-                showTutorialStep();
-            });
-        } else if (step.target) {
-            const targetElement = document.querySelector(step.target);
-            if (!targetElement) {
-                console.warn(`Tutorial target not found: ${step.target}`);
-                currentTutorialStep++;
-                showTutorialStep();
-                return;
-            }
-
-            setTimeout(() => {
-                targetElement.classList.add('highlighted-element');
-            
-                const pointer = document.createElement('div');
-                pointer.className = 'tutorial-pointer';
-                pointer.innerHTML = `<p>${step.text}</p><button>Next</button>`;
-                
-                tutorialStepContainer.appendChild(pointer);
-                
-                const targetRect = targetElement.getBoundingClientRect();
-                const pointerRect = pointer.getBoundingClientRect();
-
-                let topPos = 0;
-                let leftPos = 0;
-
-                if (step.position === 'top') {
-                    pointer.classList.add('arrow-bottom');
-                    topPos = targetRect.top - pointerRect.height - 15;
-                    leftPos = targetRect.left + targetRect.width / 2 - pointerRect.width / 2;
-                }
-
-                if (leftPos < 10) {
-                    leftPos = 10;
-                } else if (leftPos + pointerRect.width > window.innerWidth) {
-                    leftPos = window.innerWidth - pointerRect.width - 10;
-                }
-
-                pointer.style.top = `${topPos}px`;
-                pointer.style.left = `${leftPos}px`;
-
-                pointer.querySelector('button').onclick = () => {
-                    currentTutorialStep++;
-                    showTutorialStep();
-                };
-            }, 50);
-        }
-    }
-
-    function endTutorial() {
-        const lastStep = tutorialSteps[currentTutorialStep - 1];
-        if (lastStep && lastStep.onAfter) {
-            lastStep.onAfter();
-        }
-        tutorialOverlay.classList.remove('visible');
-        document.querySelectorAll('.highlighted-element').forEach(el => el.classList.remove('highlighted-element'));
-        localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
-    }
-
     function handleWipeData() {
         if (confirm("Are you sure you want to delete ALL chats, settings, and stored data? This cannot be undone.")) {
             localStorage.clear();
+            usageStats = { chats: [], images: [] };
+            updateUsageUI();
             
             showToast("All data has been wiped.", "success");
             setTimeout(() => window.location.reload(), 1500);
         }
     }
-
-    // --- Background Music Functions ---
-    function updateMuteButtonUI() {
-        if (isMusicMuted) {
-            muteMusicBtn.innerHTML = `<i class="fas fa-volume-mute"></i> <span>Unmute Music</span>`;
-        } else {
-            muteMusicBtn.innerHTML = `<i class="fas fa-volume-up"></i> <span>Mute Music</span>`;
-        }
-    }
-
-    const fadeOutMusic = () => {
-        if (!backgroundMusic || backgroundMusic.paused) return;
-        clearInterval(audioFadeInterval);
-        audioFadeInterval = setInterval(() => {
-            const newVolume = backgroundMusic.volume - 0.05;
-            if (newVolume > 0) {
-                backgroundMusic.volume = newVolume;
-            } else {
-                backgroundMusic.volume = 0;
-                backgroundMusic.pause();
-                backgroundMusic.currentTime = 10; // Reset to 10s mark
-                clearInterval(audioFadeInterval);
-            }
-        }, 50); // Fade out over 1 second
-    };
-
-    const fadeInMusic = () => {
-        // Only play if not muted, in initial view, and music is paused
-        if (isMusicMuted || !mainContent.classList.contains('initial-view') || !backgroundMusic || !backgroundMusic.paused) {
-            return;
-        }
-        clearInterval(audioFadeInterval);
-        backgroundMusic.volume = 0;
-        backgroundMusic.currentTime = 10; // Start at 10 seconds
-        
-        try {
-            const playPromise = backgroundMusic.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn("Background music autoplay was prevented.", error);
-                });
-            }
-        } catch (e) {
-            console.error("Error playing background music:", e);
-        }
-
-        audioFadeInterval = setInterval(() => {
-            const newVolume = backgroundMusic.volume + 0.05;
-            if (newVolume < 1.0) {
-                backgroundMusic.volume = newVolume;
-            } else {
-                backgroundMusic.volume = 1.0;
-                clearInterval(audioFadeInterval);
-            }
-        }, 50); // Fade in over 1 second
-    };
-
-    const startInactivityTimer = () => {
-        clearTimeout(inactivityTimer);
-        // Only set the timer if we're in the initial view.
-        if (mainContent.classList.contains('initial-view')) {
-            inactivityTimer = setTimeout(fadeInMusic, 5000);
-        }
-    };
-
-    const stopMusicAndTimer = () => {
-        clearTimeout(inactivityTimer);
-        fadeOutMusic();
-    };
-
     // --- Initialization Sequence ---
     document.addEventListener('DOMContentLoaded', () => {
         // Assign DOM elements
@@ -2294,6 +3217,7 @@ body {
         menuToggleBtn = document.getElementById('menu-toggle-btn');
         chatMessagesContainer = document.getElementById('chat-messages');
         messageInput = document.getElementById('message-input');
+        chatInputArea = document.querySelector('.chat-input-area');
         sendButton = document.getElementById('send-button');
         createImageButton = document.getElementById('create-image-button');
         imageUploadButton = document.getElementById('image-upload-button');
@@ -2314,7 +3238,6 @@ body {
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
-        muteMusicBtn = document.getElementById('mute-music-btn');
         
         themesOverlay = document.getElementById('themes-overlay');
         closeThemesModalBtn = document.getElementById('close-themes-modal-btn');
@@ -2328,18 +3251,49 @@ body {
         grassThemeBox = document.getElementById('grass-theme-box');
         cloudsThemeBox = document.getElementById('clouds-theme-box');
 
+        meButton = document.getElementById('me-button');
+        mePopup = document.getElementById('me-popup');
+        mePopupCloseBtn = document.getElementById('me-popup-close-btn');
+        meStartCameraBtn = document.getElementById('me-start-camera-btn');
+        meCaptureBtn = document.getElementById('me-capture-btn');
+        meUploadBtn = document.getElementById('me-upload-btn');
+        meUploadInput = document.getElementById('me-upload-input');
+        meRetakeRow = document.getElementById('me-retake-row');
+        meRetakeBtn = document.getElementById('me-retake-btn');
+        meRemoveBtn = document.getElementById('me-remove-btn');
+        meMediaPreview = document.getElementById('me-media-preview');
+        meMediaPlaceholder = document.getElementById('me-media-placeholder');
+        mePhotoPreview = document.getElementById('me-photo-preview');
+        mePromptArea = document.getElementById('me-prompt-area');
+        mePromptInput = document.getElementById('me-prompt-input');
+        meSubtitle = document.getElementById('me-popup-subtitle');
+        meCameraStreamEl = document.getElementById('me-camera-stream');
+        meCanvas = document.getElementById('me-canvas');
+        meActiveBanner = document.getElementById('me-active-banner');
+        meInlineRetakeBtn = document.getElementById('me-inline-retake-btn');
+        meInlineRemoveBtn = document.getElementById('me-inline-remove-btn');
+
+        settingsTabButtons = Array.from(document.querySelectorAll('[data-settings-tab]'));
+        settingsTabPanels = Array.from(document.querySelectorAll('[data-settings-panel]'));
+        usageChatsBar = document.getElementById('usage-chats-bar');
+        usageChatsLabel = document.getElementById('usage-chats-label');
+        usageChatsReset = document.getElementById('usage-chats-reset');
+        usageImagesBar = document.getElementById('usage-images-bar');
+        usageImagesLabel = document.getElementById('usage-images-label');
+        usageImagesReset = document.getElementById('usage-images-reset');
+
         actionMenuToggle = document.getElementById('action-menu-toggle');
         actionMenu = document.getElementById('action-menu');
+        actionCoachmark = document.getElementById('action-coachmark');
 
-        tutorialOverlay = document.getElementById('tutorial-overlay');
-        tutorialStepContainer = document.getElementById('tutorial-step-container');
         wipeDataBtn = document.getElementById('wipe-data-btn');
-        
-        // Music element
-        backgroundMusic = document.getElementById('background-music');
+        initialNameOverlay = document.getElementById('initial-name-overlay');
+        initialNameInput = document.getElementById('initial-name-input');
+        initialNameSaveBtn = document.getElementById('initial-name-save-btn');
 
         // --- Event Listeners ---
         actionMenuToggle.addEventListener('click', () => {
+            hideActionCoachmark(true);
             actionMenu.classList.toggle('visible');
             actionMenuToggle.classList.toggle('active');
         });
@@ -2348,19 +3302,28 @@ body {
             if (!actionMenu.contains(e.target) && !actionMenuToggle.contains(e.target)) {
                 actionMenu.classList.remove('visible');
                 actionMenuToggle.classList.remove('active');
+                hideActionCoachmark(true);
             }
         });
         
         loadData();
-        updateMuteButtonUI();
+        loadMeProfileFromStorage();
+        loadUsageStats();
+        updateUsageUI();
+        if (usageUpdateInterval) clearInterval(usageUpdateInterval);
+        usageUpdateInterval = setInterval(updateUsageUI, 60000);
+        if (!userPersonality.name) {
+            showInitialNamePrompt();
+        }
         renderChatList();
         setChatActiveState(true); 
         if (currentChatId && chats[currentChatId]?.history.length > 0) {
             loadChat(currentChatId); 
-        } else {
-            startInactivityTimer(); // Start timer only if no active chat is loaded
         }
         updateActionButtonsState();
+        if (actionCoachmark) {
+            setTimeout(() => showActionCoachmark(), 400);
+        }
 
         newChatBtn.addEventListener('click', () => {
             if (currentChatId && chats[currentChatId] && chats[currentChatId].history.length === 0) {
@@ -2375,6 +3338,9 @@ body {
         });
         settingsButton.addEventListener('click', showPersonalityModal);
         themesButton.addEventListener('click', showThemesModal);
+        settingsTabButtons.forEach(btn => {
+            btn.addEventListener('click', () => activateSettingsTab(btn.dataset.settingsTab));
+        });
         
         menuToggleBtn.addEventListener('click', () => {
             sidebar.classList.add('visible');
@@ -2404,7 +3370,6 @@ body {
         messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { e.preventDefault(); handleSendMessage(); } });
         messageInput.addEventListener('input', () => {
             updateActionButtonsState();
-            stopMusicAndTimer(); // Stop music as soon as user starts typing
         });
         createImageButton.addEventListener('click', handleCreateImageButtonClick);
         imageUploadButton.addEventListener('click', () => imageUploadInput.click());
@@ -2414,14 +3379,6 @@ body {
         
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
-        muteMusicBtn.addEventListener('click', () => {
-            isMusicMuted = !isMusicMuted;
-            localStorage.setItem(MUSIC_MUTED_KEY, isMusicMuted);
-            updateMuteButtonUI();
-            if (isMusicMuted) {
-                stopMusicAndTimer();
-            }
-        });
         personalityOverlay.addEventListener('click', (e) => { if(e.target === personalityOverlay) hidePersonalityModal(); });
         
         closeThemesModalBtn.addEventListener('click', hideThemesModal);
@@ -2432,15 +3389,71 @@ body {
         grassThemeBox.addEventListener('click', () => saveAndApplyTheme('grass'));
         cloudsThemeBox.addEventListener('click', () => saveAndApplyTheme('clouds'));
 
+        if (meButton) {
+            meButton.addEventListener('click', () => {
+                if (meProfile && meProfile.imageData) {
+                    if (meQuickModeActive) {
+                        deactivateMeQuickMode();
+                        showMePopup();
+                    } else {
+                        activateMeQuickMode();
+                    }
+                } else {
+                    showMePopup();
+                }
+            });
+        }
+        if (mePopup) mePopup.addEventListener('click', (e) => { if (e.target === mePopup) hideMePopup(); });
+        if (mePopupCloseBtn) mePopupCloseBtn.addEventListener('click', hideMePopup);
+        if (meStartCameraBtn) meStartCameraBtn.addEventListener('click', startMeCamera);
+        if (meCaptureBtn) meCaptureBtn.addEventListener('click', handleMeCapture);
+        if (meUploadBtn) meUploadBtn.addEventListener('click', () => { if (meUploadInput) meUploadInput.click(); });
+        if (meUploadInput) meUploadInput.addEventListener('change', handleMeUpload);
+        if (meMediaPreview) {
+            meMediaPreview.addEventListener('click', () => {
+                if (meProfile && meProfile.imageData) {
+                    activateMeQuickMode();
+                }
+            });
+        }
+        if (meRetakeBtn) meRetakeBtn.addEventListener('click', () => startMeCamera());
+        if (meRemoveBtn) meRemoveBtn.addEventListener('click', handleMeRemove);
+        if (meInlineRetakeBtn) {
+            meInlineRetakeBtn.addEventListener('click', () => {
+                deactivateMeQuickMode();
+                showMePopup();
+                setTimeout(() => startMeCamera(), 120);
+            });
+        }
+        if (meInlineRemoveBtn) {
+            meInlineRemoveBtn.addEventListener('click', () => {
+                handleMeRemove();
+                showToast("me photo removed.", "info", 2000);
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mePopup && mePopup.classList.contains('visible')) {
+                hideMePopup();
+            }
+        });
+
         wipeDataBtn.addEventListener('click', handleWipeData);
+        if (initialNameSaveBtn) {
+            initialNameSaveBtn.addEventListener('click', handleInitialNameSave);
+        }
+        if (initialNameInput) {
+            initialNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleInitialNameSave();
+                }
+            });
+        }
 
         loader.classList.remove('visible');
         messageInput.focus();
         console.log("Graxybot UI Initialized.");
 
-        if (localStorage.getItem(TUTORIAL_COMPLETED_KEY) !== 'true') {
-            startTutorial();
-        }
     });
 </script>
 </body>

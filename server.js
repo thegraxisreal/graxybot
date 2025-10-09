@@ -11,8 +11,8 @@ const port = process.env.PORT || 3000;
 // to only your frontend's domain for enhanced security.
 app.use(cors());
 
-// Enable parsing of JSON request bodies. This is crucial for receiving messages from your frontend.
-app.use(express.json());
+// Enable parsing of JSON request bodies with a larger limit to handle images encoded in base64.
+app.use(express.json({ limit: '15mb' }));
 
 // Serve static files from the current directory. This will serve your graxybot.html
 // and any other static assets (like graxybot.png, CSS, etc.)
@@ -183,6 +183,261 @@ app.post('/elevenlabs-tts', async (req, res) => {
                 });
             }
         } else {
+            res.end();
+        }
+    }
+});
+
+async function evaluateAndOptimizeImagePrompt(prompt, apiKey) {
+    const moderationUrl = 'https://api.openai.com/v1/chat/completions';
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+    };
+
+    const payload = {
+        model: 'gpt-4.1-mini',
+        messages: [
+            {
+                role: 'system',
+                content: `You are Graxybot's safety filter and prompt polisher. Analyse the user's request for disallowed content (nudity, sexual content, minors, gore, hate, violence, self-harm, explicit body descriptions, sexual contexts, fetish content, or any other unsafe or policy-breaking material).
+Return a JSON object with this exact structure:
+{"status":"safe"|"unsafe","optimized_prompt":"string","response":"string"}
+- If the prompt is unsafe, set status to "unsafe", leave optimized_prompt empty, and craft a short, laid-back, all-lowercase, lightly funny response in the "response" field explaining (without repeating the explicit request) why you're refusing, in Graxybot's informal tone. Keep it under 25 words.
+- If the prompt is allowed, set status to "safe", produce an upgraded concise art-generation prompt in optimized_prompt (max 40 words, descriptive, no first-person language), and set response to an empty string.
+Respond with JSON only.`
+            },
+            {
+                role: 'user',
+                content: prompt
+            }
+        ],
+        temperature: 0.3,
+        max_tokens: 300
+    };
+
+    const moderationResponse = await axios.post(moderationUrl, payload, { headers });
+    const content = moderationResponse.data?.choices?.[0]?.message?.content;
+    if (!content) {
+        throw new Error('Invalid moderation response');
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(content);
+    } catch (err) {
+        throw new Error('Failed to parse moderation response JSON');
+    }
+
+    if (!parsed || typeof parsed !== 'object' || !parsed.status) {
+        throw new Error('Moderation response missing required fields');
+    }
+
+    return parsed;
+}
+
+function formatMessagesForGemini(messages = []) {
+    if (!Array.isArray(messages)) return { contents: [] };
+    let systemInstruction = null;
+    const contents = [];
+
+    messages.forEach((msg) => {
+        if (!msg || typeof msg !== 'object' || typeof msg.content !== 'string') {
+            return;
+        }
+        const text = msg.content.trim();
+        if (!text) return;
+
+        if (msg.role === 'system') {
+            if (!systemInstruction) {
+                systemInstruction = { parts: [{ text }] };
+            } else {
+                // append additional system text
+                systemInstruction.parts.push({ text });
+            }
+            return;
+        }
+
+        let role = 'user';
+        if (msg.role === 'assistant' || msg.role === 'model') {
+            role = 'model';
+        }
+
+        contents.push({
+            role,
+            parts: [{ text }]
+        });
+    });
+
+    return { contents, systemInstruction };
+}
+
+// Gemini Image Generation Proxy Endpoint
+app.post('/gemini/image', async (req, res) => {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+        console.error('Error: GEMINI_API_KEY environment variable not set on the server.');
+        return res.status(500).json({ error: 'Server configuration error: Gemini API key is missing.' });
+    }
+
+    const prompt = typeof req.body.prompt === 'string' ? req.body.prompt.trim() : '';
+    if (!prompt) {
+        return res.status(400).json({ error: 'No prompt provided for image generation.' });
+    }
+
+    try {
+        const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+        let finalPrompt = prompt;
+
+        if (OPENAI_API_KEY) {
+            try {
+                const moderationResult = await evaluateAndOptimizeImagePrompt(prompt, OPENAI_API_KEY);
+                if (moderationResult.status !== 'safe') {
+                    const message = moderationResult.response || "whoa, let's keep it PG.";
+                    return res.status(400).json({ error: 'unsafe_prompt', message });
+                }
+                finalPrompt = moderationResult.optimized_prompt || prompt;
+            } catch (modErr) {
+                console.warn('Prompt moderation failed, proceeding with original prompt:', modErr.message);
+            }
+        } else {
+            console.warn('OPENAI_API_KEY not set; skipping prompt moderation for image generation.');
+        }
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${GEMINI_API_KEY}`;
+        const referenceImage = req.body.referenceImage;
+        const parts = [];
+
+        if (referenceImage && referenceImage.data) {
+            parts.push({
+                inlineData: {
+                    data: referenceImage.data,
+                    mimeType: referenceImage.mimeType || 'image/png'
+                }
+            });
+        }
+
+        parts.push({
+            text: finalPrompt
+        });
+
+        const payload = {
+            contents: [
+                {
+                    role: 'user',
+                    parts
+                }
+            ],
+            generationConfig: {
+                responseModalities: ['IMAGE', 'TEXT']
+            }
+        };
+
+        const geminiResponse = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const candidates = geminiResponse.data?.candidates || [];
+        const responseParts = candidates[0]?.content?.parts || [];
+        const inlinePart = responseParts.find((part) => part.inlineData && part.inlineData.data);
+
+        if (!inlinePart) {
+            console.error('Gemini image response missing inline data:', geminiResponse.data);
+            return res.status(502).json({
+                error: 'Gemini did not return image data.',
+                details: geminiResponse.data
+            });
+        }
+
+        const { data, mimeType } = inlinePart.inlineData;
+        return res.json({
+            image: data,
+            mimeType: mimeType || 'image/png'
+        });
+    } catch (error) {
+        const details = error.response?.data || error.message;
+        console.error('Error proxying Gemini image request:', details);
+        const status = error.response?.status || 500;
+        return res.status(status).json({
+            error: 'Failed to communicate with Gemini image API',
+            details
+        });
+    }
+});
+
+// Gemini Chat Proxy Endpoint (nano banana)
+app.post('/gemini/chat', async (req, res) => {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+        console.error('Error: GEMINI_API_KEY environment variable not set on the server.');
+        return res.status(500).json({ error: 'Server configuration error: Gemini API key is missing.' });
+    }
+
+    const { messages } = req.body || {};
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ error: 'No messages provided for Gemini chat.' });
+    }
+
+    const { contents, systemInstruction } = formatMessagesForGemini(messages);
+    if (contents.length === 0) {
+        return res.status(400).json({ error: 'No valid messages to send to Gemini.' });
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const payload = {
+        contents
+    };
+    if (systemInstruction) {
+        payload.systemInstruction = systemInstruction;
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        const geminiResponse = await axios.post(url, payload);
+        const candidates = geminiResponse.data?.candidates || [];
+        const primaryCandidate = candidates[0];
+        const parts = primaryCandidate?.content?.parts || [];
+        const text = parts
+            .map((part) => {
+                if (typeof part.text === 'string') return part.text;
+                return '';
+            })
+            .join('');
+
+        const eventPayload = {
+            choices: [
+                {
+                    delta: {
+                        content: text
+                    }
+                }
+            ]
+        };
+        res.write(`data: ${JSON.stringify(eventPayload)}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+    } catch (error) {
+        const status = error.response?.status || 500;
+        const details = error.response?.data || error.message;
+        console.error('Error proxying Gemini chat request:', details);
+        if (!res.headersSent) {
+            res.status(status).json({
+                error: 'Failed to communicate with Gemini chat API',
+                details
+            });
+        } else {
+            res.write(
+                `data: ${JSON.stringify({
+                    error: 'Failed to communicate with Gemini chat API',
+                    details
+                })}\n\n`
+            );
+            res.write('data: [DONE]\n\n');
             res.end();
         }
     }
