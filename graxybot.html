@@ -12,20 +12,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
 <style>
 :root {
-    --background: #ffffff;
-    --sidebar-bg: #f9fafb;
-    --text-primary: #1a1a1a;
-    --text-secondary: #6b7280;
-    --primary: #4f46e5;
-    --primary-light: #675ef2;
-    --border-color: #e5e7eb;
-    --input-bg: #f3f4f6;
-    --user-message-bg: #eef2ff;
-    --bot-message-bg: #f9fafb;
-    --hover-bg: #f3f4f6;
-    --code-bg: #272822;
-    --code-header-bg: #3a3b35;
-    --toast-bg: #333;
+    --background: #0b1220;
+    --sidebar-bg: #0f1729;
+    --text-primary: #e8eefc;
+    --text-secondary: #9fb0cc;
+    --primary: #4BB5FF;
+    --primary-light: #7cd6ff;
+    --border-color: #1f2a3d;
+    --input-bg: #0f1d31;
+    --user-message-bg: #102846;
+    --bot-message-bg: #0f1729;
+    --hover-bg: #18263d;
+    --code-bg: #0c182b;
+    --code-header-bg: #12243b;
+    --toast-bg: #111827;
     --toast-text: white;
     --modal-bg: rgba(0, 0, 0, 0.5);
     --sidebar-width: 260px;
@@ -33,6 +33,24 @@
     --danger-color-hover: #dc2626;
     --success-color: #22c55e;
     --success-color-hover: #16a34a;
+}
+
+body.theme-light {
+    --background: #ffffff;
+    --sidebar-bg: #f9fafb;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b7280;
+    --primary: #4BB5FF;
+    --primary-light: #7cd6ff;
+    --border-color: #e5e7eb;
+    --input-bg: #f3f4f6;
+    --user-message-bg: #e8f6ff;
+    --bot-message-bg: #f9fafb;
+    --hover-bg: #f3f4f6;
+    --code-bg: #272822;
+    --code-header-bg: #3a3b35;
+    --toast-bg: #333;
+    --toast-text: white;
 }
 
 html, body {
@@ -98,15 +116,34 @@ body {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     background-color: var(--background);
+    color: white;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
-.new-chat-btn:hover { background-color: var(--hover-bg); }
+.new-chat-btn:hover { background-color: var(--hover-bg); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
 .new-chat-btn i { color: var(--primary); }
+.changelog-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 8px;
+}
+.changelog-btn i { color: var(--primary); }
+.changelog-btn:hover { background-color: var(--hover-bg); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
 .chat-list {
     list-style: none;
     padding: 0;
@@ -116,7 +153,7 @@ body {
 }
 .chat-list-item {
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: 10px;
     margin-bottom: 5px;
     cursor: pointer;
     white-space: nowrap;
@@ -145,28 +182,6 @@ body {
     gap: 0.5rem; /* Reduced gap */
 }
 
-.download-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: var(--success-color);
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    border: none;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.download-btn:hover {
-    background: var(--success-color-hover);
-}
-
 .sidebar-footer-controls {
     display: flex;
     gap: 0.5rem;
@@ -182,8 +197,8 @@ body {
     border: 1px solid var(--border-color);
     cursor: pointer;
     color: var(--text-secondary);
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 10px 14px;
+    border-radius: 10px;
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.2s ease;
@@ -211,7 +226,7 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     transition: background-image 0.5s ease-in-out;
-    background-color: #f0f4f8; /* Default background color */
+    background-color: var(--background); /* Default background color */
     overflow: hidden; /* Important for theme containers */
 }
 
@@ -351,8 +366,8 @@ body {
     align-items: center;
     gap: 1rem;
     height: 38px;
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(5px);
+    background-color: rgba(11, 18, 32, 0.75);
+    backdrop-filter: blur(8px);
     position: relative; 
     z-index: 10;
 }
@@ -447,15 +462,15 @@ body {
 
 .chat-input-container {
     padding: 1rem 1.5rem;
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(5px);
+    background-color: rgba(11, 18, 32, 0.85);
+    backdrop-filter: blur(8px);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
     position: relative;
 }
 .chat-input-area {
-    display: flex; align-items: center; background-color: #f9fafb;
+    display: flex; align-items: center; background-color: var(--input-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     position: relative;
     overflow: visible;
@@ -466,16 +481,16 @@ body {
     position: absolute;
     inset: -4px;
     border-radius: inherit;
-    background: linear-gradient(120deg, rgba(139, 92, 246, 0.35), rgba(34, 211, 238, 0.35), rgba(250, 204, 21, 0.35));
+    background: linear-gradient(120deg, rgba(75, 181, 255, 0.35), rgba(34, 211, 238, 0.35), rgba(250, 204, 21, 0.35));
     filter: blur(12px);
     opacity: 0;
     z-index: -1;
     transition: opacity 0.3s ease;
 }
 .chat-input-area.image-mode-active {
-    border-color: rgba(139, 92, 246, 0.55);
+    border-color: rgba(75, 181, 255, 0.55);
     background-color: rgba(249, 250, 251, 0.95);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(139, 92, 246, 0.22);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(75, 181, 255, 0.22);
 }
 .chat-input-area.image-mode-active::after {
     opacity: 1;
@@ -501,8 +516,8 @@ body {
     background-color: transparent; color: var(--text-secondary);
     font-size: 1.1rem; transition: all 0.2s ease;
 }
-.icon-btn:hover { color: var(--primary); background-color: #eef2ff; }
-.icon-btn.active { color: var(--primary); background-color: #e0e7ff; box-shadow: 0 0 0 3px #c7d2fe; }
+.icon-btn:hover { color: var(--primary); background-color: #e8f6ff; }
+.icon-btn.active { color: var(--primary); background-color: #d6efff; box-shadow: 0 0 0 3px #b4e2ff; }
 .icon-btn:disabled { color: #d1d5db; background-color: transparent; cursor: not-allowed; }
 #send-button { background-color: var(--primary); color: white; }
 #send-button:hover { background-color: var(--primary-light); }
@@ -518,7 +533,7 @@ body {
 }
 #action-menu-toggle.active {
     transform: rotate(135deg);
-    background-color: #eef2ff;
+    background-color: #e8f6ff;
     color: var(--primary);
 }
 .action-menu {
@@ -562,7 +577,7 @@ body {
     color: var(--text-primary);
 }
 
-.menu-item-image i { color: #8B5CF6; }
+.menu-item-image i { color: #4BB5FF; }
 .menu-item-me i { color: #FACC15; }
 .menu-item-attach i { color: #3B82F6; }
 .menu-item-reddit i { color: #FF4500; }
@@ -572,7 +587,7 @@ body {
     color: white !important;
 }
 
-.menu-item-image:hover { background-color: #8B5CF6; }
+.menu-item-image:hover { background-color: #4BB5FF; }
 .menu-item-me:hover { background-color: #FACC15; }
 .menu-item-attach:hover { background-color: #3B82F6; }
 .menu-item-reddit:hover { background-color: #FF4500; }
@@ -793,7 +808,7 @@ body {
 .modal-content label { display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
 .modal-content input, .modal-content textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--border-color);
-    border-radius: 8px; background-color: #f9fafb; color: var(--text-primary);
+    border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);
     font-size: 0.95rem; margin-bottom: 20px; box-sizing: border-box;
 }
 .modal-content button {
@@ -858,6 +873,110 @@ body {
 }
 .settings-tab-panel.active {
     display: block;
+}
+.changelog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.changelog-entry {
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bot-message-bg);
+    overflow: hidden;
+}
+.changelog-hero {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+}
+.changelog-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.changelog-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+.changelog-title {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.changelog-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.changelog-entry ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+.settings-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bot-message-bg);
+    margin-top: 10px;
+    gap: 12px;
+}
+.toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.toggle-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.toggle-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+}
+.toggle-switch input { display: none; }
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #1f2a3d;
+    transition: 0.3s;
+    border-radius: 26px;
+    border: 1px solid var(--border-color);
+}
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(75, 181, 255, 0.15);
+}
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(18px);
 }
 .usage-section {
     display: flex;
@@ -1332,6 +1451,16 @@ body {
                     <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
                     <label for="response-style-input">How do you want Graxybot to respond?</label>
                     <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
+                    <div class="settings-toggle-row">
+                        <div class="toggle-text">
+                            <div class="toggle-title">Dark mode</div>
+                            <div class="toggle-subtitle">Keep things moody or switch back to light.</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="theme-mode-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                     <button id="save-personality-btn">Save Settings</button>
                     <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
                 </div>
@@ -1361,6 +1490,33 @@ body {
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Changelog Modal -->
+<div id="changelog-overlay" class="modal-overlay">
+    <div id="changelog-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-changelog-btn">&times;</button>
+        <h2>Changelog</h2>
+        <div class="modal-subtitle">Latest updates to Graxybot.</div>
+        <div class="changelog-list">
+            <article class="changelog-entry">
+                <div class="changelog-hero">
+                    <img src="header.png" alt="Day 1 header">
+                </div>
+                <div class="changelog-meta">
+                    <span class="changelog-title">12 Days of Graxybot — Day 1</span>
+                    <span class="changelog-date">Today</span>
+                </div>
+                <ul>
+                    <li>New dark-default UI with blue accent, rounded surfaces, and a light/dark toggle in Settings.</li>
+                    <li>Switched image generation to OpenAI <code>gpt-image-1-mini</code> (low quality) via the proxy.</li>
+                    <li>Refreshed sidebar (removed desktop download), new chat text color, and cleaned old coachmark.</li>
+                    <li>Dynamic header titles that personalize once you set a name; default stays “Graxybot.”</li>
+                    <li>Chat input uses the themed background; overall backgrounds respect your selected theme.</li>
+                </ul>
+            </article>
         </div>
     </div>
 </div>
@@ -1449,13 +1605,13 @@ body {
             <button class="new-chat-btn" id="new-chat-btn">
                 <i class="fas fa-plus"></i> New Chat
             </button>
+            <button class="changelog-btn" id="changelog-btn">
+                <i class="fas fa-list-alt"></i> Changelog
+            </button>
         </div>
         <ul class="chat-list" id="chat-list">
         </ul>
         <div class="sidebar-footer">
-            <button id="download-desktop-btn" class="download-btn" onclick="window.open('download.html', '_blank')">
-                <i class="fas fa-download"></i> Download Graxybot Desktop
-            </button>
             <div class="sidebar-footer-controls">
                 <button class="sidebar-footer-link" id="themes-button">
                     <i class="fas fa-palette"></i>
@@ -1498,10 +1654,6 @@ body {
                 </div>
                 <div class="input-actions">
                     <div class="action-menu-container">
-                        <div id="action-coachmark" class="floating-coach">
-                            <span class="coach-text">try the world's fastest image generation</span>
-                            <span class="coach-arrow"><i class="fas fa-arrow-up-right"></i></span>
-                        </div>
                         <div class="action-menu" id="action-menu">
                             <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span></button>
                             <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
@@ -1552,6 +1704,7 @@ body {
     const CURRENT_CHAT_ID_KEY = "graxybot_minimalist_current_chat_id_v3";
     const PERSONALITY_STORAGE_KEY = "graxybot_minimalist_personality_v3";
     const THEME_STORAGE_KEY = "graxybot_theme_v1";
+    const THEME_MODE_STORAGE_KEY = "graxybot_theme_mode_v1";
     const ME_PROFILE_STORAGE_KEY = "graxybot_me_profile_v1";
     const USAGE_STORAGE_KEY = "graxybot_usage_stats_v1";
     const CHAT_USAGE_LIMIT = 50;
@@ -1569,6 +1722,7 @@ body {
     let themesButton, themesOverlay, closeThemesModalBtn, themePromptInput, generateThemeBtn;
     let themePreview, themeSpinner, themeImagePreview, saveThemeBtn, removeThemeBtn, themeContainer;
     let grassThemeBox, cloudsThemeBox;
+    let themeModeToggle;
     let meButton, mePopup, mePopupCloseBtn, meStartCameraBtn, meCaptureBtn, meUploadBtn, meUploadInput;
     let meRetakeRow, meRetakeBtn, meRemoveBtn, meMediaPreview, meMediaPlaceholder, mePhotoPreview;
     let mePromptArea, mePromptInput, meSubtitle, meCameraStreamEl, meCanvas;
@@ -1583,6 +1737,7 @@ body {
     let wipeDataBtn;
     let initialNameOverlay, initialNameInput, initialNameSaveBtn;
     let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn;
+    let changelogOverlay, changelogBtn, closeChangelogBtn;
 
     // --- Application State ---
     let chats = {};
@@ -1616,6 +1771,38 @@ body {
             toast.classList.remove('show');
             toast.addEventListener('transitionend', () => toast.remove(), { once: true });
         }, duration);
+    }
+    function applyThemeMode(mode) {
+        const normalized = mode === 'light' ? 'light' : 'dark';
+        if (normalized === 'light') {
+            document.body.classList.add('theme-light');
+        } else {
+            document.body.classList.remove('theme-light');
+        }
+        localStorage.setItem(THEME_MODE_STORAGE_KEY, normalized);
+        if (themeModeToggle) {
+            themeModeToggle.checked = normalized === 'dark';
+        }
+    }
+    function setDynamicChatTitle() {
+        if (!chatTitle) return;
+        const name = (userPersonality?.name || '').trim();
+        if (!name) {
+            chatTitle.textContent = 'Graxybot';
+            return;
+        }
+        const roll = Math.random();
+        let title = 'Graxybot';
+        if (roll < 0.7) {
+            title = 'Graxybot';
+        } else if (roll < 0.8) {
+            title = `how can i help today, ${name}?`;
+        } else if (roll < 0.9) {
+            title = `hey ${name}`;
+        } else {
+            title = `how\'s it going, ${name}?`;
+        }
+        chatTitle.textContent = title;
     }
     function generateChatId() { return `chat_${Date.now()}`; }
     function loadData() {
@@ -2831,6 +3018,7 @@ body {
         userPersonality.name = userNameInput.value.trim() || null;
         userPersonality.responseStyle = responseStyleInput.value.trim() || '';
         savePersonalitySettings();
+        setDynamicChatTitle();
         showToast("Personality saved!", "success");
         hidePersonalityModal();
     }
@@ -2857,6 +3045,7 @@ body {
         }
         userPersonality.name = name;
         savePersonalitySettings();
+        setDynamicChatTitle();
         hideInitialNamePrompt();
         showToast(`hey ${name}!`, "success");
     }
@@ -3233,11 +3422,16 @@ body {
         closeStoryBtn = document.getElementById('close-story-btn');
         downloadStoryBtn = document.getElementById('download-story-btn');
         
+        changelogOverlay = document.getElementById('changelog-overlay');
+        changelogBtn = document.getElementById('changelog-btn');
+        closeChangelogBtn = document.getElementById('close-changelog-btn');
+        
         personalityOverlay = document.getElementById('personality-overlay');
         userNameInput = document.getElementById('user-name-input');
         responseStyleInput = document.getElementById('response-style-input');
         savePersonalityBtn = document.getElementById('save-personality-btn');
         closePersonalityModalBtn = document.getElementById('close-personality-modal-btn');
+        themeModeToggle = document.getElementById('theme-mode-toggle');
         
         themesOverlay = document.getElementById('themes-overlay');
         closeThemesModalBtn = document.getElementById('close-themes-modal-btn');
@@ -3291,6 +3485,10 @@ body {
         initialNameInput = document.getElementById('initial-name-input');
         initialNameSaveBtn = document.getElementById('initial-name-save-btn');
 
+        const storedThemeMode = localStorage.getItem(THEME_MODE_STORAGE_KEY) || 'dark';
+        applyThemeMode(storedThemeMode);
+        setDynamicChatTitle();
+
         // --- Event Listeners ---
         actionMenuToggle.addEventListener('click', () => {
             hideActionCoachmark(true);
@@ -3305,6 +3503,11 @@ body {
                 hideActionCoachmark(true);
             }
         });
+        if (themeModeToggle) {
+            themeModeToggle.addEventListener('change', (e) => {
+                applyThemeMode(e.target.checked ? 'dark' : 'light');
+            });
+        }
         
         loadData();
         loadMeProfileFromStorage();
@@ -3388,6 +3591,9 @@ body {
         removeThemeBtn.addEventListener('click', handleRemoveTheme);
         grassThemeBox.addEventListener('click', () => saveAndApplyTheme('grass'));
         cloudsThemeBox.addEventListener('click', () => saveAndApplyTheme('clouds'));
+        if (changelogBtn) changelogBtn.addEventListener('click', () => changelogOverlay.classList.add('visible'));
+        if (closeChangelogBtn) closeChangelogBtn.addEventListener('click', () => changelogOverlay.classList.remove('visible'));
+        if (changelogOverlay) changelogOverlay.addEventListener('click', (e) => { if (e.target === changelogOverlay) changelogOverlay.classList.remove('visible'); });
 
         if (meButton) {
             meButton.addEventListener('click', () => {

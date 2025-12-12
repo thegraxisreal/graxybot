@@ -6,6 +6,7 @@ const axios = require('axios'); // For making HTTP requests to OpenAI and Eleven
 
 const app = express();
 const port = process.env.PORT || 3000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAVWME_Smi6ibkeo2AEHUuxFdVNj0ayIA0'; // TEMP: hardcoded for testing
 
 // Enable CORS for all origins. In a production environment, you might want to restrict this
 // to only your frontend's domain for enhanced security.
@@ -272,12 +273,12 @@ function formatMessagesForGemini(messages = []) {
     return { contents, systemInstruction };
 }
 
-// Gemini Image Generation Proxy Endpoint
+// Gemini Image Generation Proxy Endpoint (now backed by OpenAI image generation)
 app.post('/gemini/image', async (req, res) => {
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) {
-        console.error('Error: GEMINI_API_KEY environment variable not set on the server.');
-        return res.status(500).json({ error: 'Server configuration error: Gemini API key is missing.' });
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    if (!OPENAI_API_KEY) {
+        console.error('Error: OPENAI_API_KEY environment variable not set on the server.');
+        return res.status(500).json({ error: 'Server configuration error: OpenAI API key is missing.' });
     }
 
     const prompt = typeof req.body.prompt === 'string' ? req.body.prompt.trim() : '';
@@ -286,82 +287,56 @@ app.post('/gemini/image', async (req, res) => {
     }
 
     try {
-        const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
         let finalPrompt = prompt;
 
-        if (OPENAI_API_KEY) {
-            try {
-                const moderationResult = await evaluateAndOptimizeImagePrompt(prompt, OPENAI_API_KEY);
-                if (moderationResult.status !== 'safe') {
-                    const message = moderationResult.response || "whoa, let's keep it PG.";
-                    return res.status(400).json({ error: 'unsafe_prompt', message });
-                }
-                finalPrompt = moderationResult.optimized_prompt || prompt;
-            } catch (modErr) {
-                console.warn('Prompt moderation failed, proceeding with original prompt:', modErr.message);
+        try {
+            const moderationResult = await evaluateAndOptimizeImagePrompt(prompt, OPENAI_API_KEY);
+            if (moderationResult.status !== 'safe') {
+                const message = moderationResult.response || "whoa, let's keep it PG.";
+                return res.status(400).json({ error: 'unsafe_prompt', message });
             }
-        } else {
-            console.warn('OPENAI_API_KEY not set; skipping prompt moderation for image generation.');
+            finalPrompt = moderationResult.optimized_prompt || prompt;
+        } catch (modErr) {
+            console.warn('Prompt moderation failed, proceeding with original prompt:', modErr.message);
         }
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${GEMINI_API_KEY}`;
-        const referenceImage = req.body.referenceImage;
-        const parts = [];
-
-        if (referenceImage && referenceImage.data) {
-            parts.push({
-                inlineData: {
-                    data: referenceImage.data,
-                    mimeType: referenceImage.mimeType || 'image/png'
-                }
-            });
-        }
-
-        parts.push({
-            text: finalPrompt
-        });
 
         const payload = {
-            contents: [
-                {
-                    role: 'user',
-                    parts
-                }
-            ],
-            generationConfig: {
-                responseModalities: ['IMAGE', 'TEXT']
-            }
+            model: 'gpt-image-1-mini',
+            prompt: finalPrompt,
+            size: '1024x1024',
+            quality: 'low' // requested low quality for faster/cheaper previews
         };
 
-        const geminiResponse = await axios.post(url, payload, {
-            headers: {
-                'Content-Type': 'application/json'
+        const openaiResponse = await axios.post(
+            'https://api.openai.com/v1/images/generations',
+            payload,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                }
             }
-        });
+        );
 
-        const candidates = geminiResponse.data?.candidates || [];
-        const responseParts = candidates[0]?.content?.parts || [];
-        const inlinePart = responseParts.find((part) => part.inlineData && part.inlineData.data);
-
-        if (!inlinePart) {
-            console.error('Gemini image response missing inline data:', geminiResponse.data);
+        const imageData = openaiResponse.data?.data?.[0]?.b64_json;
+        if (!imageData) {
+            console.error('OpenAI image response missing b64_json:', openaiResponse.data);
             return res.status(502).json({
-                error: 'Gemini did not return image data.',
-                details: geminiResponse.data
+                error: 'OpenAI did not return image data.',
+                details: openaiResponse.data
             });
         }
 
-        const { data, mimeType } = inlinePart.inlineData;
         return res.json({
-            image: data,
-            mimeType: mimeType || 'image/png'
+            image: imageData,
+            mimeType: 'image/png'
         });
     } catch (error) {
         const details = error.response?.data || error.message;
-        console.error('Error proxying Gemini image request:', details);
+        console.error('Error proxying OpenAI image request:', details);
         const status = error.response?.status || 500;
         return res.status(status).json({
-            error: 'Failed to communicate with Gemini image API',
+            error: 'Failed to communicate with OpenAI image API',
             details
         });
     }
@@ -369,7 +344,6 @@ app.post('/gemini/image', async (req, res) => {
 
 // Gemini Chat Proxy Endpoint (nano banana)
 app.post('/gemini/chat', async (req, res) => {
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
         console.error('Error: GEMINI_API_KEY environment variable not set on the server.');
         return res.status(500).json({ error: 'Server configuration error: Gemini API key is missing.' });
