@@ -7,6 +7,7 @@ const axios = require('axios'); // For making HTTP requests to OpenAI and Eleven
 const app = express();
 const port = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAVWME_Smi6ibkeo2AEHUuxFdVNj0ayIA0'; // TEMP: hardcoded for testing
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Enable CORS for all origins. In a production environment, you might want to restrict this
 // to only your frontend's domain for enhanced security.
@@ -32,7 +33,6 @@ app.get('/', (req, res) => {
 app.post('/openai/chat', async (req, res) => {
   // Get the OpenAI API Key from Render's environment variables.
   // This is secure as it's never exposed in client-side code.
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   // Get the model from the request body, or default to gpt-4.1-mini
   const model = req.body.model || "gpt-5-mini";
 
@@ -108,6 +108,88 @@ app.post('/openai/chat', async (req, res) => {
     } else {
         res.end(); // Close the connection gracefully
     }
+  }
+});
+
+// OpenAI web search endpoint (Responses API + web_search tool)
+app.post('/openai/search', async (req, res) => {
+  if (!OPENAI_API_KEY) {
+    console.error('Error: OPENAI_API_KEY environment variable not set on the server.');
+    return res.status(500).json({ error: 'Server configuration error: OpenAI API key is missing.' });
+  }
+
+  const query = typeof req.body.query === 'string' ? req.body.query.trim() : '';
+  const instructions = typeof req.body.instructions === 'string' ? req.body.instructions.trim() : '';
+  if (!query) {
+    return res.status(400).json({ error: 'No query provided for OpenAI search.' });
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${OPENAI_API_KEY}`
+  };
+
+  const payload = {
+    model: 'gpt-5.1',
+    tools: [{ type: 'web_search' }],
+    input: query
+  };
+  if (instructions) {
+    payload.instructions = instructions;
+  }
+
+  try {
+    const openaiResponse = await axios.post('https://api.openai.com/v1/responses', payload, { headers });
+    const data = openaiResponse.data || {};
+    let text = '';
+
+    const coerceToText = (chunks = []) => {
+      return chunks
+        .map((chunk) => {
+          if (!chunk) return '';
+          if (typeof chunk === 'string') return chunk;
+          if (typeof chunk.text === 'string') return chunk.text;
+          if (Array.isArray(chunk.content)) {
+            return chunk.content.map((part) => part?.text || '').join('');
+          }
+          return '';
+        })
+        .join('\n')
+        .trim();
+    };
+
+    if (Array.isArray(data.output_text) && data.output_text.length) {
+      text = data.output_text.join('\n').trim();
+    }
+    if (!text && typeof data.output_text === 'string') {
+      text = data.output_text.trim();
+    }
+    if (!text && Array.isArray(data.output)) {
+      text = coerceToText(
+        data.output.map((entry) => {
+          if (Array.isArray(entry?.content)) {
+            return entry.content.map((part) => part?.text || '').join('');
+          }
+          return entry?.content?.text || '';
+        })
+      );
+    }
+    if (!text && Array.isArray(data.response)) {
+      text = coerceToText(data.response);
+    }
+
+    return res.json({
+      text: text || '',
+      raw: data
+    });
+  } catch (error) {
+    const status = error.response?.status || 500;
+    const details = error.response?.data || error.message;
+    console.error('Error during OpenAI search request:', details);
+    return res.status(status).json({
+      error: 'Failed to perform OpenAI search request',
+      details
+    });
   }
 });
 

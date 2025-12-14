@@ -503,6 +503,13 @@ body {
 .chat-input-area.image-mode-busy::after {
     opacity: 0;
 }
+.chat-input-area.search-mode-armed {
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+.chat-input-area.search-mode-armed::after {
+    opacity: 0;
+}
 #message-input {
     flex-grow: 1; border: none; outline: none; background: transparent;
     font-size: 1rem; color: var(--text-primary); padding: 10px;
@@ -582,6 +589,7 @@ body {
 .menu-item-attach i { color: #3B82F6; }
 .menu-item-reddit i { color: #FF4500; }
 .menu-item-mic i { color: #EF4444; }
+.menu-item-search i { color: #10B981; }
 
 .menu-item:hover i {
     color: white !important;
@@ -592,9 +600,18 @@ body {
 .menu-item-attach:hover { background-color: #3B82F6; }
 .menu-item-reddit:hover { background-color: #FF4500; }
 .menu-item-mic:hover { background-color: #EF4444; }
+.menu-item-search:hover { background-color: #10B981; }
 
 .menu-item:hover span {
     color: white;
+}
+.menu-item-search.active {
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    background-color: rgba(16, 185, 129, 0.18);
+}
+.menu-item-search.active span,
+.menu-item-search.active i {
+    color: #10B981;
 }
 
 .floating-coach {
@@ -888,17 +905,21 @@ body {
 }
 .changelog-hero {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    max-height: 320px;
     border-radius: 10px;
     overflow: hidden;
     margin-bottom: 12px;
     border: 1px solid var(--border-color);
     background: var(--input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .changelog-hero img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    max-height: 320px;
+    object-fit: contain;
     display: block;
 }
 .changelog-meta {
@@ -922,6 +943,92 @@ body {
     color: var(--text-secondary);
     line-height: 1.6;
 }
+.changelog-modal {
+    max-width: 1100px;
+    width: 96vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 24px;
+}
+.changelog-body {
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-top: 10px;
+}
+.changelog-body::-webkit-scrollbar {
+    width: 8px;
+}
+.changelog-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+}
+.launch-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.launch-popup-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+.launch-popup {
+    width: min(520px, 92vw);
+    background: var(--bot-message-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.35);
+    text-align: center;
+}
+.launch-popup img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+.launch-popup h3 {
+    margin: 6px 0 8px;
+    color: var(--text-primary);
+}
+.launch-popup p {
+    margin: 0 0 16px;
+    color: var(--text-secondary);
+}
+.launch-popup-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.launch-popup button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.launch-popup .primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(75,181,255,0.4);
+}
+.launch-popup .secondary {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+.launch-popup button:hover { transform: translateY(-1px); }
+.launch-popup button:active { transform: translateY(0); }
 .settings-toggle-row {
     display: flex;
     align-items: center;
@@ -1496,11 +1603,26 @@ body {
 
 <!-- Changelog Modal -->
 <div id="changelog-overlay" class="modal-overlay">
-    <div id="changelog-modal-content" class="modal-content">
+    <div id="changelog-modal-content" class="modal-content changelog-modal">
         <button class="close-modal-btn" id="close-changelog-btn">&times;</button>
         <h2>Changelog</h2>
         <div class="modal-subtitle">Latest updates to Graxybot.</div>
+        <div class="changelog-body">
         <div class="changelog-list">
+            <article class="changelog-entry">
+                <div class="changelog-hero">
+                    <img src="header2.png" alt="Day 2 header">
+                </div>
+                <div class="changelog-meta">
+                    <span class="changelog-title">12 Days of Graxybot — Day 2</span>
+                    <span class="changelog-date">Today</span>
+                </div>
+                <ul>
+                    <li>New web search mode toggle in the + menu so you can fetch fresh answers on demand.</li>
+                    <li>Chat now suggests turning on Search when you ask for time-sensitive info (dates, scores, etc.).</li>
+                    <li>Refined search prompt to keep replies simple, source-aware, and grounded in live results.</li>
+                </ul>
+            </article>
             <article class="changelog-entry">
                 <div class="changelog-hero">
                     <img src="header.png" alt="Day 1 header">
@@ -1517,6 +1639,7 @@ body {
                     <li>Chat input uses the themed background; overall backgrounds respect your selected theme.</li>
                 </ul>
             </article>
+        </div>
         </div>
     </div>
 </div>
@@ -1599,6 +1722,17 @@ body {
 </div>
 
 <div class="chat-app" id="chat-app">
+<div id="launch-popup-overlay" class="launch-popup-overlay">
+    <div class="launch-popup">
+        <img src="popup.png" alt="Graxybot update">
+        <h3>Graxybot can now search the web</h3>
+        <p>Toggle Search in the + menu for fresh, accurate answers pulled live.</p>
+        <div class="launch-popup-actions">
+            <button class="primary" id="launch-popup-changelog-btn">Read Changelog</button>
+            <button class="secondary" id="launch-popup-close-btn">Close</button>
+        </div>
+    </div>
+</div>
      <div id="menu-backdrop"></div>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -1659,6 +1793,7 @@ body {
                             <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
                             <button id="reddit-story-button" class="icon-btn menu-item menu-item-reddit" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i><span>Reddit Story</span></button>
                             <button id="mic-button" class="icon-btn menu-item menu-item-mic" title="Voice Mode"><i class="fas fa-microphone"></i><span>Voice Mode</span></button>
+                            <button id="search-mode-button" class="icon-btn menu-item menu-item-search" title="Search the Web"><i class="fas fa-globe"></i><span>Search</span></button>
                         </div>
                         <button id="action-menu-toggle" class="icon-btn" title="More Actions"><i class="fas fa-plus"></i></button>
                     </div>
@@ -1694,6 +1829,7 @@ body {
     const GEMINI_IMAGE_ENDPOINT = window.location.origin + '/gemini/image';
     const OPENAI_CHAT_MODEL = "gpt-4.1-mini";
     const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
+    const OPENAI_SEARCH_ENDPOINT = window.location.origin + '/openai/search';
     const GEMINI_CHAT_ENDPOINT = window.location.origin + '/gemini/chat';
 
     // --- UI & Storage Keys ---
@@ -1709,7 +1845,9 @@ body {
     const USAGE_STORAGE_KEY = "graxybot_usage_stats_v1";
     const CHAT_USAGE_LIMIT = 50;
     const IMAGE_USAGE_LIMIT = 20;
-    const USAGE_WINDOW_MS = 2 * 60 * 60 * 1000; // two hours rolling window
+    const USAGE_WINDOW_MS = 2 * 60 * 60 * 1000; // two hours rolling window (chat/images)
+    const SEARCH_USAGE_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours for search
+    const SEARCH_USAGE_LIMIT = 5;
     const BACKGROUND_VIDEOS = ['vid1.mp4', 'vid2.mp4', 'vid3.mp4'];
 
     // --- DOM Element References ---
@@ -1734,6 +1872,7 @@ body {
     let usageImagesBar, usageImagesLabel, usageImagesReset;
     
     let actionMenuToggle, actionMenu, actionCoachmark;
+    let searchModeButton;
     let wipeDataBtn;
     let initialNameOverlay, initialNameInput, initialNameSaveBtn;
     let redditStoryButton, storyOverlay, storyVideo, storyCaptionsContainer, closeStoryBtn, downloadStoryBtn;
@@ -1755,9 +1894,10 @@ body {
     let meStream = null;
     let meIsCapturing = false;
     let meQuickModeActive = false;
-    let usageStats = { chats: [], images: [] };
+    let usageStats = { chats: [], images: [], searches: [] };
     let usageUpdateInterval = null;
     let coachmarkHideTimeout = null;
+    let isSearchModeQueued = false;
     
     // --- Core Functions ---
     function showToast(message, type = 'info', duration = 3000) {
@@ -1854,6 +1994,9 @@ body {
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
         if (actionMenuToggle) actionMenuToggle.disabled = isBusy;
+        if (searchModeButton) {
+            searchModeButton.disabled = isBusy;
+        }
         if (redditStoryButton) redditStoryButton.disabled = isBusy;
         if (meButton) meButton.disabled = isBusy;
         if (meStartCameraBtn) meStartCameraBtn.disabled = isBusy;
@@ -1870,6 +2013,29 @@ body {
             chatInputArea.classList.toggle('image-mode-active', highlightActive);
             chatInputArea.classList.toggle('image-mode-busy', isImageGenerationModeActive && isBusy);
         }
+        updateSearchModeUI();
+    }
+    function refreshInputPlaceholder() {
+        if (!messageInput || meQuickModeActive) return;
+        if (isImageGenerationModeActive) {
+            messageInput.placeholder = "Enter image prompt...";
+            return;
+        }
+        if (isSearchModeQueued) {
+            messageInput.placeholder = "What should I search for?";
+            return;
+        }
+        messageInput.placeholder = "Ask me anything...";
+    }
+    function updateSearchModeUI() {
+        if (searchModeButton) {
+            searchModeButton.classList.toggle('active', isSearchModeQueued);
+        }
+        if (chatInputArea) {
+            const busy = isRequestInProgress || isListening;
+            chatInputArea.classList.toggle('search-mode-armed', isSearchModeQueued && !busy);
+        }
+        refreshInputPlaceholder();
     }
     function getSystemPrompt(currentModelName, isRedditStory = false) {
         let basePrompt = `You are Graxybot, a helpful AI assistant.\n You are currently running on the ${currentModelName} model.\n Your creator is 'thegraxisreal'.`;
@@ -1888,7 +2054,16 @@ body {
         if(userPersonality.responseStyle){
             basePrompt += `\n Follow these response style instructions: "${userPersonality.responseStyle}"`;
         }
+        basePrompt += `\n If you are about to say you lack real-time or up-to-date information, invite the user to search the web via the + menu in the chat bar.`;
         return basePrompt;
+    }
+    function getSearchSystemPrompt() {
+        return [
+            "You are Graxybot, operating in live web search mode using model gpt-5.1.",
+            "You MUST call the web_search tool before answering every request.",
+            "Ground answers only on what the search returns; do not rely on stale training data or say you lack real-time access.",
+            "Keep responses concise, casual, and in simple plain language with short sentences. If useful, include brief source hints like (nasa.gov)."
+        ].join("\\n");
     }
     function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null) {
        if (!currentChatId) { handleNewChat(false); }
@@ -1907,9 +2082,9 @@ body {
        chats[currentChatId].history.push(messageData);
        saveChats();
     }
-    function showThinkingIndicator(message = 'Thinking...') {
+    function showThinkingIndicator(message = 'Thinking...', iconClass = 'fa-brain') {
         removeThinkingIndicator();
-        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, 'fa-brain', message);
+        currentThinkingIndicatorElement = displayMessage([], 'bot-thinking', false, null, null, iconClass, message);
         if (currentThinkingIndicatorElement) {
             currentThinkingIndicatorElement.classList.add('thinking-indicator');
             const msgDiv = currentThinkingIndicatorElement.querySelector('.message');
@@ -2189,14 +2364,15 @@ body {
                 const parsed = JSON.parse(stored);
                 usageStats = {
                     chats: Array.isArray(parsed?.chats) ? parsed.chats : [],
-                    images: Array.isArray(parsed?.images) ? parsed.images : []
+                    images: Array.isArray(parsed?.images) ? parsed.images : [],
+                    searches: Array.isArray(parsed?.searches) ? parsed.searches : []
                 };
             } else {
-                usageStats = { chats: [], images: [] };
+                usageStats = { chats: [], images: [], searches: [] };
             }
         } catch (error) {
             console.error("Error loading usage stats:", error);
-            usageStats = { chats: [], images: [] };
+            usageStats = { chats: [], images: [], searches: [] };
         }
         pruneUsageStats();
     }
@@ -2211,16 +2387,18 @@ body {
 
     function pruneUsageStats(save = true) {
         const now = Date.now();
-        const windowMs = USAGE_WINDOW_MS;
-        usageStats.chats = (usageStats.chats || []).filter(ts => now - ts < windowMs);
-        usageStats.images = (usageStats.images || []).filter(ts => now - ts < windowMs);
+        const types = ['chats', 'images', 'searches'];
+        types.forEach(type => {
+            const { windowMs } = getUsageConfig(type);
+            usageStats[type] = (usageStats[type] || []).filter(ts => now - ts < windowMs);
+        });
         if (save) saveUsageStats();
     }
 
     function getUsageConfig(type) {
-        return type === 'images'
-            ? { limit: IMAGE_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS }
-            : { limit: CHAT_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS };
+        if (type === 'images') return { limit: IMAGE_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS };
+        if (type === 'searches') return { limit: SEARCH_USAGE_LIMIT, windowMs: SEARCH_USAGE_WINDOW_MS };
+        return { limit: CHAT_USAGE_LIMIT, windowMs: USAGE_WINDOW_MS };
     }
 
     function getUsageStatus(type) {
@@ -2382,9 +2560,9 @@ body {
             messageInput.classList.remove('me-input-highlight');
         }
         if (messageInput && messageInput.dataset.prevPlaceholder) {
-            messageInput.placeholder = messageInput.dataset.prevPlaceholder;
             delete messageInput.dataset.prevPlaceholder;
         }
+        refreshInputPlaceholder();
         if (meActiveBanner) {
             meActiveBanner.style.display = 'none';
         }
@@ -2596,6 +2774,16 @@ body {
         const saturation = 60 + Math.random() * 20;
         const lightness = 45 + Math.random() * 10;
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+    function isLikelyFreshInfoQuery(text = '') {
+        const lower = text.toLowerCase();
+        const keywords = [
+            'today', 'yesterday', 'tonight', 'current', 'latest', 'breaking', 'live',
+            'date', 'time', 'day', 'month', 'year', 'now',
+            'score', 'final score', 'game', 'match', 'weather', 'forecast', 'stock', 'price',
+            'launched', 'released', 'release date', 'earnings', 'who won', 'win', 'loss'
+        ];
+        return keywords.some(k => lower.includes(k));
     }
 
     function buildSwirlGradient() {
@@ -2867,6 +3055,48 @@ body {
 
         return streamOpenAIResponse(messages, modelName, stream);
     }
+
+    async function sendSearchRequest(queryText) {
+        if (!queryText) throw new Error("Search query missing.");
+        const instructions = getSearchSystemPrompt();
+        try {
+            const response = await fetch(OPENAI_SEARCH_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: queryText, instructions })
+            });
+            const rawText = await response.text();
+            let data = {};
+            if (rawText) {
+                try {
+                    data = JSON.parse(rawText);
+                } catch (err) {
+                    data = {};
+                }
+            }
+            if (!response.ok) {
+                const message = data?.error || data?.details || response.statusText || 'Search request failed.';
+                throw new Error(message);
+            }
+            let text = '';
+            if (typeof data?.text === 'string') {
+                text = data.text.trim();
+            } else if (Array.isArray(data?.text)) {
+                text = data.text.join('\n').trim();
+            } else if (Array.isArray(data?.output_text)) {
+                text = data.output_text.join('\n').trim();
+            } else if (Array.isArray(data?.raw?.output_text)) {
+                text = data.raw.output_text.join('\n').trim();
+            }
+            if (!text) {
+                text = 'Search finished but no response text was returned.';
+            }
+            return text;
+        } catch (error) {
+            console.error("sendSearchRequest error:", error);
+            throw error;
+        }
+    }
     
     async function handleSendMessage() {
         console.log("handleSendMessage: Start");
@@ -2879,18 +3109,29 @@ body {
         hideActionCoachmark(true);
 
         const usingMeQuickMode = meQuickModeActive && meProfile && meProfile.imageData;
-        const currentPrompt = messageText;
-        const shouldGenerateImage = usingMeQuickMode || isImageGenerationModeActive || isImageGenerationRequest(currentPrompt);
-        const usageType = shouldGenerateImage ? 'images' : 'chats';
+        let currentPrompt = messageText;
+        let useSearchMode = isSearchModeQueued;
+
+        const shouldGenerateImage = !useSearchMode && (usingMeQuickMode || isImageGenerationModeActive || isImageGenerationRequest(currentPrompt));
+        const usageType = useSearchMode ? 'searches' : shouldGenerateImage ? 'images' : 'chats';
         const usageAttempt = tryConsumeUsage(usageType);
 
         if (!usageAttempt.success) {
-            const waitText = usageAttempt.remainingMs
-                ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
-                : '';
-            const label = usageType === 'images' ? 'image' : 'chat';
-            showToast(`${label} limit reached.${waitText}`, 'error', 4000);
+            if (usageType === 'searches') {
+                showToast("looks like graxybot's under high usage, try asking again later.", 'error', 4000);
+            } else {
+                const waitText = usageAttempt.remainingMs
+                    ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
+                    : '';
+                const label = usageType === 'images' ? 'image' : 'chat';
+                showToast(`${label} limit reached.${waitText}`, 'error', 4000);
+            }
             return;
+        }
+
+        if (useSearchMode) {
+            isSearchModeQueued = false;
+            updateSearchModeUI();
         }
 
         setChatActiveState(false);
@@ -2903,6 +3144,15 @@ body {
 
         messageInput.value = '';
         removeSelectedImage();
+
+        // Suggest manual search for time-sensitive questions
+        if (!useSearchMode && !shouldGenerateImage && isLikelyFreshInfoQuery(currentPrompt)) {
+            const promptMsg = "need fresh info? turn on Search in the + menu, then resend.";
+            displayMessage([{ text: promptMsg }], 'bot', false, null, null, 'fa-globe');
+            addMessageToHistory('model', [{ text: promptMsg }]);
+            updateActionButtonsState();
+            return;
+        }
 
         if (shouldGenerateImage) {
             isRequestInProgress = true; 
@@ -2918,6 +3168,27 @@ body {
                 deactivateMeQuickMode();
             }
 
+        } else if (useSearchMode) {
+            isRequestInProgress = true;
+            updateActionButtonsState();
+            console.log("handleSendMessage: Running web search.");
+            showThinkingIndicator("Searching the web...", 'fa-globe');
+            try {
+                const searchResponse = await sendSearchRequest(currentPrompt);
+                removeThinkingIndicator();
+                displayMessage([{ text: searchResponse }], 'bot', false, null, null, 'fa-globe');
+                addMessageToHistory('model', [{ text: searchResponse }]);
+            } catch (error) {
+                removeThinkingIndicator();
+                const friendly = /limit|quota|rate/i.test(error?.message || '')
+                    ? "search is cooling off. try again soon."
+                    : `Search failed: ${error.message}`;
+                displayMessage([{ text: friendly }], 'bot', true, null, null, 'fa-globe');
+            } finally {
+                isRequestInProgress = false;
+                updateActionButtonsState();
+                console.log("handleSendMessage: End (search).");
+            }
         } else {
             isRequestInProgress = true; 
             updateActionButtonsState();
@@ -2970,7 +3241,7 @@ body {
         speechRecognition.onend = () => { 
             isListening = false;
             updateActionButtonsState(); 
-            messageInput.placeholder = "Ask me anything..."; 
+            refreshInputPlaceholder();
             if(messageInput.value.trim()) {
                 handleSendMessage(); 
             }
@@ -2981,7 +3252,7 @@ body {
             showToast(`Mic error: ${e.error}`, 'error'); 
             isListening = false;
             updateActionButtonsState();
-            messageInput.placeholder = "Ask me anything...";
+            refreshInputPlaceholder();
         };
     }
     function toggleSpeechRecognition() {
@@ -2994,15 +3265,40 @@ body {
     }
     function deactivateImageGenerationMode() {
         isImageGenerationModeActive = false;
-        messageInput.placeholder = "Ask me anything...";
+        refreshInputPlaceholder();
         updateActionButtonsState();
     }
     function handleCreateImageButtonClick() {
         hideActionCoachmark(true);
         isImageGenerationModeActive = !isImageGenerationModeActive;
-        messageInput.placeholder = isImageGenerationModeActive ? "Enter image prompt..." : "Ask me anything...";
+        if (isImageGenerationModeActive && isSearchModeQueued) {
+            isSearchModeQueued = false;
+        }
+        refreshInputPlaceholder();
+        updateSearchModeUI();
         updateActionButtonsState();
         messageInput.focus();
+    }
+    function handleSearchModeToggle() {
+        hideActionCoachmark(true);
+        if (isRequestInProgress) return;
+        isSearchModeQueued = !isSearchModeQueued;
+        if (isSearchModeQueued) {
+            if (isImageGenerationModeActive) {
+                isImageGenerationModeActive = false;
+            }
+            refreshInputPlaceholder();
+            if (meQuickModeActive) {
+                deactivateMeQuickMode();
+            }
+            showToast("next message will search the web.", "info", 2200);
+        } else {
+            showToast("web search off.", "info", 1800);
+        }
+        updateSearchModeUI();
+        updateActionButtonsState();
+        if (actionMenu) actionMenu.classList.remove('visible');
+        if (actionMenuToggle) actionMenuToggle.classList.remove('active');
     }
     function showPersonalityModal() {
         activateSettingsTab('profile');
@@ -3479,6 +3775,10 @@ body {
         actionMenuToggle = document.getElementById('action-menu-toggle');
         actionMenu = document.getElementById('action-menu');
         actionCoachmark = document.getElementById('action-coachmark');
+        searchModeButton = document.getElementById('search-mode-button');
+        const launchPopupOverlay = document.getElementById('launch-popup-overlay');
+        const launchPopupCloseBtn = document.getElementById('launch-popup-close-btn');
+        const launchPopupChangelogBtn = document.getElementById('launch-popup-changelog-btn');
 
         wipeDataBtn = document.getElementById('wipe-data-btn');
         initialNameOverlay = document.getElementById('initial-name-overlay');
@@ -3503,6 +3803,9 @@ body {
                 hideActionCoachmark(true);
             }
         });
+        if (searchModeButton) {
+            searchModeButton.addEventListener('click', handleSearchModeToggle);
+        }
         if (themeModeToggle) {
             themeModeToggle.addEventListener('change', (e) => {
                 applyThemeMode(e.target.checked ? 'dark' : 'light');
@@ -3594,6 +3897,20 @@ body {
         if (changelogBtn) changelogBtn.addEventListener('click', () => changelogOverlay.classList.add('visible'));
         if (closeChangelogBtn) closeChangelogBtn.addEventListener('click', () => changelogOverlay.classList.remove('visible'));
         if (changelogOverlay) changelogOverlay.addEventListener('click', (e) => { if (e.target === changelogOverlay) changelogOverlay.classList.remove('visible'); });
+        if (launchPopupOverlay) {
+            launchPopupOverlay.classList.add('visible');
+        }
+        if (launchPopupCloseBtn) {
+            launchPopupCloseBtn.addEventListener('click', () => {
+                launchPopupOverlay?.classList.remove('visible');
+            });
+        }
+        if (launchPopupChangelogBtn) {
+            launchPopupChangelogBtn.addEventListener('click', () => {
+                launchPopupOverlay?.classList.remove('visible');
+                changelogOverlay?.classList.add('visible');
+            });
+        }
 
         if (meButton) {
             meButton.addEventListener('click', () => {
@@ -3657,6 +3974,7 @@ body {
         }
 
         loader.classList.remove('visible');
+        updateSearchModeUI();
         messageInput.focus();
         console.log("Graxybot UI Initialized.");
 
