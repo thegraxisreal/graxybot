@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy for Graxybot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Faint background animation */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 122, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            opacity: 0.6;
+            transition: background 0.4s ease;
+            z-index: -1;
+        }
+
+        /* Subtle floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(0, 122, 255, 0.15);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #007aff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #007aff;
+            margin: 0;
+        }
+        h2 {
+            color: #007aff;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #e0e0e0;
+            margin-top: 30px;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #007aff;
+        }
+        .contact {
+            background-color: #1e2a38;
+            padding: 15px;
+            border-left: 4px solid #007aff;
+            margin-top: 30px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.9em;
+            color: #888;
+        }
+        a {
+            color: #007aff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        code {
+            background-color: #2d2d2d;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <h1>Privacy Policy for Graxybot</h1>
+        <p><strong>Effective date:</strong> December 17, 2025</p>
+        <p>Graxybot is published by Daman Salerno (“we,” “our,” or “us”). This Privacy Policy explains the personal information the Graxybot iOS app (“App”) collects, how it is used, and the choices available to you. The App is designed for individual users who are at least 13 years old.</p>
+    </header>
+
+    <section>
+        <h2>Summary</h2>
+        <ul>
+            <li>Graxybot collects information needed to facilitate real-time messaging, generate AI responses, and ensure user safety.</li>
+            <li>Your chat messages, usernames, and room details are stored in the cloud (Firebase) to sync across devices and deliver messages to other users.</li>
+            <li>Message snippets may be sent to our AI providers to generate context-aware bot replies.</li>
+            <li>We offer tools for safety, including optional censorship filters, blocking, and reporting mechanisms.</li>
+            <li>You can delete your profile or specific chats at any time; data is removed from active display immediately but may persist briefly in backups.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Information We Collect</h2>
+        <p>The following information is collected when you use Graxybot:</p>
+        <ol>
+            <li><strong>User-Generated Content (UGC).</strong> This includes text messages, conversation history, room names, and any images you choose to upload or generate. This content is processed to deliver messages to other users in real-time and to provide AI-generated responses.</li>
+            <li><strong>Profile Information.</strong> We collect your display name/username and any optional profile details. This information is visible to other users in chat rooms and messaging threads.</li>
+            <li><strong>Usage Counters &amp; Credits.</strong> We maintain counters for message and image generation limits. These are synced to your account to enforce fair use.</li>
+            <li><strong>Generated Images.</strong> Images created through the App’s AI tools are saved to your account and local device.</li>
+            <li><strong>Device &amp; Diagnostic Logs.</strong> Our servers and hosting providers (e.g., Vercel, Firebase) automatically receive standard metadata (IP address, user agent, crash reports) to maintain service security, reliability, and analytics.</li>
+        </ol>
+        <p>Graxybot does <strong>not</strong> request access to your contacts, precise location, or motion data beyond what is required for basic app functionality.</p>
+    </section>
+
+    <section>
+        <h2>How We Use Information</h2>
+        <p>We use the collected information to:</p>
+        <ul>
+            <li>Deliver real-time messages and sync conversation history across your devices.</li>
+            <li>Generate contextual AI responses by analyzing recent message snippets in active conversations.</li>
+            <li>Display your profile identity to other users within chat rooms.</li>
+            <li>Enforce content moderation policies and investigate reports of abuse.</li>
+            <li>Maintain usage limits and improve App performance.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Information Sharing &amp; Third-Party Processors</h2>
+        <p>We share data only as necessary to provide the App’s core features:</p>
+        <ul>
+            <li><strong>Cloud Storage &amp; Database (Firebase/Firestore).</strong> We use Google Firebase to store and sync your messages, user profile, and chat rooms. This allows you to access your history on multiple devices and receive real-time updates.</li>
+            <li><strong>AI Model Providers.</strong> To generate bot responses, specific message snippets and prompts are sent to our secure proxy (<code>https://graxybot-proxy.vercel.app</code>) and forwarded to AI providers (such as OpenAI). These providers process data to generate a reply and are not permitted to use your data for advertising.</li>
+            <li><strong>Infrastructure Services.</strong> Third parties like Vercel (hosting) and Apple (iOS services) process data to keep the App running securely.</li>
+            <li><strong>Legal Compliance.</strong> We may disclose information if required by law or to protect the safety of our users.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Content Moderation &amp; Safety</h2>
+        <p>To ensure a safe environment for all users:</p>
+        <ul>
+            <li><strong>Optional Censorship/Filtering.</strong> The App includes a user-controlled setting to filter profanity or sensitive content. When enabled, messages containing flagged keywords may be blocked or obscured locally on your device.</li>
+            <li><strong>Blocking &amp; Reporting.</strong> You can block other users or report specific messages/profiles for violating our terms. We review these reports and may take action, including banning users or removing content.</li>
+            <li><strong>Automated Moderation.</strong> We may use automated systems to detect and prevent the transmission of illegal or highly abusive content.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Data Storage, Retention, and Deletion</h2>
+        <ul>
+            <li><strong>Cloud Storage.</strong> Your messages, profile, and room data are stored securely in the cloud (Firebase). This data persists until you choose to delete it.</li>
+            <li><strong>User Deletion Controls.</strong> You can delete specific chat messages, leave rooms, or delete your entire account through the App settings.
+                <ul>
+                    <li><strong>Account Deletion:</strong> Removing your account permanently deletes your profile and private data from our active databases.</li>
+                    <li><strong>Chat Deletion:</strong> Deleting a chat removes it from your view. Note that in group settings, messages you sent may still be visible to other participants unless specific "unsend" features are used.</li>
+                </ul>
+            </li>
+            <li><strong>Backups &amp; Logs.</strong> While data is removed from our active systems immediately upon deletion, it may persist in secure encrypted backups or server logs for a limited period (typically up to 90 days) for disaster recovery and security auditing purposes.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Data Security</h2>
+        <p>We implement robust security measures, including encryption in transit and at rest for cloud data. However, no internet transmission is 100% secure. You use the App and its messaging features at your own risk.</p>
+    </section>
+
+    <section>
+        <h2>Your Choices</h2>
+        <ul>
+            <li><strong>Manage Profile:</strong> You can update your display name or profile details at any time.</li>
+            <li><strong>Toggle AI Features:</strong> You can choose whether to interact with AI bots or use the App solely for user-to-user messaging.</li>
+            <li><strong>Opt-out:</strong> You can uninstall the App to stop all local data collection. To remove cloud data, please use the "Delete Account" feature before uninstalling.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>International Users</h2>
+        <p>Graxybot is operated from the United States. By using the App, you consent to the transfer and processing of your data in the U.S. and other jurisdictions where our cloud providers (Google/Firebase, Vercel) operate.</p>
+    </section>
+
+    <section>
+        <h2>Changes to This Policy</h2>
+        <p>We may update this Privacy Policy to reflect changes in our features or legal obligations. The “Effective date” at the top will be updated accordingly. Continued use of the App signifies acceptance of the revised policy.</p>
+    </section>
+
+    <section class="contact">
+        <h2>Contact</h2>
+        <p>If you have questions about this Privacy Policy, data safety, or need to report a privacy concern, please contact us at <a href="mailto:thegraxisreal@gmail.com">thegraxisreal@gmail.com</a>.</p>
+    </section>
+
+    <footer>
+        <p>© 2025 Graxybot. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Mouse-following subtle radial gradient
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 100 + '%';
+            const y = (e.clientY / window.innerHeight) * 100 + '%';
+            document.body.style.setProperty('--mouse-x', x);
+            document.body.style.setProperty('--mouse-y', y);
+        });
+
+        // Generate floating particles
+        const particlesContainer = document.getElementById('particles');
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            
+            const size = Math.random() * 4 + 2 + 'px';
+            const left = Math.random() * 100 + '%';
+            const duration = Math.random() * 20 + 20 + 's';
+            const delay = Math.random() * 10 + 's';
+            const offset = (Math.random() - 0.5) * 200 + 'px'; // horizontal drift
+            
+            particle.style.width = size;
+            particle.style.height = size;
+            particle.style.left = left;
+            particle.style.animationDuration = duration;
+            particle.style.animationDelay = delay;
+            particle.style.setProperty('--drift', offset);
+            
+            // Custom drift in animation
+            particle.style.animation = `float ${duration} linear infinite ${delay}`;
+            
+            particlesContainer.appendChild(particle);
+            
+            // Remove after animation to prevent buildup
+            setTimeout(() => {
+                particle.remove();
+            }, (parseFloat(duration) + parseFloat(delay)) * 1000);
+        }
+
+        // Create initial particles
+        for (let i = 0; i < 15; i++) {
+            createParticle();
+        }
+
+        // Continuously add new particles
+        setInterval(createParticle, 3000);
+    </script>
+</body>
+</html>
