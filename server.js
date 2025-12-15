@@ -6,8 +6,8 @@ const axios = require('axios'); // For making HTTP requests to OpenAI and Eleven
 
 const app = express();
 const port = process.env.PORT || 3000;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAVWME_Smi6ibkeo2AEHUuxFdVNj0ayIA0'; // TEMP: hardcoded for testing
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Enable CORS for all origins. In a production environment, you might want to restrict this
 // to only your frontend's domain for enhanced security.
@@ -54,7 +54,8 @@ app.post('/openai/chat', async (req, res) => {
     // Prepare headers for the request to the actual OpenAI API
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}` // Use the securely accessed API key
+      'Authorization': `Bearer ${OPENAI_API_KEY}`, // Use the securely accessed API key
+      'Accept-Encoding': 'identity' // Disable compression to prevent Brotli errors
     };
 
     // Prepare the payload for the OpenAI API

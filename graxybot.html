@@ -379,7 +379,7 @@ body {
     padding: 0;
     font-weight: 700;
     color: var(--primary);
-    z-index: 10;
+    z-index: 0; /* Keep title in the back */
     top: 1rem;
     left: 1.5rem; /* Adjusted for mobile */
     font-size: 1.2rem;
@@ -460,13 +460,20 @@ body {
 .code-block-buttons button { background-color: #4a4b45; border: none; color: #f8f8f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; display: inline-flex; align-items: center; gap: 5px; }
 .code-block-container pre[class*="language-"] { background: var(--code-bg) !important; margin: 0 !important; padding: 15px !important; border-radius: 0 0 8px 8px !important; border: none !important; font-size: 0.9rem; max-height: 400px; overflow: auto; }
 
+.chat-messages, .chat-input-container {
+    position: relative;
+    z-index: 1;
+}
+
 .chat-input-container {
     padding: 1rem 1.5rem;
     background-color: rgba(11, 18, 32, 0.85);
     backdrop-filter: blur(8px);
     border-top: 1px solid var(--border-color); flex-shrink: 0;
     position: relative;
+    z-index: 50; /* Ensure input UI is on top of everything else */
 }
+
 .chat-input-area {
     display: flex; align-items: center; background-color: var(--input-bg);
     border: 1px solid var(--border-color);
@@ -492,9 +499,19 @@ body {
     background-color: rgba(249, 250, 251, 0.95);
     box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(75, 181, 255, 0.22);
 }
-.chat-input-area.image-mode-active::after {
+.chat-input-area.web-design-mode-active {
+    border-color: rgba(255, 193, 7, 0.55); /* Yellow border */
+    background-color: var(--input-bg); /* Keep original input background for theme consistency */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 0 0 2px rgba(255, 193, 7, 0.22); /* Yellow box shadow */
+}
+.chat-input-area.image-mode-active::after,
+.chat-input-area.web-design-mode-active::after {
     opacity: 1;
     animation: imagePromptAura 3.5s ease-in-out infinite;
+}
+.chat-input-area.web-design-mode-active::after {
+    /* Override with a pure yellow gradient for Web Design mode */
+    background: linear-gradient(120deg, rgba(255, 193, 7, 0.35), rgba(255, 223, 0, 0.35), rgba(255, 193, 7, 0.35));
 }
 .chat-input-area.image-mode-busy {
     border-color: rgba(148, 163, 184, 0.6);
@@ -535,6 +552,11 @@ body {
     display: flex;
     align-items: center;
 }
+.agent-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
 #action-menu-toggle {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -542,6 +564,18 @@ body {
     transform: rotate(135deg);
     background-color: #e8f6ff;
     color: var(--primary);
+}
+#agent-menu-toggle {
+    transition: background-color 0.2s ease, color 0.2s ease;
+    width: auto; padding: 0 10px; gap: 6px;
+}
+#agent-menu-toggle.active {
+    background-color: #fffbeb; /* Light yellow bg */
+    color: #FFC107;
+}
+#agent-menu-toggle span {
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 .action-menu {
     position: absolute;
@@ -560,7 +594,7 @@ body {
     transform: translateY(10px);
     visibility: hidden;
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-    z-index: 10;
+    z-index: 100; /* Increased z-index */
 }
 .action-menu.visible {
     opacity: 1;
@@ -590,6 +624,7 @@ body {
 .menu-item-reddit i { color: #FF4500; }
 .menu-item-mic i { color: #EF4444; }
 .menu-item-search i { color: #10B981; }
+.menu-item-agent i { color: #FFC107; } /* Yellow for agent */
 
 .menu-item:hover i {
     color: white !important;
@@ -601,6 +636,7 @@ body {
 .menu-item-reddit:hover { background-color: #FF4500; }
 .menu-item-mic:hover { background-color: #EF4444; }
 .menu-item-search:hover { background-color: #10B981; }
+.menu-item-agent:hover { background-color: #FFC107; } /* Yellow for agent hover */
 
 .menu-item:hover span {
     color: white;
@@ -609,9 +645,13 @@ body {
     border: 1px solid rgba(16, 185, 129, 0.45);
     background-color: rgba(16, 185, 129, 0.18);
 }
-.menu-item-search.active span,
-.menu-item-search.active i {
-    color: #10B981;
+.menu-item-web-design.active {
+    border: 1px solid rgba(255, 193, 7, 0.45); /* Yellow border */
+    background-color: rgba(255, 193, 7, 0.18); /* Yellow background */
+}
+.menu-item-web-design.active span,
+.menu-item-web-design.active i {
+    color: #FFC107; /* Yellow for active icon/text */
 }
 
 .floating-coach {
@@ -778,6 +818,61 @@ body {
     border-color: rgba(250, 204, 21, 0.8) !important;
     box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35) !important;
     background: #fffdf3 !important;
+}
+
+.web-design-mode-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+#web-design-mode-toggle {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    width: auto; padding: 0 10px; gap: 6px;
+    background-color: var(--input-bg); /* Use theme variable for default background */
+    color: var(--text-secondary); /* Use theme variable for default text color */
+    border: 1px solid var(--border-color); /* Use theme variable for default border */
+}
+#web-design-mode-toggle:hover {
+    background-color: var(--hover-bg); /* Use theme variable for hover background */
+    color: var(--text-primary); /* Use theme variable for hover text color */
+}
+
+/* Style for when a mode is actually selected (always, as it shows "Pro" or "Simple") */
+#web-design-mode-toggle.web-design-mode-selected {
+    background-color: rgba(255, 193, 7, 0.15); /* Yellow tint */
+    color: #FFC107; /* Yellow text */
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+#web-design-mode-toggle.web-design-mode-selected:hover {
+    background-color: rgba(255, 193, 7, 0.25);
+}
+
+#web-design-mode-toggle span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Ensure menu items in the Web Design mode dropdown are readable */
+.web-design-mode-container .menu-item {
+    color: var(--text-primary);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.2s ease;
+}
+.web-design-mode-container .menu-item:hover {
+    background-color: rgba(255, 193, 7, 0.15); /* Yellow hover */
+    color: #FFC107;
+}
+.web-design-mode-container .menu-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+.web-design-mode-container .menu-item:hover i {
+    color: #FFC107 !important;
 }
 
 .loader-overlay {
@@ -1787,6 +1882,20 @@ body {
                     </div>
                 </div>
                 <div class="input-actions">
+                    <div class="agent-menu-container">
+                        <div class="action-menu" id="agent-menu">
+                            <button id="web-design-agent-button" class="icon-btn menu-item menu-item-web-design" title="Web Design Agent"><i class="fas fa-palette"></i><span>Web Design</span></button>
+                            <button id="deltamath-agent-button" class="icon-btn menu-item" title="Deltamath Agent (Beta)" disabled><i class="fas fa-calculator"></i><span>Deltamath (Beta)</span></button>
+                        </div>
+                        <button id="agent-menu-toggle" class="icon-btn" title="Agents"><i class="fas fa-robot"></i><span>Agents</span></button>
+                    </div>
+                    <div class="web-design-mode-container" id="web-design-mode-container" style="display: none;">
+                        <div class="action-menu" id="web-design-mode-menu">
+                            <button class="menu-item" id="mode-simple-btn"><i class="fas fa-bolt"></i><span>Simple</span></button>
+                            <button class="menu-item" id="mode-pro-btn"><i class="fas fa-star"></i><span>Pro</span></button>
+                        </div>
+                        <button id="web-design-mode-toggle" class="icon-btn" title="Web Design Mode"><span>Pro</span></button>
+                    </div>
                     <div class="action-menu-container">
                         <div class="action-menu" id="action-menu">
                             <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span></button>
@@ -1865,6 +1974,8 @@ body {
     let meRetakeRow, meRetakeBtn, meRemoveBtn, meMediaPreview, meMediaPlaceholder, mePhotoPreview;
     let mePromptArea, mePromptInput, meSubtitle, meCameraStreamEl, meCanvas;
     let meActiveBanner, meInlineRetakeBtn, meInlineRemoveBtn;
+    let webDesignModeContainer, webDesignModeToggle, webDesignModeMenu, modeSimpleBtn, modeProBtn;
+    let currentWebDesignMode = 'simple';
     
     let settingsTabButtons = [];
     let settingsTabPanels = [];
@@ -1872,6 +1983,7 @@ body {
     let usageImagesBar, usageImagesLabel, usageImagesReset;
     
     let actionMenuToggle, actionMenu, actionCoachmark;
+    let agentMenuToggle, agentMenu, webDesignAgentButton;
     let searchModeButton;
     let wipeDataBtn;
     let initialNameOverlay, initialNameInput, initialNameSaveBtn;
@@ -1883,6 +1995,7 @@ body {
     let currentChatId = null;
     let isRequestInProgress = false;
     let isImageGenerationModeActive = false;
+    let isWebDesignModeActive = false;
     let currentThinkingIndicatorElement = null;
     let selectedImageData = null, selectedImageMimeType = null, selectedImagePreviewUrl = null;
     let userPersonality = { name: null, responseStyle: null };
@@ -1994,6 +2107,8 @@ body {
         createImageButton.disabled = isBusy;
         createImageButton.classList.toggle('active', isImageGenerationModeActive);
         if (actionMenuToggle) actionMenuToggle.disabled = isBusy;
+        if (agentMenuToggle) agentMenuToggle.disabled = isBusy;
+        if (webDesignAgentButton) webDesignAgentButton.disabled = isBusy;
         if (searchModeButton) {
             searchModeButton.disabled = isBusy;
         }
@@ -2006,12 +2121,18 @@ body {
         if (meRemoveBtn) meRemoveBtn.disabled = isBusy;
         if (meInlineRetakeBtn) meInlineRetakeBtn.disabled = isBusy;
         if (meInlineRemoveBtn) meInlineRemoveBtn.disabled = isBusy;
+        if (webDesignAgentButton) {
+            webDesignAgentButton.disabled = isBusy;
+            webDesignAgentButton.classList.toggle('active', isWebDesignModeActive);
+        }
         settingsButton.disabled = isBusy;
         themesButton.disabled = isBusy;
         if (chatInputArea) {
-            const highlightActive = isImageGenerationModeActive && !isBusy;
-            chatInputArea.classList.toggle('image-mode-active', highlightActive);
-            chatInputArea.classList.toggle('image-mode-busy', isImageGenerationModeActive && isBusy);
+            const highlightImageActive = isImageGenerationModeActive && !isBusy;
+            const highlightWebActive = isWebDesignModeActive && !isBusy;
+            chatInputArea.classList.toggle('image-mode-active', highlightImageActive);
+            chatInputArea.classList.toggle('web-design-mode-active', highlightWebActive);
+            chatInputArea.classList.toggle('image-mode-busy', (isImageGenerationModeActive || isWebDesignModeActive) && isBusy);
         }
         updateSearchModeUI();
     }
@@ -2019,6 +2140,10 @@ body {
         if (!messageInput || meQuickModeActive) return;
         if (isImageGenerationModeActive) {
             messageInput.placeholder = "Enter image prompt...";
+            return;
+        }
+        if (isWebDesignModeActive) {
+            messageInput.placeholder = "Describe the website you want...";
             return;
         }
         if (isSearchModeQueued) {
@@ -2065,7 +2190,67 @@ body {
             "Keep responses concise, casual, and in simple plain language with short sentences. If useful, include brief source hints like (nasa.gov)."
         ].join("\\n");
     }
-    function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null) {
+
+    function getWebDesignSystemPrompt(mode = 'pro') {
+        const styles = [
+            "Minimalism (lots of whitespace, clean sans-serif fonts, limited color palette)",
+            "Neo-Brutalism (high contrast, bold borders, harsh shadows, monospaced fonts, vibrant clashy colors)",
+            "Glassmorphism (translucent frosted glass effects, vivid background blobs, light borders)",
+            "Retro 90s/Y2K (pixel fonts, neon green/pink, terminal aesthetic, glitch effects)",
+            "Skeuomorphism (realistic textures, depths, shadows, physical-feeling elements)",
+            "Typographic/Editorial (massive text, focus on layout and font pairing, magazine style)",
+            "Dark Mode Cyberpunk (neon glows, dark backgrounds, futuristic tech feel)",
+            "Paper/Collage (torn paper edges, grainy textures, hand-drawn elements)",
+            "Bauhaus (geometric shapes, primary colors, diagonal layouts)",
+            "Soft UI / Neumorphism (soft shadows, elements extruded from background, rounded corners)"
+        ];
+        
+        const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
+
+        const lengthConstraint = mode === 'simple' 
+            ? "Keep code concise and under 300 lines (approx 7k tokens) for speed."
+            : "Keep code clean and strictly under 10,000 tokens (approx. 400-500 lines of high-quality code).";
+
+        return `You are the "Visionary Web Design Agent," a world-class UI/UX developer famous on Awwwards and Dribbble for creating visually stunning, high-impact single-page websites.
+
+Your goal is to take a user's concept and translate it into a single, self-contained HTML5 file. You must strictly adhere to the following directives:
+
+### 1. MANDATORY VISUAL STYLE
+**You MUST use the following design aesthetic for this specific request:**
+👉 **${selectedStyle}** 👈
+
+Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it colorful. If it says minimal, make it minimal.
+
+### 2. VISUALS FIRST, TEXT LAST
+* **The Anti-Essay Rule:** You are allergic to long text. Never generate paragraphs longer than 2 sentences.
+* **Visual Hierarchy:** Use text primarily as a design element (massive headlines, typographic textures).
+* **Content:** Use punchy, marketing-style copy (e.g., "Taste the Future," "Create," "Bold Moves").
+* **Layout:** Prioritize generous whitespace (padding/margins). If the page feels crowded, delete text.
+* **Imagery:** Use high-quality placeholder images (e.g., unsplash source URLs) heavily.
+
+### 3. TECHNICAL CONSTRAINTS
+* **Single File:** Output valid HTML5 with embedded CSS (\`<style>\`) and JS (\`<script>\`).
+* **No External Frameworks:** Do not use Bootstrap, Tailwind, or jQuery. Write pure, efficient vanilla CSS and JS.
+* **Assets:** You may import Google Fonts and FontAwesome (via CDN).
+* **Efficiency:** ${lengthConstraint} Use CSS Grid and Flexbox efficiently.
+* **Micro-interactions:** You must include hover states, smooth transitions, and at least one creative interaction (e.g., a reveal on scroll or a dynamic cursor).
+
+### 4. OUTPUT FORMAT
+* Do not speak to the user.
+* Do not explain the code.
+* Do not explicitly state which aesthetic you chose.
+* Output ONLY the single Markdown code block containing the HTML code.
+
+### 5. DESIGN EXECUTION
+* If the style is **Neo-Brutalism**: Use high contrast, heavy strokes, stark shadows, and monospaced fonts.
+* If the style is **Glassmorphism**: Use backdrop-filters, transparency, and soft gradients.
+* If the style is **Minimalism**: Use extreme whitespace and simple sans-serif typography.
+* (Apply similar specific design logic to whichever style you select).
+
+**INPUT:** A user idea.
+**OUTPUT:** A single HTML file representing a high-end, Dribbble-quality interpretation of that idea.`;
+    }
+    function addMessageToHistory(role, contentParts, imagePreview = null, generatedMediaSrc = null, mediaPrompt = null, extraData = null) {
        if (!currentChatId) { handleNewChat(false); }
        if (!chats[currentChatId]) return;
        if (role === 'user' && chats[currentChatId].history.length === 0) {
@@ -2078,6 +2263,9 @@ body {
        if (generatedMediaSrc) {
            messageData.generatedMediaSrc = generatedMediaSrc;
            messageData.mediaPrompt = mediaPrompt;
+       }
+       if (extraData) {
+           messageData.extraData = extraData;
        }
        chats[currentChatId].history.push(messageData);
        saveChats();
@@ -2097,7 +2285,7 @@ body {
             currentThinkingIndicatorElement = null;
         }
     }
-    function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null) {
+    function displayMessage(contentParts, sender, isError = false, imagePreview = null, generatedMediaSrc = null, customIconClass = null, mediaPrompt = null, extraData = null) {
         const usingMeQuickMode = meQuickModeActive && meProfile && meProfile.imageData;
 
         setChatActiveState(false);
@@ -2128,20 +2316,72 @@ body {
         const paragraph = document.createElement('p');
         paragraph.dataset.streamTarget = "true";
         let textContent = Array.isArray(contentParts) ? (contentParts.find(p => p.text)?.text || '') : '';
-        if (generatedMediaSrc) {
-            const media = document.createElement('img');
-            media.src = generatedMediaSrc; media.className = 'generated-image';
-            messageDiv.appendChild(media);
-            if (mediaPrompt) paragraph.innerHTML = `<em>Prompt: ${mediaPrompt}</em>`;
-        } else if (imagePreview) {
-            const img = document.createElement('img');
-            img.src = imagePreview; img.className = 'sent-image';
-            messageDiv.appendChild(img);
+        
+        if (extraData && extraData.type === 'web_design' && extraData.html) {
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.alignItems = 'flex-start';
+            container.style.gap = '8px';
+
+            const viewButton = document.createElement('button');
+            // Style similar to me-active-controls buttons
+            viewButton.style.background = 'transparent';
+            viewButton.style.border = '1px solid rgba(255, 193, 7, 0.5)';
+            viewButton.style.color = 'var(--text-primary)';
+            viewButton.style.padding = '8px 16px';
+            viewButton.style.borderRadius = '8px';
+            viewButton.style.fontWeight = '600';
+            viewButton.style.cursor = 'pointer';
+            viewButton.style.display = 'inline-flex';
+            viewButton.style.alignItems = 'center';
+            viewButton.style.gap = '8px';
+            viewButton.style.transition = 'all 0.2s ease';
+            
+            viewButton.innerHTML = '<i class="fas fa-external-link-alt" style="color: #FFC107;"></i> View Site';
+            
+            viewButton.onmouseover = () => {
+                viewButton.style.background = 'rgba(255, 193, 7, 0.15)';
+            };
+            viewButton.onmouseout = () => {
+                viewButton.style.background = 'transparent';
+            };
+
+            viewButton.onclick = () => {
+                const blob = new Blob([extraData.html], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            };
+            
+            container.appendChild(viewButton);
+
+            if (extraData.stats) {
+                const statsLine = document.createElement('div');
+                statsLine.style.fontSize = '0.75rem';
+                statsLine.style.color = 'var(--text-secondary)';
+                statsLine.style.marginLeft = '4px';
+                statsLine.textContent = `${extraData.stats.lines} lines generated in ${extraData.stats.time}s`;
+                container.appendChild(statsLine);
+            }
+
+            messageDiv.appendChild(container);
+        } else {
+            if (generatedMediaSrc) {
+                const media = document.createElement('img');
+                media.src = generatedMediaSrc; media.className = 'generated-image';
+                messageDiv.appendChild(media);
+                if (mediaPrompt) paragraph.innerHTML = `<em>Prompt: ${mediaPrompt}</em>`;
+            } else if (imagePreview) {
+                const img = document.createElement('img');
+                img.src = imagePreview; img.className = 'sent-image';
+                messageDiv.appendChild(img);
+            }
+            if (textContent) processAndAppendText(textContent, paragraph);
+            if (paragraph.hasChildNodes() || paragraph.textContent || sender === 'bot') {
+                messageDiv.appendChild(paragraph);
+            }
         }
-        if (textContent) processAndAppendText(textContent, paragraph);
-        if (paragraph.hasChildNodes() || paragraph.textContent || sender === 'bot') {
-            messageDiv.appendChild(paragraph);
-        }
+
         bubbleDiv.appendChild(messageDiv);
         wrapper.appendChild(iconDiv);
         wrapper.appendChild(bubbleDiv);
@@ -2150,7 +2390,7 @@ body {
         return wrapper;
     }
     
-    function processAndAppendText(text, targetElement) {
+    function processAndAppendText(text, targetElement, shouldHighlight = true) {
         targetElement.innerHTML = '';
         const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
         let lastIndex = 0;
@@ -2216,7 +2456,7 @@ body {
             targetElement.appendChild(textSpan);
         }
 
-        if (window.Prism) {
+        if (shouldHighlight && window.Prism) {
             setTimeout(() => Prism.highlightAllUnder(targetElement), 0);
         }
     }
@@ -2278,7 +2518,7 @@ body {
         setChatActiveState(!hasHistory);
         if (hasHistory) {
             chats[chatId].history.forEach(msg => {
-                displayMessage(msg.parts, msg.role, false, msg.imagePreview, msg.generatedMediaSrc, null, msg.mediaPrompt);
+                displayMessage(msg.parts, msg.role, false, msg.imagePreview, msg.generatedMediaSrc, null, msg.mediaPrompt, msg.extraData);
             });
         }
     }
@@ -2920,9 +3160,10 @@ body {
             }
         }
     }
-    async function streamOpenAIResponse(messages, modelName, stream = true) {
+    async function streamOpenAIResponse(messages, modelName, stream = true, silent = false) {
         console.log("sendMessageToOpenAI: Start", modelName);
-        const botMessageElement = stream ? displayMessage([], 'bot') : null;
+        // If silent, we don't display a message initially
+        const botMessageElement = (!silent && stream) ? displayMessage([], 'bot') : null;
         const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
         
         let fullResponseText = "";
@@ -2961,7 +3202,7 @@ body {
                         if (content) {
                             fullResponseText += content;
                             if (paragraph) {
-                               processAndAppendText(fullResponseText, paragraph);
+                               processAndAppendText(fullResponseText, paragraph, false); // No highlight during stream
                                chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                             }
                         }
@@ -2971,7 +3212,7 @@ body {
                 });
             }
             if (paragraph) {
-                processAndAppendText(fullResponseText, paragraph);
+                processAndAppendText(fullResponseText, paragraph, true); // Highlight at the end
             }
             console.log("sendMessageToOpenAI: End (Success)");
             return fullResponseText;
@@ -2985,10 +3226,10 @@ body {
         }
     }
 
-    async function sendMessageToModel(messages, modelName, stream = true) {
+    async function sendMessageToModel(messages, modelName, stream = true, silent = false) {
         if (modelName === GEMINI_CHAT_MODEL) {
             console.log("sendMessageToGemini: Start", modelName);
-            const botMessageElement = stream ? displayMessage([], 'bot') : null;
+            const botMessageElement = (!silent && stream) ? displayMessage([], 'bot') : null;
             const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
             let fullResponseText = "";
             try {
@@ -3026,7 +3267,7 @@ body {
                             if (content) {
                                 fullResponseText += content;
                                 if (paragraph) {
-                                    processAndAppendText(fullResponseText, paragraph);
+                                    processAndAppendText(fullResponseText, paragraph, false); // No highlight during stream
                                     chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
                                 }
                             }
@@ -3036,7 +3277,7 @@ body {
                     });
                 }
                 if (paragraph) {
-                    processAndAppendText(fullResponseText, paragraph);
+                    processAndAppendText(fullResponseText, paragraph, true); // Highlight at end
                 }
                 console.log("sendMessageToGemini: End (Success)");
                 return fullResponseText;
@@ -3053,7 +3294,7 @@ body {
             }
         }
 
-        return streamOpenAIResponse(messages, modelName, stream);
+        return streamOpenAIResponse(messages, modelName, stream, silent);
     }
 
     async function sendSearchRequest(queryText) {
@@ -3189,6 +3430,81 @@ body {
                 updateActionButtonsState();
                 console.log("handleSendMessage: End (search).");
             }
+        } else if (isWebDesignModeActive) {
+            isRequestInProgress = true; 
+            updateActionButtonsState();
+            console.log("handleSendMessage: Web Design Agent active.");
+            
+            showThinkingIndicator("Designing your Site...", 'fa-palette');
+
+            // Determine mode from variable
+            const designMode = currentWebDesignMode;
+            const modelToUse = designMode === 'simple' ? "gpt-4.1-mini" : "gpt-5.1";
+            
+            const systemPrompt = getWebDesignSystemPrompt(designMode);
+            
+            const historyForAPI = (chats[currentChatId]?.history || [])
+                .slice(-6).map(msg => ({ // Less history for focused design task
+                    role: msg.role === 'model' ? 'assistant' : 'user',
+                    content: msg.parts.map(p => p.text).join(' ')
+                }));
+            
+            // Prioritize the current prompt context
+            const messagesForModel = [
+                { role: "system", content: systemPrompt },
+                ...historyForAPI,
+                { role: "user", content: currentPrompt } // Ensure current prompt is explicit if history is messy
+            ];
+            
+            // Remove the duplicate user message if it was already added to history above (it is added in handleSendMessage before this block)
+            // Actually, historyForAPI includes the message we just added? 
+            // Let's check addMessageToHistory... Yes, it pushes to history.
+            // So historyForAPI will include the current message as the last item.
+            // We just need the system prompt + history.
+            
+            const messages = [{ role: "system", content: systemPrompt }, ...historyForAPI];
+
+            const startTime = Date.now(); // Start timer
+
+            try {
+                const aiResponse = await sendMessageToModel(messages, modelToUse, true, true); // Silent mode
+                
+                const endTime = Date.now(); // End timer
+                const durationSeconds = ((endTime - startTime) / 1000).toFixed(1);
+
+                // Extract HTML code from response
+                const codeBlockRegex = /```html([\s\S]*?)```/i;
+                const match = aiResponse.match(codeBlockRegex);
+                const htmlCode = match ? match[1].trim() : aiResponse;
+                
+                // robust line counting
+                const lineCount = htmlCode.split(/\r\n|\r|\n/).length;
+
+                // Display result with View Site button
+                const extraData = { 
+                    type: 'web_design', 
+                    html: htmlCode,
+                    stats: { 
+                        lines: lineCount, 
+                        time: durationSeconds 
+                    }
+                };
+                console.log("Web Design Stats:", extraData.stats); // Debug log
+
+                displayMessage([], 'bot', false, null, null, 'fa-palette', null, extraData);
+                addMessageToHistory('model', [{ text: "Website generated" }], null, null, null, extraData);
+
+            } catch (error) {
+                 // Error handled in sendMessageToModel / displayMessage
+                 removeThinkingIndicator();
+                 displayMessage([{ text: `Design failed: ${error.message}` }], 'bot', true);
+            } finally {
+                removeThinkingIndicator();
+                isRequestInProgress = false;
+                updateActionButtonsState();
+                console.log("handleSendMessage: End (Web Design).");
+            }
+
         } else {
             isRequestInProgress = true; 
             updateActionButtonsState();
@@ -3271,11 +3587,13 @@ body {
     function handleCreateImageButtonClick() {
         hideActionCoachmark(true);
         isImageGenerationModeActive = !isImageGenerationModeActive;
-        if (isImageGenerationModeActive && isSearchModeQueued) {
-            isSearchModeQueued = false;
+        if (isImageGenerationModeActive) {
+            if (isSearchModeQueued) isSearchModeQueued = false;
+            if (isWebDesignModeActive) isWebDesignModeActive = false;
         }
         refreshInputPlaceholder();
         updateSearchModeUI();
+        updateWebDesignModeUI();
         updateActionButtonsState();
         messageInput.focus();
     }
@@ -3287,6 +3605,9 @@ body {
             if (isImageGenerationModeActive) {
                 isImageGenerationModeActive = false;
             }
+            if (isWebDesignModeActive) {
+                isWebDesignModeActive = false;
+            }
             refreshInputPlaceholder();
             if (meQuickModeActive) {
                 deactivateMeQuickMode();
@@ -3296,10 +3617,64 @@ body {
             showToast("web search off.", "info", 1800);
         }
         updateSearchModeUI();
+        updateWebDesignModeUI();
         updateActionButtonsState();
         if (actionMenu) actionMenu.classList.remove('visible');
         if (actionMenuToggle) actionMenuToggle.classList.remove('active');
     }
+    function handleWebDesignAgentToggle() {
+        hideActionCoachmark(true);
+        if (isRequestInProgress) return;
+        
+        isWebDesignModeActive = !isWebDesignModeActive;
+        console.log("Web Design Mode toggled:", isWebDesignModeActive);
+        
+        if (isWebDesignModeActive) {
+            // Disable other modes
+            if (isImageGenerationModeActive) isImageGenerationModeActive = false;
+            if (isSearchModeQueued) isSearchModeQueued = false;
+            if (meQuickModeActive) deactivateMeQuickMode();
+            
+            showToast("Web Design Agent active!", "info", 2000);
+        } else {
+            showToast("Web Design Agent disabled.", "info", 1800);
+        }
+        
+        updateWebDesignModeUI();
+        updateActionButtonsState();
+        
+        // Close menu
+        if (agentMenu) agentMenu.classList.remove('visible');
+        if (agentMenuToggle) agentMenuToggle.classList.remove('active');
+    }
+
+    function updateWebDesignModeUI() {
+        if (webDesignAgentButton) {
+            webDesignAgentButton.classList.toggle('active', isWebDesignModeActive);
+        }
+        
+        if (webDesignModeContainer) {
+            webDesignModeContainer.style.display = isWebDesignModeActive ? 'flex' : 'none';
+        }
+        
+        if (chatInputArea) {
+            const busy = isRequestInProgress || isListening;
+            chatInputArea.classList.toggle('web-design-mode-active', isWebDesignModeActive && !busy);
+            // Re-apply busy state logic just in case
+            chatInputArea.classList.toggle('image-mode-busy', (isImageGenerationModeActive || isWebDesignModeActive) && busy);
+        }
+
+        if (chatTitle) {
+            if (isWebDesignModeActive) {
+                // Store original title if needed, or just set it
+                chatTitle.textContent = "What can I design?";
+            } else {
+                setDynamicChatTitle();
+            }
+        }
+        refreshInputPlaceholder();
+    }
+    
     function showPersonalityModal() {
         activateSettingsTab('profile');
         updateUsageUI();
@@ -3762,6 +4137,11 @@ body {
         meActiveBanner = document.getElementById('me-active-banner');
         meInlineRetakeBtn = document.getElementById('me-inline-retake-btn');
         meInlineRemoveBtn = document.getElementById('me-inline-remove-btn');
+        webDesignModeContainer = document.getElementById('web-design-mode-container');
+        webDesignModeToggle = document.getElementById('web-design-mode-toggle');
+        webDesignModeMenu = document.getElementById('web-design-mode-menu');
+        modeSimpleBtn = document.getElementById('mode-simple-btn');
+        modeProBtn = document.getElementById('mode-pro-btn');
 
         settingsTabButtons = Array.from(document.querySelectorAll('[data-settings-tab]'));
         settingsTabPanels = Array.from(document.querySelectorAll('[data-settings-panel]'));
@@ -3774,6 +4154,9 @@ body {
 
         actionMenuToggle = document.getElementById('action-menu-toggle');
         actionMenu = document.getElementById('action-menu');
+        agentMenuToggle = document.getElementById('agent-menu-toggle');
+        agentMenu = document.getElementById('agent-menu');
+        webDesignAgentButton = document.getElementById('web-design-agent-button');
         actionCoachmark = document.getElementById('action-coachmark');
         searchModeButton = document.getElementById('search-mode-button');
         const launchPopupOverlay = document.getElementById('launch-popup-overlay');
@@ -3794,14 +4177,69 @@ body {
             hideActionCoachmark(true);
             actionMenu.classList.toggle('visible');
             actionMenuToggle.classList.toggle('active');
+            // Ensure agent menu is closed when action menu is opened
+            if (agentMenu) agentMenu.classList.remove('visible');
+            if (agentMenuToggle) agentMenuToggle.classList.remove('active');
         });
 
-        document.addEventListener('click', (e) => {
-            if (!actionMenu.contains(e.target) && !actionMenuToggle.contains(e.target)) {
+        if (agentMenuToggle) {
+            agentMenuToggle.addEventListener('click', () => {
+                agentMenu.classList.toggle('visible');
+                agentMenuToggle.classList.toggle('active');
+                // Ensure action menu is closed when agent menu is opened
                 actionMenu.classList.remove('visible');
                 actionMenuToggle.classList.remove('active');
                 hideActionCoachmark(true);
+            });
+        }
+
+        if (webDesignModeToggle) {
+            webDesignModeToggle.addEventListener('click', () => {
+                webDesignModeMenu.classList.toggle('visible');
+                // Close other menus
+                if (actionMenu) actionMenu.classList.remove('visible');
+                if (actionMenuToggle) actionMenuToggle.classList.remove('active');
+                if (agentMenu) agentMenu.classList.remove('visible');
+                if (agentMenuToggle) agentMenuToggle.classList.remove('active');
+            });
+        }
+        
+        function setWebDesignMode(mode) {
+            currentWebDesignMode = mode;
+            const label = mode === 'simple' ? 'Simple' : 'Pro';
+            if (webDesignModeToggle) {
+                webDesignModeToggle.querySelector('span').textContent = label;
+                webDesignModeToggle.classList.add('web-design-mode-selected'); // Apply selected class
             }
+            if (webDesignModeMenu) webDesignModeMenu.classList.remove('visible');
+            showToast(`Web Design: ${label} Mode`, 'info');
+        }
+
+        if (modeSimpleBtn) modeSimpleBtn.addEventListener('click', () => setWebDesignMode('simple'));
+        if (modeProBtn) modeProBtn.addEventListener('click', () => setWebDesignMode('pro'));
+
+        // ... (rest of the event listeners) ...
+
+        // Initialize Web Design mode state
+        setWebDesignMode(currentWebDesignMode);
+        
+        document.addEventListener('click', (e) => {
+            const clickedInsideActionMenu = actionMenu && (actionMenu.contains(e.target) || actionMenuToggle.contains(e.target));
+            const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || agentMenuToggle.contains(e.target));
+            const clickedInsideWebDesignMenu = webDesignModeContainer && (webDesignModeContainer.contains(e.target));
+
+            if (!clickedInsideActionMenu) {
+                if (actionMenu) actionMenu.classList.remove('visible');
+                if (actionMenuToggle) actionMenuToggle.classList.remove('active');
+            }
+            if (!clickedInsideAgentMenu) {
+                if (agentMenu) agentMenu.classList.remove('visible');
+                if (agentMenuToggle) agentMenuToggle.classList.remove('active');
+            }
+            if (!clickedInsideWebDesignMenu) {
+                if (webDesignModeMenu) webDesignModeMenu.classList.remove('visible');
+            }
+            hideActionCoachmark(true);
         });
         if (searchModeButton) {
             searchModeButton.addEventListener('click', handleSearchModeToggle);
@@ -3881,7 +4319,12 @@ body {
         imageUploadButton.addEventListener('click', () => imageUploadInput.click());
         imageUploadInput.addEventListener('change', handleImageSelection);
         removeImageButton.addEventListener('click', removeSelectedImage);
-        micButton.addEventListener('click', toggleSpeechRecognition);
+        if (micButton) micButton.addEventListener('click', toggleSpeechRecognition);
+
+        if (webDesignAgentButton) {
+            // Use onclick to prevent multiple listeners
+            webDesignAgentButton.onclick = handleWebDesignAgentToggle;
+        }
         
         closePersonalityModalBtn.addEventListener('click', hidePersonalityModal);
         savePersonalityBtn.addEventListener('click', handleSavePersonality);
