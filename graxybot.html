@@ -3018,10 +3018,7 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
     function isLikelyFreshInfoQuery(text = '') {
         const lower = text.toLowerCase();
         const keywords = [
-            'today', 'yesterday', 'tonight', 'current', 'latest', 'breaking', 'live',
-            'date', 'time', 'day', 'month', 'year', 'now',
-            'score', 'final score', 'game', 'match', 'weather', 'forecast', 'stock', 'price',
-            'launched', 'released', 'release date', 'earnings', 'who won', 'win', 'loss'
+            'moist'
         ];
         return keywords.some(k => lower.includes(k));
     }
