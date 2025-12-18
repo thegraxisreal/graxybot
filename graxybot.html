@@ -638,6 +638,18 @@ body {
 .menu-item-search:hover { background-color: #10B981; }
 .menu-item-agent:hover { background-color: #FFC107; } /* Yellow for agent hover */
 
+.new-tag {
+    background-color: var(--primary);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: auto;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .menu-item:hover span {
     color: white;
 }
@@ -873,6 +885,56 @@ body {
 }
 .web-design-mode-container .menu-item:hover i {
     color: #FFC107 !important;
+}
+
+.customize-image-mode-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+#customize-image-mode-toggle {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    width: auto; padding: 0 10px; gap: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+#customize-image-mode-toggle:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
+}
+#customize-image-mode-toggle.active {
+    background-color: rgba(75, 181, 255, 0.15); /* Blue tint */
+    color: #4BB5FF; /* Blue text */
+    border: 1px solid rgba(75, 181, 255, 0.3);
+}
+#customize-image-mode-toggle.active:hover {
+    background-color: rgba(75, 181, 255, 0.25);
+}
+#customize-image-mode-toggle span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.customize-image-mode-container .menu-item {
+    color: var(--text-primary);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.2s ease;
+}
+.customize-image-mode-container .menu-item:hover {
+    background-color: rgba(75, 181, 255, 0.15); /* Blue hover */
+    color: #4BB5FF;
+}
+.customize-image-mode-container .menu-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+.customize-image-mode-container .menu-item:hover i {
+    color: #4BB5FF !important;
 }
 
 .loader-overlay {
@@ -1896,9 +1958,16 @@ body {
                         </div>
                         <button id="web-design-mode-toggle" class="icon-btn" title="Web Design Mode"><span>Pro</span></button>
                     </div>
+                    <div class="customize-image-mode-container" id="customize-image-mode-container" style="display: none;">
+                        <div class="action-menu" id="customize-image-mode-menu">
+                            <button class="menu-item" id="image-model-mini-btn"><i class="fas fa-compress-arrows-alt"></i><span>Mini</span></button>
+                            <button class="menu-item" id="image-model-max-btn"><i class="fas fa-expand-arrows-alt"></i><span>Max</span></button>
+                        </div>
+                        <button id="customize-image-mode-toggle" class="icon-btn" title="Customize Image Model"><span>Customize</span></button>
+                    </div>
                     <div class="action-menu-container">
                         <div class="action-menu" id="action-menu">
-                            <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span></button>
+                            <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span><span class="new-tag">New</span></button>
                             <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
                             <button id="reddit-story-button" class="icon-btn menu-item menu-item-reddit" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i><span>Reddit Story</span></button>
                             <button id="mic-button" class="icon-btn menu-item menu-item-mic" title="Voice Mode"><i class="fas fa-microphone"></i><span>Voice Mode</span></button>
@@ -1953,7 +2022,7 @@ body {
     const ME_PROFILE_STORAGE_KEY = "graxybot_me_profile_v1";
     const USAGE_STORAGE_KEY = "graxybot_usage_stats_v1";
     const CHAT_USAGE_LIMIT = 50;
-    const IMAGE_USAGE_LIMIT = 20;
+    const IMAGE_USAGE_LIMIT = 10;
     const USAGE_WINDOW_MS = 2 * 60 * 60 * 1000; // two hours rolling window (chat/images)
     const SEARCH_USAGE_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours for search
     const SEARCH_USAGE_LIMIT = 5;
@@ -1975,6 +2044,8 @@ body {
     let mePromptArea, mePromptInput, meSubtitle, meCameraStreamEl, meCanvas;
     let meActiveBanner, meInlineRetakeBtn, meInlineRemoveBtn;
     let webDesignModeContainer, webDesignModeToggle, webDesignModeMenu, modeSimpleBtn, modeProBtn;
+    let customizeImageModeContainer, customizeImageModeToggle, customizeImageModeMenu, imageModelMiniBtn, imageModelMaxBtn;
+    let currentImageModel = 'gpt-image-1-mini';
     let currentWebDesignMode = 'simple';
     
     let settingsTabButtons = [];
@@ -3091,7 +3162,10 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         isRequestInProgress = true; 
         if(!isForTheme) updateActionButtonsState();
 
-        const payload = { prompt: promptText };
+        const payload = { 
+            prompt: promptText,
+            model: isForTheme ? 'gpt-image-1-mini' : (currentImageModel || 'gpt-image-1-mini')
+        };
         if (referenceImage && referenceImage.imageData) {
             payload.referenceImage = {
                 data: referenceImage.imageData,
@@ -3579,10 +3653,14 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
     function deactivateImageGenerationMode() {
         isImageGenerationModeActive = false;
         refreshInputPlaceholder();
+        updateImageModeUI();
         updateActionButtonsState();
     }
     function handleCreateImageButtonClick() {
         hideActionCoachmark(true);
+        if (actionMenu) actionMenu.classList.remove('visible');
+        if (actionMenuToggle) actionMenuToggle.classList.remove('active');
+
         isImageGenerationModeActive = !isImageGenerationModeActive;
         if (isImageGenerationModeActive) {
             if (isSearchModeQueued) isSearchModeQueued = false;
@@ -3591,6 +3669,7 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         refreshInputPlaceholder();
         updateSearchModeUI();
         updateWebDesignModeUI();
+        updateImageModeUI();
         updateActionButtonsState();
         messageInput.focus();
     }
@@ -3615,6 +3694,7 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         }
         updateSearchModeUI();
         updateWebDesignModeUI();
+        updateImageModeUI();
         updateActionButtonsState();
         if (actionMenu) actionMenu.classList.remove('visible');
         if (actionMenuToggle) actionMenuToggle.classList.remove('active');
@@ -3638,6 +3718,7 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         }
         
         updateWebDesignModeUI();
+        updateImageModeUI();
         updateActionButtonsState();
         
         // Close menu
@@ -3670,6 +3751,16 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
             }
         }
         refreshInputPlaceholder();
+    }
+
+    function updateImageModeUI() {
+        if (customizeImageModeContainer) {
+            customizeImageModeContainer.style.display = isImageGenerationModeActive ? 'flex' : 'none';
+        }
+        const agentContainer = document.querySelector('.agent-menu-container');
+        if (agentContainer) {
+            agentContainer.style.display = isImageGenerationModeActive ? 'none' : 'flex';
+        }
     }
     
     function showPersonalityModal() {
@@ -4140,6 +4231,12 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         modeSimpleBtn = document.getElementById('mode-simple-btn');
         modeProBtn = document.getElementById('mode-pro-btn');
 
+        customizeImageModeContainer = document.getElementById('customize-image-mode-container');
+        customizeImageModeToggle = document.getElementById('customize-image-mode-toggle');
+        customizeImageModeMenu = document.getElementById('customize-image-mode-menu');
+        imageModelMiniBtn = document.getElementById('image-model-mini-btn');
+        imageModelMaxBtn = document.getElementById('image-model-max-btn');
+
         settingsTabButtons = Array.from(document.querySelectorAll('[data-settings-tab]'));
         settingsTabPanels = Array.from(document.querySelectorAll('[data-settings-panel]'));
         usageChatsBar = document.getElementById('usage-chats-bar');
@@ -4215,28 +4312,62 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         if (modeSimpleBtn) modeSimpleBtn.addEventListener('click', () => setWebDesignMode('simple'));
         if (modeProBtn) modeProBtn.addEventListener('click', () => setWebDesignMode('pro'));
 
+        if (customizeImageModeToggle) {
+            customizeImageModeToggle.addEventListener('click', () => {
+                customizeImageModeMenu.classList.toggle('visible');
+                // Close other menus
+                if (actionMenu) actionMenu.classList.remove('visible');
+                if (actionMenuToggle) actionMenuToggle.classList.remove('active');
+                if (agentMenu) agentMenu.classList.remove('visible');
+                if (agentMenuToggle) agentMenuToggle.classList.remove('active');
+                if (webDesignModeMenu) webDesignModeMenu.classList.remove('visible');
+            });
+        }
+
+        function setImageModel(model) {
+            currentImageModel = model;
+            const label = model === 'gpt-image-1-mini' ? 'Mini' : 'Max';
+            if (customizeImageModeToggle) {
+                 customizeImageModeToggle.querySelector('span').textContent = label;
+                 customizeImageModeToggle.classList.add('active');
+            }
+            if (customizeImageModeMenu) customizeImageModeMenu.classList.remove('visible');
+            showToast(`Image Model: ${label}`, 'info');
+        }
+
+        if (imageModelMiniBtn) imageModelMiniBtn.addEventListener('click', () => setImageModel('gpt-image-1-mini'));
+        if (imageModelMaxBtn) imageModelMaxBtn.addEventListener('click', () => setImageModel('gpt-image-1.5'));
+
+        // Initialize Image Mode state
+        setImageModel(currentImageModel);
+
         // ... (rest of the event listeners) ...
 
         // Initialize Web Design mode state
         setWebDesignMode(currentWebDesignMode);
         
         document.addEventListener('click', (e) => {
-            const clickedInsideActionMenu = actionMenu && (actionMenu.contains(e.target) || actionMenuToggle.contains(e.target));
-            const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || agentMenuToggle.contains(e.target));
+const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || agentMenuToggle.contains(e.target));
             const clickedInsideWebDesignMenu = webDesignModeContainer && (webDesignModeContainer.contains(e.target));
+            const clickedInsideImageMenu = customizeImageModeContainer && (customizeImageModeContainer.contains(e.target));
 
             if (!clickedInsideActionMenu) {
                 if (actionMenu) actionMenu.classList.remove('visible');
                 if (actionMenuToggle) actionMenuToggle.classList.remove('active');
             }
+
             if (!clickedInsideAgentMenu) {
-                if (agentMenu) agentMenu.classList.remove('visible');
-                if (agentMenuToggle) agentMenuToggle.classList.remove('active');
+                 if (agentMenu) agentMenu.classList.remove('visible');
+                 if (agentMenuToggle) agentMenuToggle.classList.remove('active');
             }
+
             if (!clickedInsideWebDesignMenu) {
-                if (webDesignModeMenu) webDesignModeMenu.classList.remove('visible');
+                 if (webDesignModeMenu) webDesignModeMenu.classList.remove('visible');
             }
-            hideActionCoachmark(true);
+
+            if (!clickedInsideImageMenu) {
+                 if (customizeImageModeMenu) customizeImageModeMenu.classList.remove('visible');
+            }
         });
         if (searchModeButton) {
             searchModeButton.addEventListener('click', handleSearchModeToggle);

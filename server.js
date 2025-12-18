@@ -383,11 +383,13 @@ app.post('/gemini/image', async (req, res) => {
             console.warn('Prompt moderation failed, proceeding with original prompt:', modErr.message);
         }
 
+        const model = req.body.model || 'gpt-image-1-mini';
         const payload = {
-            model: 'gpt-image-1-mini',
+            model: model,
             prompt: finalPrompt,
             size: '1024x1024',
-            quality: 'low' // requested low quality for faster/cheaper previews
+            quality: 'low', // requested low quality for faster/cheaper previews
+            n: 1
         };
 
         const openaiResponse = await axios.post(
