@@ -5,8 +5,6 @@ const cors = require('cors');
 const axios = require('axios');
 const http = require('http');
 const { Server } = require('socket.io');
-const DeltaMathController = require('../deltamathController');
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -21,14 +19,21 @@ const port = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Controller Instance
-const agentController = new DeltaMathController(io);
-console.log("Agent Controller Initialized.");
+// Agent controller — only loaded if Playwright is available (local only)
+let agentController = null;
+try {
+    const DeltaMathController = require('../deltamathController');
+    agentController = new DeltaMathController(io);
+    console.log("Agent Controller Initialized.");
+} catch (e) {
+    console.log("Agent Controller unavailable (Playwright not installed). Agent features disabled.");
+}
 
 io.on('connection', (socket) => {
     console.log('User connected');
 
     socket.on('launch-agent', async (creds) => {
+        if (!agentController) return socket.emit('status', 'Agent unavailable on this server.');
         try {
             await agentController.startAgent(creds);
             socket.emit('status', 'Agent Launched - Attempting Login');
@@ -39,11 +44,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('stop-agent', async () => {
+        if (!agentController) return;
         await agentController.stopAgent();
         socket.emit('status', 'Agent Stopped');
     });
 
     socket.on('start-ai', async () => {
+        if (!agentController) return;
         socket.emit('status', 'AI Autonomous Mode Started');
         agentController.startAutonomousLoop();
     });
