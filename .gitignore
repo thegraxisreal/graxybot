@@ -1,0 +1,8 @@
+.env
+node_modules/
+*.log
+*.pid
+*.txt
+.DS_Store
+.claude/
+temp_*.html
