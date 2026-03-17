@@ -2026,12 +2026,10 @@ body {
 <div class="chat-app" id="chat-app">
 <div id="launch-popup-overlay" class="launch-popup-overlay">
     <div class="launch-popup">
-        <img src="popup.png" alt="Graxybot update">
-        <h3>Graxybot can now search the web</h3>
-        <p>Toggle Search in the + menu for fresh, accurate answers pulled live.</p>
+        <h3>🤖 Graxybot is now an Agent</h3>
+        <p>The biggest update yet — Graxybot can now <strong>do your DeltaMath assignments for you</strong>. Open the DeltaMath Agent in the sidebar, log in, navigate to your assignment, and hand it off. It'll solve your problems autonomously in under 10 minutes.<br><br>Not perfect yet, but it's getting there fast.</p>
         <div class="launch-popup-actions">
-            <button class="primary" id="launch-popup-changelog-btn">Read Changelog</button>
-            <button class="secondary" id="launch-popup-close-btn">Close</button>
+            <button class="primary" id="launch-popup-close-btn">Let's go</button>
         </div>
     </div>
 </div>
@@ -4403,7 +4401,6 @@ Do NOT deviate from this style. Commit to it 100%. If it says colorful, make it 
         searchModeButton = document.getElementById('search-mode-button');
         const launchPopupOverlay = document.getElementById('launch-popup-overlay');
         const launchPopupCloseBtn = document.getElementById('launch-popup-close-btn');
-        const launchPopupChangelogBtn = document.getElementById('launch-popup-changelog-btn');
 
         wipeDataBtn = document.getElementById('wipe-data-btn');
         initialNameOverlay = document.getElementById('initial-name-overlay');
@@ -4628,12 +4625,6 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
         if (launchPopupCloseBtn) {
             launchPopupCloseBtn.addEventListener('click', () => {
                 launchPopupOverlay?.classList.remove('visible');
-            });
-        }
-        if (launchPopupChangelogBtn) {
-            launchPopupChangelogBtn.addEventListener('click', () => {
-                launchPopupOverlay?.classList.remove('visible');
-                changelogOverlay?.classList.add('visible');
             });
         }
 
