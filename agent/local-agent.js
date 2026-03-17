@@ -7,6 +7,7 @@ console.log(`🔌 Connecting to broker at ${RELAY_URL}...`);
 
 const socket = io(RELAY_URL, {
     query: { role: 'agent' },
+    transports: ['websocket'],
     reconnection: true,
     reconnectionDelay: 2000,
 });
@@ -22,11 +23,16 @@ socket.on('connect', () => {
     console.log('✅ Connected to broker as local agent');
 });
 
-socket.on('disconnect', () => {
-    console.log('❌ Disconnected from broker');
+socket.on('connect_error', (err) => {
+    console.error('❌ Connection error:', err.message);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('❌ Disconnected from broker:', reason);
 });
 
 socket.on('launch-agent', async (creds) => {
+    console.log('📨 Received launch-agent from broker');
     try {
         await controller.startAgent(creds);
         socket.emit('status', 'Agent Launched - Attempting Login');
