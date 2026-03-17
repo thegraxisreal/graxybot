@@ -5032,9 +5032,8 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
             }
         }
 
-        // URL of the Local Agent (Serveo Link)
-        // REPLACE THIS with your actual Serveo/Tunnel link when you run it
-        const REMOTE_AGENT_URL = "http://localhost:3000";
+        // Connect to whatever server is serving this page (broker)
+        const REMOTE_AGENT_URL = window.location.origin;
 
         function initSocket() {
             if (socket) return;
