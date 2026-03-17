@@ -2150,11 +2150,13 @@ body {
 <script type="module">
     // --- Configuration ---
     const GEMINI_CHAT_MODEL = "gemini-2.0-flash";
-    const GEMINI_IMAGE_ENDPOINT = window.location.origin + '/gemini/image';
+    // Always route API requests to Render (even when page is served via cloudflare tunnel)
+    const API_BASE = "https://www.graxybot.xyz";
+    const GEMINI_IMAGE_ENDPOINT = API_BASE + '/gemini/image';
     const OPENAI_CHAT_MODEL = "gpt-4.1-mini";
-    const OPENAI_PROXY_ENDPOINT = window.location.origin + '/openai/chat';
-    const OPENAI_SEARCH_ENDPOINT = window.location.origin + '/openai/search';
-    const GEMINI_CHAT_ENDPOINT = window.location.origin + '/gemini/chat';
+    const OPENAI_PROXY_ENDPOINT = API_BASE + '/openai/chat';
+    const OPENAI_SEARCH_ENDPOINT = API_BASE + '/openai/search';
+    const GEMINI_CHAT_ENDPOINT = API_BASE + '/gemini/chat';
 
     // --- UI & Storage Keys ---
     const DEFAULT_CHAT_MODEL = OPENAI_CHAT_MODEL;
@@ -4544,15 +4546,21 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
         }
 
         newChatBtn.addEventListener('click', () => {
-            if (currentChatId && chats[currentChatId] && chats[currentChatId].history.length === 0) {
+            if (!isAgentSessionActive && currentChatId && chats[currentChatId] && chats[currentChatId].history.length === 0) {
                 showToast("Send a message to start the current chat first.", 'info');
                 sidebar.classList.remove('visible');
                 menuBackdrop.classList.remove('visible');
                 return;
             }
+            // If agent session is active, end it and return to chat
+            if (isAgentSessionActive) {
+                isAgentSessionActive = false;
+                if (socket) socket.emit('stop-agent');
+            }
             sidebar.classList.remove('visible');
             menuBackdrop.classList.remove('visible');
             handleNewChat(true);
+            setChatActiveState(true);
         });
         settingsButton.addEventListener('click', showPersonalityModal);
         themesButton.addEventListener('click', showThemesModal);
@@ -4708,7 +4716,8 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
         
         // Removed static element references (agentModeUi, etc.)
         let socket = null;
-        
+        let isAgentSessionActive = false;
+
         // Dynamic references for the inline interface
         let currentAgentStatusText = null;
         let currentAgentStreamView = null;
@@ -5054,12 +5063,20 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
             socket.on('status', (msg) => {
                 if (currentAgentStatusText) currentAgentStatusText.textContent = msg;
 
-                if (msg.includes('Busy') || msg.includes('Error')) {
+                if (msg.includes('Busy')) {
+                     showToast(msg, 'error', 6000);
+                     if (dmLaunchBtn) dmLaunchBtn.disabled = false;
+                     isAgentSessionActive = false;
+                     setChatActiveState(true);
+                     return;
+                }
+                if (msg.includes('Error')) {
                      showToast(msg, 'error');
                      if (dmLaunchBtn) dmLaunchBtn.disabled = false;
                 }
 
-                if (msg === "Agent Stopped") {
+                if (msg === "Agent Stopped" || msg.includes('time limit') || msg.includes('disconnected')) {
+                    isAgentSessionActive = false;
                     if (currentAgentStopBtn) {
                          currentAgentStopBtn.textContent = "Agent Stopped";
                          currentAgentStopBtn.disabled = true;
@@ -5123,6 +5140,7 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
                 handleNewChat(true);
                 setChatActiveState(false);
 
+                isAgentSessionActive = true;
                 setTimeout(() => {
                     renderAgentInlineInterface();
                     initSocket();

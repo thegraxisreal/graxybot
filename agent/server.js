@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
 
     socket.on('launch-agent', async (creds) => {
         if (agentController.isAgentActive && activeControllerId !== socket.id) {
-            socket.emit('status', 'Agent Busy - Another user is currently using it.');
+            socket.emit('status', 'Agent Busy - Usage is in high demand. We\'re actively expanding access — try again in a few minutes!');
             return;
         }
 
