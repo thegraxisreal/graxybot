@@ -5064,10 +5064,24 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
                 if (currentAgentStatusText) currentAgentStatusText.textContent = msg;
 
                 if (msg.includes('Busy')) {
-                     showToast(msg, 'error', 6000);
                      if (dmLaunchBtn) dmLaunchBtn.disabled = false;
                      isAgentSessionActive = false;
                      setChatActiveState(true);
+                     // Show a modal they have to dismiss
+                     const busyOverlay = document.createElement('div');
+                     busyOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,22,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);';
+                     busyOverlay.innerHTML = `
+                         <div style="background:#0f1a2e;border:1px solid rgba(75,181,255,0.2);border-radius:20px;padding:40px 36px;max-width:420px;text-align:center;box-shadow:0 8px 48px rgba(0,0,0,0.6);">
+                             <div style="font-size:2.8rem;margin-bottom:16px;">⚡</div>
+                             <h2 style="color:#fff;margin:0 0 12px 0;font-size:1.4rem;">High Demand Right Now</h2>
+                             <p style="color:rgba(255,255,255,0.6);font-size:0.92rem;line-height:1.7;margin:0 0 28px 0;">
+                                 Graxybot is currently helping another student.<br>
+                                 We're actively expanding access — please try again in a few minutes.
+                             </p>
+                             <button onclick="this.closest('[style]').remove()" style="background:var(--primary);color:#0b1220;font-weight:800;border:none;border-radius:12px;padding:14px 40px;cursor:pointer;font-size:1rem;">Got it</button>
+                         </div>`;
+                     document.body.appendChild(busyOverlay);
+                     busyOverlay.addEventListener('click', (e) => { if (e.target === busyOverlay) busyOverlay.remove(); });
                      return;
                 }
                 if (msg.includes('Error')) {
