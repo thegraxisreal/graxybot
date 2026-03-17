@@ -58,6 +58,11 @@ io.on('connection', (socket) => {
     socket.on('keypress', (data) => forwardToAgent('keypress', data));
 });
 
+// Diagnostic endpoint — hit this to verify broker state
+app.get('/ping', (req, res) => {
+    res.json({ status: 'broker running', agentConnected: agentSocket !== null });
+});
+
 // Enable CORS for all origins. In a production environment, you might want to restrict this
 // to only your frontend's domain for enhanced security.
 app.use(cors());
