@@ -19,41 +19,43 @@ const port = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Agent controller — only loaded if Playwright is available (local only)
-let agentController = null;
-try {
-    const DeltaMathController = require('../deltamathController');
-    agentController = new DeltaMathController(io);
-    console.log("Agent Controller Initialized.");
-} catch (e) {
-    console.log("Agent Controller unavailable (Playwright not installed). Agent features disabled.");
-}
+// The local Mac agent connects here with ?role=agent
+// All other connections are treated as regular users
+let agentSocket = null;
 
 io.on('connection', (socket) => {
-    console.log('User connected');
+    if (socket.handshake.query.role === 'agent') {
+        agentSocket = socket;
+        console.log('🤖 Local agent connected');
 
-    socket.on('launch-agent', async (creds) => {
-        if (!agentController) return socket.emit('status', 'Agent unavailable on this server.');
-        try {
-            await agentController.startAgent(creds);
-            socket.emit('status', 'Agent Launched - Attempting Login');
-        } catch (e) {
-            console.error("Launch Error:", e);
-            socket.emit('status', 'Error launching agent');
-        }
-    });
+        // Forward agent events → all users
+        socket.on('agent-frame', (data) => io.emit('agent-frame', data));
+        socket.on('agent-thought', (data) => io.emit('agent-thought', data));
+        socket.on('status', (data) => io.emit('status', data));
 
-    socket.on('stop-agent', async () => {
-        if (!agentController) return;
-        await agentController.stopAgent();
-        socket.emit('status', 'Agent Stopped');
-    });
+        socket.on('disconnect', () => {
+            agentSocket = null;
+            console.log('🤖 Local agent disconnected');
+            io.emit('status', 'Agent disconnected from server.');
+        });
+        return;
+    }
 
-    socket.on('start-ai', async () => {
-        if (!agentController) return;
-        socket.emit('status', 'AI Autonomous Mode Started');
-        agentController.startAutonomousLoop();
-    });
+    // Regular user connection
+    console.log('User connected:', socket.id);
+
+    const forwardToAgent = (event, data) => {
+        if (agentSocket) agentSocket.emit(event, data);
+        else socket.emit('status', 'Agent not connected. Start local-agent.js on your Mac.');
+    };
+
+    socket.on('launch-agent', (creds) => forwardToAgent('launch-agent', creds));
+    socket.on('stop-agent', () => forwardToAgent('stop-agent'));
+    socket.on('start-ai', () => forwardToAgent('start-ai'));
+    socket.on('pause-ai', () => forwardToAgent('pause-ai'));
+    socket.on('click', (data) => forwardToAgent('click', data));
+    socket.on('type', (data) => forwardToAgent('type', data));
+    socket.on('keypress', (data) => forwardToAgent('keypress', data));
 });
 
 // Enable CORS for all origins. In a production environment, you might want to restrict this
