@@ -2008,14 +2008,13 @@ body {
     <div class="modal-content">
         <button class="close-modal-btn" id="close-dm-setup-btn">&times;</button>
         <h2>Set Up Agent</h2>
-        <p class="modal-subtitle">What assignment should Graxybot work on?</p>
+        <p class="modal-subtitle">Graxybot will solve whatever assignment you open.</p>
 
-        <label for="dm-assignment-input">Assignment Name (Exact Match)</label>
-        <input type="text" id="dm-assignment-input" placeholder="e.g., Algebra 1 Homework 4">
-
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 4px 0 12px 0; line-height: 1.5;">
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.6;">
             <i class="fas fa-info-circle" style="color: var(--primary);"></i>
-            After launching, you'll log in to DeltaMath yourself in the browser stream — then hand control to Graxybot.
+            After launching: log in, navigate to your assignment, then press <strong style="color:var(--primary);">Hand over to Graxybot</strong>.<br><br>
+            <i class="fas fa-exclamation-triangle" style="color:#f0a500;"></i>
+            Graxybot is not perfect — always double-check its work.
         </p>
 
         <button id="dm-launch-btn">Launch Agent</button>
@@ -4931,10 +4930,11 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
                     <div id="agent-modal-instructions" style="position:absolute;inset:0;background:rgba(11,18,32,0.94);display:flex;align-items:center;justify-content:center;z-index:5;padding:32px;">
                         <div style="max-width:460px;text-align:center;">
                             <div style="font-size:2.2rem;margin-bottom:16px;">🔑</div>
-                            <h3 style="color:var(--text-primary);font-size:1.2rem;margin:0 0 12px 0;">Sign in to DeltaMath</h3>
+                            <h3 style="color:var(--text-primary);font-size:1.2rem;margin:0 0 12px 0;">Sign in &amp; Navigate</h3>
                             <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;margin:0 0 24px 0;">
                                 Click any field in the browser preview to focus it, then type normally on your keyboard.<br><br>
-                                Once you're fully logged in, press <strong style="color:var(--primary);">Hand over to Graxybot</strong> below.
+                                Log in, then <strong style="color:var(--text-primary);">open the assignment</strong> you want Graxybot to solve. Once you're on it, press <strong style="color:var(--primary);">Hand over to Graxybot</strong> below.<br><br>
+                                <span style="color:#f0a500;font-size:0.82rem;"><i class="fas fa-exclamation-triangle"></i> Graxybot is not perfect — always review its answers.</span>
                             </p>
                             <button id="agent-modal-understand-btn" style="background:var(--primary);color:#0b1220;font-weight:700;border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-size:0.9rem;">I understand</button>
                         </div>
@@ -5118,13 +5118,6 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
 
         if (dmLaunchBtn) {
             dmLaunchBtn.addEventListener('click', () => {
-                const assignment = dmAssignmentInput.value.trim();
-
-                if (!assignment) {
-                    showToast("Please enter an assignment name.", "error");
-                    return;
-                }
-
                 dmSetupOverlay.classList.remove('visible');
 
                 handleNewChat(true);
@@ -5134,7 +5127,7 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
                     renderAgentInlineInterface();
                     initSocket();
                     logAgent("Launching agent...");
-                    socket.emit('launch-agent', { assignment });
+                    socket.emit('launch-agent', {});
                 }, 100);
             });
         }
