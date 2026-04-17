@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graxybot Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 250px;
+            background: #1e1e1e;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        #sidebar h1 {
+            margin: 0 0 30px 0;
+            font-size: 1.5em;
+            color: #bb86fc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .menu-label {
+            font-size: 0.8em;
+            color: #777;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-item:hover {
+            background: #333;
+        }
+
+        .menu-item.active {
+            background: #3700b3;
+            color: white;
+        }
+
+        .menu-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        #main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Panels */
+        .panel {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        /* Agent View */
+        #agent-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #agent-controls-bar {
+            background: #2c2c2c;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #333;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #bb86fc;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #9955e8;
+        }
+
+        .btn-danger {
+            background: #cf6679;
+            color: #000;
+        }
+
+        .btn-danger:hover {
+            background: #b00020;
+            color: white;
+        }
+
+        .btn-success {
+            background: #03dac6;
+            color: #000;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Stream Area */
+        #stream-wrapper {
+            position: relative;
+            flex: 1;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #stream-img {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+            cursor: crosshair;
+        }
+
+        #stream-placeholder {
+            color: #555;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        /* Instructions Overlay */
+        #instruction-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #bb86fc;
+            color: #bb86fc;
+            font-weight: bold;
+            display: none;
+            pointer-events: none;
+        }
+
+        /* Keyboard Proxy */
+        #keyboard-proxy {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        #proxy-input {
+            flex: 1;
+            padding: 10px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 4px;
+        }
+
+        /* Logs */
+        #agent-logs {
+            height: 150px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #aaa;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 2px;
+        }
+
+        .log-thought {
+            color: #03dac6;
+        }
+
+        .log-system {
+            color: #bb86fc;
+        }
+
+        /* Modal */
+        #modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #modal {
+            background: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #modal h2 {
+            margin-top: 0;
+            color: #bb86fc;
+        }
+
+        #modal p {
+            color: #bbb;
+            margin-bottom: 20px;
+        }
+
+        #modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="sidebar">
+        <h1>Graxybot</h1>
+
+        <div class="menu-label">Agents</div>
+        <div class="menu-item" onclick="switchPanel('dashboard')">
+            <span class="menu-icon">🏠</span> Dashboard
+        </div>
+        <div class="menu-item" onclick="confirmLaunch()">
+            <span class="menu-icon">📐</span> Delta Math
+        </div>
+
+        <div class="menu-label">System</div>
+        <div class="menu-item">
+            <span class="menu-icon">⚙️</span> Settings
+        </div>
+    </div>
+
+    <div id="main-content">
+        <!-- Dashboard Panel -->
+        <div id="panel-dashboard" class="panel active">
+            <h2>Welcome Back, User.</h2>
+            <p>Select an agent from the menu to begin.</p>
+        </div>
+
+        <!-- Delta Math Panel -->
+        <div id="panel-deltamath" class="panel">
+            <div id="agent-controls-bar">
+                <button id="btn-login" class="btn btn-success" disabled onclick="startAI()">✅ I'm Logged In (Start
+                    AI)</button>
+                <button class="btn btn-danger" onclick="stopAgent()">🛑 Stop Agent</button>
+                <span id="status-text" style="margin-left: auto; color: #888;">Status: Offline</span>
+            </div>
+
+            <div id="stream-wrapper">
+                <div id="stream-placeholder">Agent is offline.</div>
+                <img id="stream-img" src="" alt="Agent Stream">
+                <div id="instruction-overlay">ℹ️ Please Log In Manually Below</div>
+            </div>
+
+            <div id="agent-logs"></div>
+
+            <div id="keyboard-proxy">
+                <input type="text" id="proxy-input" placeholder="Type here to send text to the agent browser...">
+                <button class="btn btn-primary" onclick="sendText()">Send</button>
+                <button class="btn btn-primary" onclick="sendEnter()">Enter ↵</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="modal-overlay">
+        <div id="modal">
+            <h2>Launch Agent?</h2>
+            <p>This will start a browser instance on the server. Are you ready?</p>
+            <div id="modal-actions">
+                <button class="btn btn-primary" onclick="launchAgent()">Yes, Launch</button>
+                <button class="btn" style="background:#444; color:white;" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // DOM Elements
+        const modal = document.getElementById('modal-overlay');
+        const panels = document.querySelectorAll('.panel');
+        const img = document.getElementById('stream-img');
+        const placeholder = document.getElementById('stream-placeholder');
+        const instructionOverlay = document.getElementById('instruction-overlay');
+        const statusText = document.getElementById('status-text');
+        const logsDiv = document.getElementById('agent-logs');
+        const btnLogin = document.getElementById('btn-login');
+        const proxyInput = document.getElementById('proxy-input');
+
+        // State
+        let currentAgent = null;
+
+        // --- Navigation ---
+        function switchPanel(name) {
+            panels.forEach(p => p.classList.remove('active'));
+            if (name === 'deltamath') document.getElementById('panel-deltamath').classList.add('active');
+            else document.getElementById('panel-dashboard').classList.add('active');
+        }
+
+        function confirmLaunch() {
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // --- Agent Actions ---
+        function launchAgent() {
+            closeModal();
+            switchPanel('deltamath');
+            addLog('System', 'Initializing Delta Math Agent...');
+            socket.emit('launch-agent');
+        }
+
+        function stopAgent() {
+            socket.emit('stop-agent');
+            addLog('System', 'Stopping agent...');
+            resetUI();
+            switchPanel('dashboard');
+        }
+
+        function startAI() {
+            socket.emit('start-ai');
+            addLog('System', 'Starting AI Autonomous Mode...');
+            btnLogin.disabled = true;
+            btnLogin.innerText = "🤖 AI Running...";
+            instructionOverlay.style.display = 'none';
+        }
+
+        function resetUI() {
+            img.style.display = 'none';
+            placeholder.style.display = 'block';
+            btnLogin.disabled = true;
+            btnLogin.innerText = "✅ I'm Logged In (Start AI)";
+            instructionOverlay.style.display = 'none';
+            statusText.innerText = "Status: Offline";
+        }
+
+        // --- Interaction ---
+        img.onclick = (e) => {
+            const rect = img.getBoundingClientRect();
+            // Calculate scale if image is resized by CSS
+            // Assume the image shows the full 1280x800 frame
+            // We need to map the click to the intrinsic size of the stream (which should be 1280x800)
+            const scaleX = 1280 / rect.width;
+            const scaleY = 800 / rect.height;
+
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            socket.emit('click', { x, y });
+        };
+
+        function sendText() {
+            if (proxyInput.value) {
+                socket.emit('type', { text: proxyInput.value });
+                proxyInput.value = '';
+            }
+        }
+        function sendEnter() {
+            socket.emit('keypress', { key: 'Enter' });
+        }
+        proxyInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); sendText(); }
+        });
+
+        // --- Socket Events ---
+        socket.on('status', (msg) => {
+            statusText.innerText = "Status: " + msg;
+            addLog('System', msg);
+
+            if (msg.includes("Launched")) {
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+                instructionOverlay.style.display = 'block';
+                btnLogin.disabled = false;
+            }
+            if (msg.includes("Stopped")) {
+                resetUI();
+            }
+        });
+
+        socket.on('agent-frame', (base64) => {
+            img.src = `data:image/jpeg;base64,${base64}`;
+        });
+
+        socket.on('agent-thought', (thought) => {
+            addLog('AI Thought', thought);
+        });
+
+        function addLog(source, text) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const sourceSpan = document.createElement('span');
+            sourceSpan.className = source === 'AI Thought' ? 'log-thought' : 'log-system';
+            sourceSpan.innerText = `[${source}] `;
+            entry.appendChild(sourceSpan);
+            entry.appendChild(document.createTextNode(text));
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+    </script>
+</body>
+
+</html>

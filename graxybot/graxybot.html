@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graxybot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="graxybot.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+    <link rel="stylesheet" href="assets/styles/graxybot.css">
+</head>
+<body>
+
+<div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Settings Modal -->
+<div id="personality-overlay" class="modal-overlay">
+    <div id="personality-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-personality-modal-btn">&times;</button>
+        <h2>Graxybot Settings</h2>
+        <div class="settings-layout">
+            <div class="settings-tabs">
+                <button class="settings-tab-button active" data-settings-tab="profile">Profile</button>
+                <button class="settings-tab-button" data-settings-tab="usage">Usage</button>
+            </div>
+            <div class="settings-panels">
+                <div class="settings-tab-panel active" id="settings-tab-profile" data-settings-panel="profile">
+                    <label for="user-name-input">What should Graxybot call you?</label>
+                    <input type="text" id="user-name-input" placeholder="e.g., Alex, Boss, Friend">
+                    <label for="response-style-input">How do you want Graxybot to respond?</label>
+                    <textarea id="response-style-input" rows="3" placeholder="e.g., Be concise and funny"></textarea>
+                    <div class="settings-toggle-row">
+                        <div class="toggle-text">
+                            <div class="toggle-title">Dark mode</div>
+                            <div class="toggle-subtitle">Keep things moody or switch back to light.</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="theme-mode-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <button id="save-personality-btn">Save Settings</button>
+                    <button id="wipe-data-btn" class="danger-btn">Wipe All Data</button>
+                </div>
+                <div class="settings-tab-panel" id="settings-tab-usage" data-settings-panel="usage">
+                    <div class="usage-section">
+                        <div class="usage-card">
+                            <div class="usage-header">
+                                <span>Chats</span>
+                                <span id="usage-chats-label">0 / 50</span>
+                            </div>
+                            <div class="usage-progress">
+                                <div class="usage-progress-bar" id="usage-chats-bar"></div>
+                            </div>
+                            <div class="usage-reset" id="usage-chats-reset">Full allowance available</div>
+                        </div>
+                        <div class="usage-card">
+                            <div class="usage-header">
+                                <span>Images</span>
+                                <span id="usage-images-label">0 / 20</span>
+                            </div>
+                            <div class="usage-progress">
+                                <div class="usage-progress-bar" id="usage-images-bar"></div>
+                            </div>
+                            <div class="usage-reset" id="usage-images-reset">Full allowance available</div>
+                        </div>
+                        <p class="usage-note">Each limit resets automatically every 2 hours. Invite your friends, but pace the magic.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Initial Name Modal -->
+<div id="initial-name-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h2>hi! what's your name?</h2>
+        <p class="modal-subtitle">graxybot likes to keep it personal.</p>
+        <input type="text" id="initial-name-input" placeholder="type your name...">
+        <button id="initial-name-save-btn">let's chat</button>
+    </div>
+</div>
+
+<!-- Me Popup -->
+<div id="me-popup">
+    <div class="me-popup-card">
+        <button class="me-popup-close" id="me-popup-close-btn">&times;</button>
+        <h2>me mode</h2>
+        <p id="me-popup-subtitle">snap a quick pic so graxybot can remix you into anything.</p>
+
+        <div class="me-media-area" id="me-media-area">
+            <div class="me-media-preview" id="me-media-preview">
+                <span id="me-media-placeholder">no photo yet</span>
+                <img id="me-photo-preview" alt="me preview" style="display:none;">
+            </div>
+            <video id="me-camera-stream" playsinline style="display:none;"></video>
+            <canvas id="me-canvas" width="512" height="512" style="display:none;"></canvas>
+        </div>
+
+        <div class="me-prompt-area" id="me-prompt-area" style="display:none;">
+            <textarea id="me-prompt-input" placeholder="example: put me in a neon cyberpunk world"></textarea>
+            <div class="me-hint">graxybot keeps your picture on this device. hit generate to send it with your prompt.</div>
+        </div>
+
+        <div class="me-control-row">
+            <button id="me-start-camera-btn" class="secondary-btn">open camera</button>
+            <button id="me-upload-btn" class="secondary-btn">upload photo</button>
+        </div>
+        <button id="me-capture-btn" class="primary-btn" style="display:none;">capture photo</button>
+        <div class="me-control-row" id="me-retake-row" style="display:none;">
+            <button id="me-retake-btn" class="secondary-btn">retake photo</button>
+            <button id="me-remove-btn" class="danger-btn">remove photo</button>
+        </div>
+        <input type="file" id="me-upload-input" accept="image/*" style="display:none;">
+    </div>
+</div>
+
+<!-- Themes Modal -->
+<div id="themes-overlay" class="modal-overlay">
+    <div id="themes-modal-content" class="modal-content">
+        <button class="close-modal-btn" id="close-themes-modal-btn">&times;</button>
+        <h2>Chat Themes</h2>
+        
+        <div class="theme-options">
+            <div class="theme-box" id="grass-theme-box" data-theme="grass">
+                <i class="fas fa-leaf theme-icon"></i>
+                <span class="theme-name">Grass</span>
+            </div>
+            <div class="theme-box" id="clouds-theme-box" data-theme="clouds">
+                <i class="fas fa-cloud theme-icon"></i>
+                <span class="theme-name">Clouds</span>
+            </div>
+        </div>
+
+        <div id="generate-theme-container">
+            <label for="theme-prompt-input">Or generate a custom theme:</label>
+            <input type="text" id="theme-prompt-input" placeholder="e.g., a serene mountain lake at dawn">
+            <button id="generate-theme-btn">Generate Image</button>
+            
+            <div id="theme-preview" class="modal-preview-box">
+                <div class="spinner modal-spinner" id="theme-spinner"></div>
+                <img id="theme-image-preview" src="" alt="Theme preview" style="display: none;"/>
+            </div>
+        </div>
+
+        <button id="save-theme-btn" class="secondary-btn" disabled>Save Generated Theme</button>
+        <button id="remove-theme-btn" class="danger-btn">Remove Theme</button>
+    </div>
+</div>
+
+<!-- DeltaMath Agent T&C Modal -->
+<div id="dm-tc-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal-btn" id="close-dm-tc-btn">&times;</button>
+        <h2>DeltaMath Agent (Beta)</h2>
+        <div class="modal-subtitle">Terms & Conditions</div>
+        <div class="dm-load-banner">
+            <i class="fas fa-signal"></i>
+            <span>currently under high load, try again later.</span>
+        </div>
+        <ul class="tc-list">
+            <li>1. Graxybot does not store your login session or any personal data. You log in yourself in the browser.</li>
+            <li>2. Graxybot does not condone cheating or using AI for work, this is a research preview.</li>
+            <li>3. Graxybot can make mistakes, and can do things that cannot be reveresed. Be advised, you will be able to see graxybot as it acts on the browser.</li>
+            <li>4. Graxybot Agent can only do multiple choise or simple(ish) questions, this is a research preview</li>
+        </ul>
+        <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="dm-tc-check" style="width: auto; margin: 0;">
+            <span>I agree to these terms</span>
+        </label>
+        <button id="dm-tc-next-btn" class="dm-tc-close-btn">Close</button>
+    </div>
+</div>
+
+<!-- DeltaMath Assignment Modal -->
+<div id="dm-setup-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal-btn" id="close-dm-setup-btn">&times;</button>
+        <h2>Set Up Agent</h2>
+        <p class="modal-subtitle">Graxybot will solve whatever assignment you open.</p>
+
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.6;">
+            <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+            After launching: log in, navigate to your assignment, then press <strong style="color:var(--primary);">Hand over to Graxybot</strong>.<br><br>
+            <i class="fas fa-exclamation-triangle" style="color:#f0a500;"></i>
+            Graxybot is not perfect — always double-check its work.
+        </p>
+
+        <button id="dm-launch-btn">Launch Agent</button>
+    </div>
+</div>
+
+
+
+<div class="chat-app" id="chat-app">
+<div id="launch-popup-overlay" class="launch-popup-overlay">
+    <div class="launch-popup">
+        <img src="gbothomework.png" alt="Graxybot homework illustration">
+        <h3>📚 Graxybot now solves homework</h3>
+        <p>Upload homework sheets and Graxybot will break them down into <strong>quick, easily understandable bits</strong> so the work feels way less overwhelming.<br><br>Use the new Homework button in the sidebar to get started.</p>
+        <div class="launch-popup-actions">
+            <button class="primary" id="launch-popup-close-btn">Let's go</button>
+        </div>
+    </div>
+</div>
+     <div id="menu-backdrop"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="new-chat-btn" id="new-chat-btn">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+            <button class="homework-entry-btn" id="homework-tab-button">
+                <span class="homework-entry-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5A1.5 1.5 0 0 1 7.5 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M14 3.5V8h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 12h6M9 15h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        <path d="m8.6 18.2 1.4-.3 4-4a1.1 1.1 0 1 0-1.6-1.6l-4 4-.3 1.4Z" fill="currentColor" stroke="currentColor" stroke-width=".4"/>
+                    </svg>
+                </span>
+                <span>Homework</span>
+            </button>
+        </div>
+        <ul class="chat-list" id="chat-list">
+        </ul>
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-controls">
+                <button class="sidebar-footer-link" id="themes-button">
+                    <i class="fas fa-palette"></i>
+                    <span>Themes</span>
+                </button>
+                <button class="sidebar-footer-link" id="settings-button">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content" id="main-content">
+        <div id="theme-container"></div>
+        <div class="chat-top-bar">
+            <h1 id="chat-title">Graxybot</h1>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+        </div>
+        <section id="homework-workspace" class="homework-workspace" style="display: none;">
+            <div class="homework-workspace-shell">
+                <div id="homework-home-screen" class="homework-home-screen">
+                    <div class="homework-home-copy">
+                        <div class="homework-kicker">Homework</div>
+                        <h2 id="homework-home-title">what are we getting done?</h2>
+                    </div>
+                    <div id="homework-panel" class="homework-panel">
+                        <button id="homework-upload-btn" class="homework-action-card">
+                            <span class="homework-action-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 16V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="m8.5 10.5 3.5-3.5 3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M5 16.5v1A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span class="homework-action-text">
+                                <strong>Upload homework sheets</strong>
+                                <span>open the paste-first homework solver</span>
+                            </span>
+                        </button>
+                        <button id="homework-presets-btn" class="homework-action-card">
+                            <span class="homework-action-icon">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M8 10.5h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M15.5 7.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span class="homework-action-text">
+                                <strong>View presets</strong>
+                                <span>common homework workflows, coming next</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div class="homework-workspace-head">
+                    <div>
+                        <div class="homework-kicker">Homework Intake</div>
+                        <h2>paste it all here!</h2>
+                    </div>
+                    <button id="homework-workspace-back-btn" class="homework-top-btn homework-top-btn-secondary">Back</button>
+                </div>
+                <div id="homework-intake-card" class="homework-intake-card">
+                    <label for="homework-paste-input">Worksheet text</label>
+                    <textarea id="homework-paste-input" placeholder="Paste every question, prompt, or worksheet block here..."></textarea>
+                    <div class="homework-intake-actions">
+                        <button id="homework-parse-btn" class="homework-top-btn homework-top-btn-primary">Solve homework</button>
+                    </div>
+                </div>
+                <div id="homework-working-state" class="homework-working-state" style="display: none;">
+                    <div class="homework-working-animation" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <h3>graxybot working...</h3>
+                    <p>finding each question and solving them one at a time.</p>
+                </div>
+                <div id="homework-answer-card" class="homework-answer-card" style="display: none;">
+                    <div class="homework-answer-header">
+                        <div>
+                            <div id="homework-question-position" class="homework-question-position">Question 1 of 1</div>
+                            <h3 id="homework-question-title">Question 1</h3>
+                        </div>
+                        <div id="homework-answer-status" class="homework-answer-status">Ready</div>
+                    </div>
+                    <div id="homework-question-text" class="homework-question-text"></div>
+                    <div class="homework-answer-block">
+                        <div class="homework-answer-label">Graxybot answer</div>
+                        <div id="homework-answer-text" class="homework-answer-text">Your answer will show up here.</div>
+                    </div>
+                    <div class="homework-answer-actions">
+                        <button id="homework-elaborate-btn" class="homework-answer-btn homework-answer-btn-elaborate">Elaborate</button>
+                        <button id="homework-regenerate-btn" class="homework-answer-btn homework-answer-btn-regenerate">Regenerate</button>
+                        <button id="homework-shorter-btn" class="homework-answer-btn homework-answer-btn-shorter">Shorter</button>
+                        <button id="homework-next-btn" class="homework-answer-btn homework-answer-btn-next">Next question</button>
+                    </div>
+                </div>
+                <div id="homework-detected-card" class="homework-detected-card" style="display: none;">
+                    <div class="homework-detected-header">
+                        <h3>Detected questions</h3>
+                        <span id="homework-detected-count">0 found</span>
+                    </div>
+                    <div id="homework-detected-list" class="homework-detected-list">
+                        <div class="homework-empty-state">Parsed questions will show up here.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer class="chat-input-container">
+            <div id="image-preview-area" style="display: none;">
+                <img id="image-preview" src="#" alt="Image preview"/>
+                <button id="remove-image-button" title="Remove image">&times;</button>
+            </div>
+            <div id="chat-composer">
+            <div class="chat-input-area">
+                <input type="text" id="message-input" placeholder="Ask me anything...">
+                <div id="me-active-banner" class="me-active-banner">
+                    <div class="me-active-info">
+                        <i class="fas fa-user-astronaut"></i>
+                        <span>me photo locked in. type your remix and hit send.</span>
+                    </div>
+                    <div class="me-active-controls">
+                        <button id="me-inline-retake-btn">retake</button>
+                        <button id="me-inline-remove-btn">remove</button>
+                    </div>
+                </div>
+                <div class="input-actions">
+                    <div class="agent-menu-container">
+                        <div class="action-menu" id="agent-menu">
+                            <button id="web-design-agent-button" class="icon-btn menu-item menu-item-web-design" title="Web Design Agent"><i class="fas fa-palette"></i><span>Web Design</span></button>
+                            <button id="deltamath-agent-button" class="icon-btn menu-item" title="Deltamath Agent (Beta)" disabled><i class="fas fa-calculator"></i><span>Deltamath (Beta)</span></button>
+                        </div>
+                        <button id="agent-menu-toggle" class="icon-btn" title="Agents"><i class="fas fa-robot"></i><span>Agents</span></button>
+                    </div>
+                    <div class="web-design-mode-container" id="web-design-mode-container" style="display: none;">
+                        <div class="action-menu" id="web-design-mode-menu">
+                            <button class="menu-item" id="mode-simple-btn"><i class="fas fa-bolt"></i><span>Simple</span></button>
+                            <button class="menu-item" id="mode-pro-btn"><i class="fas fa-star"></i><span>Pro</span></button>
+                        </div>
+                        <button id="web-design-mode-toggle" class="icon-btn" title="Web Design Mode"><span>Pro</span></button>
+                    </div>
+                    <div class="customize-image-mode-container" id="customize-image-mode-container" style="display: none;">
+                        <div class="action-menu" id="customize-image-mode-menu">
+                            <button class="menu-item" id="image-model-mini-btn"><i class="fas fa-compress-arrows-alt"></i><span>Mini</span></button>
+                            <button class="menu-item" id="image-model-max-btn"><i class="fas fa-expand-arrows-alt"></i><span>Max</span></button>
+                        </div>
+                        <button id="customize-image-mode-toggle" class="icon-btn" title="Customize Image Model"><span>Customize</span></button>
+                    </div>
+                    <div class="action-menu-container">
+                        <div class="action-menu" id="action-menu">
+                            <button id="create-image-button" class="icon-btn menu-item menu-item-image" title="Create Image"><i class="fas fa-image"></i><span>Create Image</span><span class="new-tag">New</span></button>
+                            <button id="image-upload-button" class="icon-btn menu-item menu-item-attach" title="Attach File"><i class="fas fa-paperclip"></i><span>Attach File</span></button>
+                            <button id="reddit-story-button" class="icon-btn menu-item menu-item-reddit" title="Generate Reddit Story"><i class="fab fa-reddit-alien"></i><span>Reddit Story</span></button>
+                            <button id="mic-button" class="icon-btn menu-item menu-item-mic" title="Voice Mode"><i class="fas fa-microphone"></i><span>Voice Mode</span></button>
+                            <button id="search-mode-button" class="icon-btn menu-item menu-item-search" title="Search the Web"><i class="fas fa-globe"></i><span>Search</span></button>
+                        </div>
+                        <button id="action-menu-toggle" class="icon-btn" title="More Actions"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+                    <button id="send-button" class="icon-btn" title="Send Message"><i class="fas fa-arrow-up"></i></button>
+                </div>
+            </div>
+            </div>
+            <input type="file" id="homework-upload-input" accept="image/*,.pdf" multiple style="display: none;">
+        </footer>
+    </main>
+</div>
+
+<div id="story-overlay" class="modal-overlay" style="background-color: black; z-index: 4000;">
+    <div id="story-video-container">
+        <video id="story-video" playsinline loop muted></video>
+    </div>
+    <div id="story-captions-container"></div>
+    <div id="story-watermark">Graxybot</div>
+    <div id="story-outro">
+        <div class="outro-line-1">Made with Graxybot</div>
+        <div class="outro-line-2">Make your own at Graxybot.com</div>
+    </div>
+    <button id="download-story-btn" class="icon-btn" title="Download Video"><i class="fas fa-download"></i></button>
+    <button id="close-story-btn" class="close-modal-btn">&times;</button>
+</div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+    <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

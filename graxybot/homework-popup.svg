@@ -1,0 +1,61 @@
+<svg width="1024" height="640" viewBox="0 0 1024 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="128" y1="64" x2="896" y2="576" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1FA1FF"/>
+      <stop offset="1" stop-color="#177DE6"/>
+    </linearGradient>
+    <linearGradient id="pumpkin" x1="512" y1="190" x2="512" y2="474" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4FD6F7"/>
+      <stop offset="1" stop-color="#33BCE8"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="700" y1="254" x2="860" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FBFF"/>
+      <stop offset="1" stop-color="#E6EEF9"/>
+    </linearGradient>
+    <filter id="shadow" x="176" y="116" width="672" height="416" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="24"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.025 0 0 0 0 0.172 0 0 0 0 0.415 0 0 0 0.24 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="640" rx="32" fill="url(#bg)"/>
+  <circle cx="512" cy="320" r="220" fill="white" fill-opacity="0.08"/>
+
+  <g filter="url(#shadow)">
+    <rect x="218" y="164" width="588" height="320" rx="32" fill="#1593F4" fill-opacity="0.22"/>
+  </g>
+
+  <g transform="translate(280 120)">
+    <path d="M245 36C241 10 269 -2 289 8C301 14 309 27 309 42C309 57 302 70 290 77L245 36Z" fill="#FFCA63"/>
+    <path d="M261 0C279 1 294 18 294 40C294 50 290 60 283 68C271 61 259 50 249 36C245 29 243 20 243 12C247 4 253 0 261 0Z" fill="#F1B348"/>
+    <ellipse cx="232" cy="194" rx="156" ry="132" fill="url(#pumpkin)"/>
+    <ellipse cx="146" cy="194" rx="72" ry="126" fill="#42CAE8"/>
+    <ellipse cx="318" cy="194" rx="72" ry="126" fill="#42CAE8"/>
+    <path d="M163 95C181 76 206 66 232 66C258 66 283 76 301 95" stroke="#23A2E5" stroke-width="6" stroke-linecap="round"/>
+    <path d="M116 194C116 147 127 108 146 84" stroke="#23A2E5" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M348 194C348 147 337 108 318 84" stroke="#23A2E5" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M196 256C205 276 217 286 232 286C247 286 259 276 268 256" stroke="#23A2E5" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <circle cx="182" cy="180" r="15" fill="white"/>
+    <circle cx="282" cy="180" r="15" fill="white"/>
+    <path d="M199 219H265C265 247 251 266 232 266C213 266 199 247 199 219Z" fill="white"/>
+  </g>
+
+  <g transform="translate(650 214) rotate(4)">
+    <rect x="0" y="0" width="172" height="220" rx="22" fill="#0B4DB9"/>
+    <rect x="18" y="18" width="136" height="184" rx="16" fill="url(#paper)"/>
+    <rect x="38" y="52" width="96" height="12" rx="6" fill="#9ED4FF"/>
+    <rect x="38" y="88" width="88" height="12" rx="6" fill="#9ED4FF"/>
+    <rect x="38" y="124" width="78" height="12" rx="6" fill="#9ED4FF"/>
+    <circle cx="56" cy="164" r="12" fill="#FFC433"/>
+    <path d="M51 164L55 168L63 158" stroke="#0B4DB9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="104" cy="164" r="12" fill="#FFC433"/>
+    <path d="M99 164L103 168L111 158" stroke="#0B4DB9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="512" y="88" fill="white" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="700" text-anchor="middle">Graxybot Homework</text>
+</svg>
