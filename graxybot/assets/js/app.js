@@ -24,7 +24,11 @@ import {
 import {
     getSearchSystemPrompt,
     getSystemPrompt,
-    getWebDesignSystemPrompt
+    getWebDesignSystemPrompt,
+    getBuildClarificationSystemPrompt,
+    getBuildPlannerSystemPrompt,
+    getBuildExecutionSystemPrompt,
+    getBuildRepairSystemPrompt
 } from './prompts.js';
 
     // --- DOM Element References ---
@@ -42,12 +46,17 @@ import {
     let meRetakeRow, meRetakeBtn, meRemoveBtn, meMediaPreview, meMediaPlaceholder, mePhotoPreview;
     let mePromptArea, mePromptInput, meSubtitle, meCameraStreamEl, meCanvas;
     let meActiveBanner, meInlineRetakeBtn, meInlineRemoveBtn;
-    let homeworkTabButton, chatComposer, homeworkPanel, homeworkUploadBtn, homeworkPresetsBtn, homeworkUploadInput;
+    let homeworkTabButton, buildTabButton, chatComposer, homeworkPanel, homeworkUploadBtn, homeworkPresetsBtn, homeworkUploadInput;
     let homeworkWorkspace, homeworkPasteInput, homeworkParseBtn, homeworkDetectedList, homeworkDetectedCount;
     let homeworkWorkspaceBackBtn, homeworkFileSummary, chatInputContainer, homeworkWorkspaceHead;
     let homeworkHomeScreen, homeworkHomeTitle, homeworkIntakeCard, homeworkWorkingState, homeworkDetectedCard;
     let homeworkAnswerCard, homeworkQuestionPosition, homeworkQuestionTitle, homeworkQuestionText;
     let homeworkAnswerText, homeworkAnswerStatus, homeworkElaborateBtn, homeworkRegenerateBtn, homeworkShorterBtn, homeworkNextBtn;
+    let buildWorkspace, buildHomeTitle, buildPromptWrap, buildPromptInput, buildPromptButton, buildPromptSprite;
+    let buildIdleScreen, buildAgentScreen, buildAgentSprite, buildAgentKicker, buildAgentTitle, buildAgentSubtitle;
+    let buildProgressWrap, buildProgressBar, buildProgressStatus;
+    let buildWorkbench, buildThinkingStream, buildCodeStream;
+    let buildResultScreen, buildPreviewFrame, buildOpenPreviewBtn, buildResetBtn, buildLogsList;
     let webDesignModeContainer, webDesignModeToggle, webDesignModeMenu, modeSimpleBtn, modeProBtn;
     let customizeImageModeContainer, customizeImageModeToggle, customizeImageModeMenu, imageModelMiniBtn, imageModelMaxBtn;
     let currentImageModel = 'gpt-image-1-mini';
@@ -88,16 +97,96 @@ import {
     let isSearchModeQueued = false;
     let isHomeworkModeActive = false;
     let isHomeworkWorkspaceActive = false;
+    let isBuildModeActive = false;
     let homeworkWorkspaceStage = 'intake';
     let homeworkSourceFiles = [];
     let homeworkParsedQuestions = [];
     let currentHomeworkQuestionIndex = 0;
+    let currentBuildHeadline = 'graxybot build';
+    let currentBuildHeadlineIndex = 0;
+    let currentBuildSprite = '';
+    let currentBuildVerb = 'building';
+    let currentBuildHtml = '';
+    let buildLogEntries = [];
+    let buildFlowState = 'idle';
+    let buildOriginalPrompt = '';
+    let buildClarificationQuestion = '';
+    let buildAwaitingClarification = false;
+    let buildFakeProgressValue = 0;
+    let buildFakeProgressInterval = null;
+    let buildFakeCodeInterval = null;
+    let buildSpriteFocusInterval = null;
+    let buildThinkingText = '';
+    let buildCodeText = '';
+    let buildLastRealCodeAt = 0;
+    let buildLastRealThinkingAt = 0;
     const HOMEWORK_FUN_LINES = [
         'Graxybot Homework',
         'what are we getting done?',
         'let’s knock this out',
         'homework, but less painful',
         'what needs solving today?'
+    ];
+    const BUILD_FUN_LINES = [
+        'graxybot build',
+        'Graxybot Build',
+        'what are we coding?',
+        'build anything',
+        'lets build something new'
+    ];
+    const BUILD_SPRITE_VARIANTS = [
+        'orb',
+        'laptop',
+        'astronaut'
+    ];
+    const BUILD_VERBS = ['working', 'coding', 'building'];
+    const BUILD_FAKE_CODE_LINES = [
+        '<!DOCTYPE html>',
+        '<html lang="en">',
+        '<head>',
+        '  <meta charset="UTF-8" />',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+        '  <title>Graxybot Build</title>',
+        '  <style>',
+        '    body { margin: 0; font-family: system-ui, sans-serif; }',
+        '    .app { display: grid; place-items: center; min-height: 100vh; }',
+        '  </style>',
+        '</head>',
+        '<body>',
+        '  <div class="app">building something fun...</div>',
+        '  <script>',
+        '    console.log("graxybot build in progress");',
+        '  </script>',
+        '</body>',
+        '</html>'
+    ];
+    const BUILD_FAKE_THINKING_LINES = [
+        'figuring out the simplest usable flow',
+        'keeping the first-run experience easy',
+        'planning the layout before coding',
+        'choosing interactions the user will understand fast',
+        'turning the request into a single-file app brief',
+        'making sure the html can run standalone'
+    ];
+    const BOT_TRANSFORM_ACTIONS = [
+        {
+            id: 'shorter',
+            label: 'make shorter',
+            loadingLabel: 'shortening...',
+            buildInstruction: () => 'Rewrite the assistant response so it is shorter and tighter. Keep the same meaning, preserve key facts, and do not add new information. Output only the rewritten answer.'
+        },
+        {
+            id: 'clearer',
+            label: 'make clearer',
+            loadingLabel: 'clarifying...',
+            buildInstruction: () => 'Rewrite the assistant response so it is clearer and easier to understand. Keep the same meaning, preserve key facts, and do not add new information. Output only the rewritten answer.'
+        },
+        {
+            id: 'elaborate',
+            label: 'elaborate',
+            loadingLabel: 'elaborating...',
+            buildInstruction: () => 'Rewrite the assistant response so it is a bit more detailed and explanatory while keeping the same meaning and core facts. Clarify the answer, but do not go off topic or add unrelated new claims. Output only the rewritten answer.'
+        }
     ];
     
     // --- Core Functions ---
@@ -127,6 +216,10 @@ import {
     }
     function setDynamicChatTitle() {
         if (!chatTitle) return;
+        if (isBuildModeActive) {
+            chatTitle.textContent = 'Graxybot Build Beta';
+            return;
+        }
         if (isHomeworkWorkspaceActive) {
             const activeQuestion = getHomeworkQuestionAtCurrentIndex();
             if (homeworkWorkspaceStage === 'results' && activeQuestion) {
@@ -162,6 +255,436 @@ import {
     }
     function getHomeworkFunLine() {
         return HOMEWORK_FUN_LINES[Math.floor(Math.random() * HOMEWORK_FUN_LINES.length)];
+    }
+    function advanceBuildHeadline() {
+        currentBuildHeadline = BUILD_FUN_LINES[currentBuildHeadlineIndex];
+        currentBuildHeadlineIndex = (currentBuildHeadlineIndex + 1) % BUILD_FUN_LINES.length;
+    }
+    function chooseBuildVerb() {
+        currentBuildVerb = BUILD_VERBS[Math.floor(Math.random() * BUILD_VERBS.length)];
+    }
+    function getBuildBadgeMarkup(label = 'Graxybot Build') {
+        return `${label} <span class="build-beta-tag build-beta-tag-inline">Beta</span>`;
+    }
+    function refreshBuildHeadline() {
+        if (buildHomeTitle && isBuildModeActive) {
+            buildHomeTitle.innerHTML = `${escapeHtml(currentBuildHeadline)} <span class="build-beta-tag build-beta-tag-inline">Beta</span>`;
+        }
+    }
+    function chooseBuildSprite() {
+        const previousSprite = currentBuildSprite;
+        let nextSprite = BUILD_SPRITE_VARIANTS[Math.floor(Math.random() * BUILD_SPRITE_VARIANTS.length)];
+        if (previousSprite && BUILD_SPRITE_VARIANTS.length > 1) {
+            while (nextSprite === previousSprite) {
+                nextSprite = BUILD_SPRITE_VARIANTS[Math.floor(Math.random() * BUILD_SPRITE_VARIANTS.length)];
+            }
+        }
+        currentBuildSprite = nextSprite;
+    }
+    function refreshBuildSprite() {
+        if (!buildPromptSprite || !currentBuildSprite) return;
+        buildPromptSprite.className = `build-prompt-sprite build-prompt-sprite--${currentBuildSprite}`;
+        if (buildAgentSprite) {
+            buildAgentSprite.className = `build-agent-sprite build-agent-sprite--${currentBuildSprite}`;
+        }
+    }
+    function stopBuildWorkbenchMotion() {
+        if (buildFakeCodeInterval) {
+            clearInterval(buildFakeCodeInterval);
+            buildFakeCodeInterval = null;
+        }
+        if (buildSpriteFocusInterval) {
+            clearInterval(buildSpriteFocusInterval);
+            buildSpriteFocusInterval = null;
+        }
+    }
+    function setBuildFocus(mode = 'thinking') {
+        if (!buildAgentScreen) return;
+        buildAgentScreen.dataset.focus = mode;
+    }
+    function formatBuildCodeMarkup(text = '') {
+        let html = escapeHtml(text);
+        html = html.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="build-code-comment">$1</span>');
+        html = html.replace(/(&lt;\/?)([a-zA-Z0-9:-]+)/g, '$1<span class="build-code-tag">$2</span>');
+        html = html.replace(/([a-zA-Z-:]+)(=)(&quot;.*?&quot;|&#39;.*?&#39;)/g, '<span class="build-code-attr">$1</span>$2<span class="build-code-string">$3</span>');
+        html = html.replace(/\b(function|const|let|var|return|if|else|for|while|new|class|async|await|true|false|null)\b/g, '<span class="build-code-keyword">$1</span>');
+        html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="build-code-number">$1</span>');
+        html = html.replace(/\b([A-Za-z_$][\w$]*)(?=\()/g, '<span class="build-code-function">$1</span>');
+        return html;
+    }
+    function renderBuildWorkbench() {
+        if (buildThinkingStream) {
+            buildThinkingStream.textContent = buildThinkingText || 'waiting for the planner...';
+            buildThinkingStream.scrollTop = buildThinkingStream.scrollHeight;
+        }
+        if (buildCodeStream) {
+            buildCodeStream.innerHTML = formatBuildCodeMarkup(buildCodeText || 'waiting for code output...');
+            buildCodeStream.scrollTop = buildCodeStream.scrollHeight;
+        }
+    }
+    function resetBuildWorkbench() {
+        buildThinkingText = '';
+        buildCodeText = '';
+        buildLastRealCodeAt = 0;
+        buildLastRealThinkingAt = 0;
+        renderBuildWorkbench();
+    }
+    function appendBuildThinkingText(chunk = '', isReal = false) {
+        if (!chunk) return;
+        buildThinkingText += chunk;
+        if (isReal) buildLastRealThinkingAt = Date.now();
+        renderBuildWorkbench();
+    }
+    function appendBuildCodeText(chunk = '', isReal = false) {
+        if (!chunk) return;
+        buildCodeText += chunk;
+        if (isReal) buildLastRealCodeAt = Date.now();
+        renderBuildWorkbench();
+    }
+    function primeBuildWorkbench() {
+        buildThinkingText = `// graxybot build planner\n// waiting for gpt-5.4-mini...\n\n`;
+        buildCodeText = `// gpt-5.4 code stream\n// waiting for standalone html...\n`;
+        renderBuildWorkbench();
+    }
+    function startBuildWorkbenchMotion() {
+        stopBuildWorkbenchMotion();
+        primeBuildWorkbench();
+        setBuildFocus('thinking');
+        let fakeCodeIndex = 0;
+        let fakeThinkingIndex = 0;
+        buildFakeCodeInterval = setInterval(() => {
+            const now = Date.now();
+            if (now - buildLastRealThinkingAt > 900) {
+                const line = BUILD_FAKE_THINKING_LINES[fakeThinkingIndex % BUILD_FAKE_THINKING_LINES.length];
+                fakeThinkingIndex += 1;
+                appendBuildThinkingText(`• ${line}\n`, false);
+            }
+            if (now - buildLastRealCodeAt > 1200) {
+                const line = BUILD_FAKE_CODE_LINES[fakeCodeIndex % BUILD_FAKE_CODE_LINES.length];
+                fakeCodeIndex += 1;
+                appendBuildCodeText(`${line}\n`, false);
+            }
+        }, 780);
+        const focusModes = ['thinking', 'coding', 'drift-left', 'drift-right', 'thinking-high', 'coding-high'];
+        let lastFocus = 'thinking';
+        buildSpriteFocusInterval = setInterval(() => {
+            let nextFocus = focusModes[Math.floor(Math.random() * focusModes.length)];
+            while (nextFocus === lastFocus && focusModes.length > 1) {
+                nextFocus = focusModes[Math.floor(Math.random() * focusModes.length)];
+            }
+            lastFocus = nextFocus;
+            setBuildFocus(nextFocus);
+        }, 980 + Math.floor(Math.random() * 520));
+    }
+    function stopFakeBuildProgress() {
+        if (buildFakeProgressInterval) {
+            clearInterval(buildFakeProgressInterval);
+            buildFakeProgressInterval = null;
+        }
+    }
+    function setFakeBuildProgress(value, label = '') {
+        buildFakeProgressValue = Math.max(0, Math.min(100, value));
+        if (buildProgressBar) {
+            buildProgressBar.style.width = `${buildFakeProgressValue}%`;
+        }
+        if (buildProgressStatus && label) {
+            buildProgressStatus.textContent = label;
+        }
+    }
+    function startFakeBuildProgress() {
+        stopFakeBuildProgress();
+        setFakeBuildProgress(8, 'starting build...');
+        buildFakeProgressInterval = setInterval(() => {
+            const increment = buildFakeProgressValue < 40
+                ? 7 + Math.random() * 8
+                : buildFakeProgressValue < 72
+                    ? 3 + Math.random() * 5
+                    : 1 + Math.random() * 2.5;
+            setFakeBuildProgress(Math.min(92, buildFakeProgressValue + increment));
+        }, 850);
+    }
+    function resetBuildLogs() {
+        buildLogEntries = [];
+        renderBuildLogs();
+    }
+    function addBuildLog(text) {
+        if (!text) return;
+        buildLogEntries.push(text);
+        buildLogEntries = buildLogEntries.slice(-6);
+        renderBuildLogs();
+    }
+    function renderBuildLogs() {
+        if (!buildLogsList) return;
+        if (!buildLogEntries.length) {
+            buildLogsList.innerHTML = '<div class="build-log-line">build logs appear here</div>';
+            return;
+        }
+        buildLogsList.innerHTML = buildLogEntries
+            .map((entry) => `<div class="build-log-line">${escapeHtml(entry)}</div>`)
+            .join('');
+    }
+    function showBuildIdleScreen() {
+        buildFlowState = 'idle';
+        if (buildIdleScreen) buildIdleScreen.style.display = 'flex';
+        if (buildAgentScreen) buildAgentScreen.style.display = 'none';
+        if (buildResultScreen) buildResultScreen.style.display = 'none';
+        if (buildProgressWrap) buildProgressWrap.style.display = 'none';
+        if (buildPromptWrap) buildPromptWrap.style.display = 'block';
+        if (buildPromptInput) {
+            buildPromptInput.placeholder = 'Describe what you want to build...';
+            buildPromptInput.value = '';
+            if (isBuildModeActive) {
+                setTimeout(() => buildPromptInput.focus(), 0);
+            }
+        }
+        stopFakeBuildProgress();
+        stopBuildWorkbenchMotion();
+        setFakeBuildProgress(0, 'starting build...');
+        if (buildPromptButton) buildPromptButton.disabled = false;
+        if (buildPromptSprite) buildPromptSprite.style.display = '';
+        refreshBuildHeadline();
+        refreshBuildSprite();
+        resetBuildLogs();
+    }
+    function showBuildClarificationScreen(questionText) {
+        buildFlowState = 'clarifying';
+        if (buildIdleScreen) buildIdleScreen.style.display = 'none';
+        if (buildResultScreen) buildResultScreen.style.display = 'none';
+        if (buildAgentScreen) buildAgentScreen.style.display = 'flex';
+        if (buildProgressWrap) buildProgressWrap.style.display = 'none';
+        if (buildPromptWrap) buildPromptWrap.style.display = 'block';
+        if (buildAgentKicker) buildAgentKicker.innerHTML = getBuildBadgeMarkup();
+        if (buildAgentTitle) buildAgentTitle.textContent = questionText || 'one quick question';
+        if (buildAgentSubtitle) buildAgentSubtitle.textContent = 'answer this and graxybot will start building.';
+        if (buildPromptInput) {
+            buildPromptInput.placeholder = 'Answer graxybot...';
+            buildPromptInput.value = '';
+            setTimeout(() => buildPromptInput.focus(), 0);
+        }
+        if (buildPromptButton) buildPromptButton.disabled = false;
+        if (buildPromptSprite) buildPromptSprite.style.display = '';
+        stopBuildWorkbenchMotion();
+        refreshBuildSprite();
+    }
+    function showBuildWorkingScreen() {
+        buildFlowState = 'building';
+        if (buildIdleScreen) buildIdleScreen.style.display = 'none';
+        if (buildResultScreen) buildResultScreen.style.display = 'none';
+        if (buildAgentScreen) buildAgentScreen.style.display = 'flex';
+        if (buildProgressWrap) buildProgressWrap.style.display = 'block';
+        if (buildPromptWrap) buildPromptWrap.style.display = 'none';
+        if (buildAgentKicker) buildAgentKicker.innerHTML = getBuildBadgeMarkup();
+        if (buildAgentTitle) buildAgentTitle.textContent = currentBuildVerb;
+        if (buildAgentSubtitle) buildAgentSubtitle.textContent = 'graxybot is turning your prompt into a single-file app.';
+        if (buildPromptInput) buildPromptInput.value = '';
+        if (buildPromptButton) buildPromptButton.disabled = true;
+        if (buildPromptSprite) buildPromptSprite.style.display = 'none';
+        startFakeBuildProgress();
+        startBuildWorkbenchMotion();
+        refreshBuildSprite();
+    }
+    function showBuildResultScreen(htmlCode) {
+        buildFlowState = 'result';
+        currentBuildHtml = htmlCode || '';
+        if (buildIdleScreen) buildIdleScreen.style.display = 'none';
+        if (buildAgentScreen) buildAgentScreen.style.display = 'none';
+        if (buildResultScreen) buildResultScreen.style.display = 'flex';
+        if (buildProgressWrap) buildProgressWrap.style.display = 'none';
+        if (buildPromptWrap) buildPromptWrap.style.display = 'none';
+        stopFakeBuildProgress();
+        stopBuildWorkbenchMotion();
+        setFakeBuildProgress(100, 'preview ready');
+        if (buildPreviewFrame) {
+            buildPreviewFrame.srcdoc = currentBuildHtml;
+        }
+        if (buildPromptInput) buildPromptInput.value = '';
+    }
+    function resetBuildFlow() {
+        buildOriginalPrompt = '';
+        buildClarificationQuestion = '';
+        buildAwaitingClarification = false;
+        currentBuildHtml = '';
+        showBuildIdleScreen();
+    }
+    function extractHtmlFromModelResponse(responseText = '') {
+        const codeBlockMatch = responseText.match(/```html\s*([\s\S]*?)```/i);
+        if (codeBlockMatch?.[1]) {
+            return codeBlockMatch[1].trim();
+        }
+        const genericBlockMatch = responseText.match(/```\s*([\s\S]*?)```/);
+        if (genericBlockMatch?.[1]) {
+            return genericBlockMatch[1].trim();
+        }
+        return responseText.trim();
+    }
+    function normalizeBuildHtml(responseText = '') {
+        let html = extractHtmlFromModelResponse(responseText);
+        const lower = html.toLowerCase();
+        const doctypeIndex = lower.indexOf('<!doctype html');
+        const htmlIndex = lower.indexOf('<html');
+        const startIndex = doctypeIndex >= 0 ? doctypeIndex : htmlIndex;
+        if (startIndex > 0) {
+            html = html.slice(startIndex);
+        }
+        const endIndex = html.toLowerCase().lastIndexOf('</html>');
+        if (endIndex >= 0) {
+            html = html.slice(0, endIndex + 7);
+        }
+        return html.trim();
+    }
+    function isStandaloneHtmlDocument(html = '') {
+        const lower = html.toLowerCase();
+        return lower.includes('<html') && lower.includes('</html>') && lower.includes('<body') && lower.includes('</body>');
+    }
+    function parseBuildJsonResponse(responseText = '') {
+        const trimmed = responseText.trim();
+        if (!trimmed) throw new Error('empty build response');
+        try {
+            return JSON.parse(trimmed);
+        } catch (error) {
+            const match = trimmed.match(/\{[\s\S]*\}/);
+            if (match) {
+                return JSON.parse(match[0]);
+            }
+            throw error;
+        }
+    }
+    async function runBuildClarificationCheck(userPrompt) {
+        addBuildLog('sending to gpt-5.4-mini');
+        const messages = [
+            { role: 'system', content: getBuildClarificationSystemPrompt() },
+            { role: 'user', content: userPrompt }
+        ];
+        const raw = await sendMessageToModel(messages, 'gpt-5.4-mini', true, true);
+        return parseBuildJsonResponse(raw);
+    }
+    async function runBuildPlanner(userPrompt, clarificationAnswer = '') {
+        addBuildLog('preparing build brief with gpt-5.4-mini');
+        const plannerInput = clarificationAnswer
+            ? `Original request:\n${userPrompt}\n\nClarifying question:\n${buildClarificationQuestion}\n\nUser answer:\n${clarificationAnswer}`
+            : `Original request:\n${userPrompt}`;
+        const messages = [
+            { role: 'system', content: getBuildPlannerSystemPrompt() },
+            { role: 'user', content: plannerInput }
+        ];
+        setBuildFocus('thinking');
+        buildThinkingText = `// gpt-5.4-mini planner\n\n`;
+        renderBuildWorkbench();
+        return sendMessageToModel(messages, 'gpt-5.4-mini', true, true, {
+            onStreamText: (chunk) => appendBuildThinkingText(chunk, true)
+        });
+    }
+    async function runBuildExecution(builderBrief) {
+        addBuildLog('sending to gpt-5.4');
+        const messages = [
+            { role: 'system', content: getBuildExecutionSystemPrompt() },
+            { role: 'user', content: builderBrief }
+        ];
+        setBuildFocus('coding');
+        buildCodeText = '// gpt-5.4 code stream\n\n';
+        renderBuildWorkbench();
+        const raw = await sendMessageToModel(messages, 'gpt-5.4', true, true, {
+            onStreamText: (chunk) => appendBuildCodeText(chunk, true)
+        });
+        return normalizeBuildHtml(raw);
+    }
+    async function repairBuildExecution(builderBrief, brokenOutput) {
+        addBuildLog('repairing standalone html');
+        const messages = [
+            { role: 'system', content: getBuildRepairSystemPrompt() },
+            {
+                role: 'user',
+                content: `Builder brief:\n${builderBrief}\n\nBroken output:\n${brokenOutput}`
+            }
+        ];
+        setBuildFocus('coding');
+        appendBuildCodeText('\n\n// repairing invalid output...\n', false);
+        const raw = await sendMessageToModel(messages, 'gpt-5.4', true, true, {
+            onStreamText: (chunk) => appendBuildCodeText(chunk, true)
+        });
+        return normalizeBuildHtml(raw);
+    }
+    async function startBuildFlow(userPrompt, clarificationAnswer = '') {
+        try {
+            isRequestInProgress = true;
+            updateActionButtonsState();
+            chooseBuildVerb();
+            showBuildWorkingScreen();
+            addBuildLog('checking if prompt needs clarification');
+            let plannerBrief = '';
+
+            if (!clarificationAnswer) {
+                const clarification = await runBuildClarificationCheck(userPrompt);
+                if (clarification?.needs_clarification && clarification?.question) {
+                    buildAwaitingClarification = true;
+                    buildClarificationQuestion = clarification.question.trim();
+                    addBuildLog('waiting for clarification');
+                    isRequestInProgress = false;
+                    updateActionButtonsState();
+                    showBuildClarificationScreen(buildClarificationQuestion);
+                    return;
+                }
+            }
+
+            buildAwaitingClarification = false;
+            addBuildLog('prompt is clear enough to build');
+            plannerBrief = await runBuildPlanner(userPrompt, clarificationAnswer);
+            addBuildLog('builder brief ready');
+            setFakeBuildProgress(32, 'writing builder brief...');
+            let htmlCode = await runBuildExecution(plannerBrief);
+            setFakeBuildProgress(74, 'generating standalone html...');
+            if (!isStandaloneHtmlDocument(htmlCode)) {
+                htmlCode = await repairBuildExecution(plannerBrief, htmlCode);
+            }
+            if (!isStandaloneHtmlDocument(htmlCode)) {
+                throw new Error('model did not return a valid standalone html file');
+            }
+            setFakeBuildProgress(94, 'loading preview...');
+            addBuildLog('rendering preview');
+            showBuildResultScreen(htmlCode);
+            addBuildLog('build complete');
+        } catch (error) {
+            console.error('Build flow failed:', error);
+            addBuildLog('build failed');
+            stopFakeBuildProgress();
+            stopBuildWorkbenchMotion();
+            showToast(`build failed: ${error.message}`, 'error', 3200);
+            showBuildClarificationScreen('build hit a snag');
+            if (buildAgentSubtitle) {
+                buildAgentSubtitle.textContent = 'try changing the prompt and sending it again.';
+            }
+        } finally {
+            isRequestInProgress = false;
+            updateActionButtonsState();
+        }
+    }
+    async function handleBuildPromptSubmit() {
+        if (!isBuildModeActive || !buildPromptInput || isRequestInProgress) return;
+        const promptText = buildPromptInput.value.trim();
+        if (!promptText) return;
+
+        if (!buildAwaitingClarification) {
+            const usageAttempt = tryConsumeUsage('chats');
+            if (!usageAttempt.success) {
+                const waitText = usageAttempt.remainingMs
+                    ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
+                    : '';
+                showToast(`chat limit reached.${waitText}`, 'error', 4000);
+                return;
+            }
+            buildOriginalPrompt = promptText;
+            chooseBuildSprite();
+            refreshBuildSprite();
+            addBuildLog('starting build');
+            await startBuildFlow(promptText);
+            return;
+        }
+
+        addBuildLog('received clarification');
+        await startBuildFlow(buildOriginalPrompt, promptText);
+    }
+    function getTransformActionById(actionId) {
+        return BOT_TRANSFORM_ACTIONS.find((action) => action.id === actionId) || null;
     }
     function generateChatId() { return `chat_${Date.now()}`; }
     function loadData() {
@@ -232,6 +755,11 @@ import {
             webDesignAgentButton.classList.toggle('active', isWebDesignModeActive);
         }
         if (homeworkTabButton) homeworkTabButton.disabled = isBusy;
+        if (buildTabButton) buildTabButton.disabled = isBusy;
+        if (buildPromptInput) buildPromptInput.disabled = isBusy;
+        if (buildPromptButton) buildPromptButton.disabled = isBusy || (isBuildModeActive && buildFlowState !== 'building' && !buildPromptInput.value.trim());
+        if (buildResetBtn) buildResetBtn.disabled = isBusy;
+        if (buildOpenPreviewBtn) buildOpenPreviewBtn.disabled = isBusy || !currentBuildHtml;
         if (homeworkUploadBtn) homeworkUploadBtn.disabled = isBusy;
         if (homeworkPresetsBtn) homeworkPresetsBtn.disabled = isBusy;
         if (homeworkElaborateBtn) homeworkElaborateBtn.disabled = isBusy || !homeworkParsedQuestions.length;
@@ -251,7 +779,7 @@ import {
     }
     function refreshInputPlaceholder() {
         if (!messageInput || meQuickModeActive) return;
-        if (isHomeworkModeActive) return;
+        if (isHomeworkModeActive || isBuildModeActive) return;
         if (isImageGenerationModeActive) {
             messageInput.placeholder = "Enter image prompt...";
             return;
@@ -267,31 +795,40 @@ import {
         messageInput.placeholder = "Ask me anything...";
     }
     function updateHomeworkModeUI() {
+        const isWorkspaceModeActive = isHomeworkModeActive || isBuildModeActive;
         if (homeworkTabButton) {
             homeworkTabButton.classList.toggle('active', isHomeworkModeActive);
         }
+        if (buildTabButton) {
+            buildTabButton.classList.toggle('active', isBuildModeActive);
+        }
         if (chatComposer) {
-            chatComposer.style.display = isHomeworkModeActive ? 'none' : '';
+            chatComposer.style.display = isWorkspaceModeActive ? 'none' : '';
         }
         if (chatMessagesContainer) {
-            chatMessagesContainer.style.display = isHomeworkModeActive ? 'none' : '';
+            chatMessagesContainer.style.display = isWorkspaceModeActive ? 'none' : '';
         }
         if (homeworkWorkspace) {
             homeworkWorkspace.style.display = isHomeworkModeActive ? 'block' : 'none';
         }
+        if (buildWorkspace) {
+            buildWorkspace.style.display = isBuildModeActive ? 'block' : 'none';
+        }
         if (chatInputContainer) {
-            chatInputContainer.style.display = isHomeworkModeActive ? 'none' : '';
+            chatInputContainer.style.display = isWorkspaceModeActive ? 'none' : '';
             chatInputContainer.style.borderTop = '';
             chatInputContainer.style.backgroundColor = '';
             chatInputContainer.style.backdropFilter = '';
             chatInputContainer.style.paddingTop = '';
         }
         updateHomeworkWorkspaceStageUI();
+        refreshBuildHeadline();
+        refreshBuildSprite();
         setDynamicChatTitle();
         syncLandingViewState();
     }
     function shouldShowLandingView() {
-        if (isHomeworkModeActive) {
+        if (isHomeworkModeActive || isBuildModeActive) {
             return false;
         }
         const currentChat = currentChatId ? chats[currentChatId] : null;
@@ -576,6 +1113,7 @@ import {
     function openHomeworkWorkspace() {
         isHomeworkModeActive = true;
         isHomeworkWorkspaceActive = true;
+        isBuildModeActive = false;
         if (!homeworkParsedQuestions.length) {
             setHomeworkWorkspaceStage('intake');
         }
@@ -594,6 +1132,24 @@ import {
         setHomeworkWorkspaceStage('intake');
         isHomeworkWorkspaceActive = false;
         isHomeworkModeActive = false;
+        updateHomeworkModeUI();
+    }
+    function enterBuildMode() {
+        isHomeworkModeActive = false;
+        isHomeworkWorkspaceActive = false;
+        isBuildModeActive = true;
+        if (buildFlowState === 'idle') {
+            advanceBuildHeadline();
+            chooseBuildSprite();
+            showBuildIdleScreen();
+        } else {
+            refreshBuildSprite();
+        }
+        setChatActiveState(false);
+        updateHomeworkModeUI();
+    }
+    function exitBuildMode() {
+        isBuildModeActive = false;
         updateHomeworkModeUI();
     }
     function updateSearchModeUI() {
@@ -625,6 +1181,120 @@ import {
        }
        chats[currentChatId].history.push(messageData);
        saveChats();
+    }
+    function getChatHistoryForContext(limit = 10) {
+        if (!currentChatId || !chats[currentChatId]) return [];
+        return chats[currentChatId].history
+            .filter((msg) => !msg?.extraData?.excludeFromContext)
+            .slice(-limit);
+    }
+    function createChatReplyExtraData(sourcePrompt = '', overrides = {}) {
+        return {
+            messageType: 'chat_reply',
+            transformable: true,
+            showTransformActions: Math.random() < 0.5,
+            sourcePrompt,
+            ...overrides
+        };
+    }
+    function shouldShowTransformActions({ sender, isError, textContent, generatedMediaSrc, imagePreview, extraData }) {
+        if (sender !== 'bot' || isError) return false;
+        if (!textContent || !textContent.trim()) return false;
+        if (generatedMediaSrc || imagePreview) return false;
+        if (!extraData || extraData.type === 'web_design') return false;
+        return extraData.transformable === true && extraData.showTransformActions === true;
+    }
+    function setTransformButtonsBusy(actionsRow, busy, loadingLabel = '') {
+        if (!actionsRow) return;
+        actionsRow.classList.toggle('is-busy', busy);
+        actionsRow.querySelectorAll('.message-transform-btn').forEach((button) => {
+            button.disabled = busy;
+        });
+        if (busy && loadingLabel) {
+            actionsRow.dataset.loadingLabel = loadingLabel;
+        } else {
+            delete actionsRow.dataset.loadingLabel;
+        }
+    }
+    function attachTransformActions(wrapper, textContent, extraData = {}) {
+        if (!wrapper || !textContent?.trim()) return;
+        const bubbleDiv = wrapper.querySelector('.message-bubble');
+        if (!bubbleDiv) return;
+
+        const existing = bubbleDiv.querySelector('.message-transform-actions');
+        if (existing) existing.remove();
+
+        const actionsRow = document.createElement('div');
+        actionsRow.className = 'message-transform-actions';
+
+        BOT_TRANSFORM_ACTIONS.forEach((action) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'message-transform-btn';
+            button.textContent = action.label;
+            button.addEventListener('click', () => {
+                handleMessageTransform(action.id, {
+                    sourceText: textContent,
+                    sourcePrompt: extraData?.sourcePrompt || ''
+                }, actionsRow);
+            });
+            actionsRow.appendChild(button);
+        });
+
+        bubbleDiv.appendChild(actionsRow);
+    }
+    async function handleMessageTransform(actionId, context, actionsRow) {
+        if (isRequestInProgress) {
+            showToast('graxybot is already working on something.', 'info', 2200);
+            return;
+        }
+
+        const action = getTransformActionById(actionId);
+        const sourceText = context?.sourceText?.trim();
+        if (!action || !sourceText) return;
+
+        const usageAttempt = tryConsumeUsage('chats');
+        if (!usageAttempt.success) {
+            const waitText = usageAttempt.remainingMs
+                ? ` try again in ${formatDuration(usageAttempt.remainingMs)}.`
+                : '';
+            showToast(`chat limit reached.${waitText}`, 'error', 4000);
+            return;
+        }
+
+        const modelToUse = DEFAULT_CHAT_MODEL;
+        const systemPrompt = getSystemPrompt(modelToUse, userPersonality);
+        const rewriteInstruction = action.buildInstruction(userPersonality);
+        const messagesForModel = [
+            { role: 'system', content: systemPrompt },
+            ...(context?.sourcePrompt ? [{ role: 'user', content: `Original user request: ${context.sourcePrompt}` }] : []),
+            { role: 'assistant', content: sourceText },
+            { role: 'user', content: rewriteInstruction }
+        ];
+
+        isRequestInProgress = true;
+        updateActionButtonsState();
+        setTransformButtonsBusy(actionsRow, true, action.loadingLabel);
+
+        try {
+            const replyExtraData = createChatReplyExtraData(context?.sourcePrompt || '', {
+                excludeFromContext: true,
+                transformSource: action.id
+            });
+            const transformedText = await sendMessageToModel(messagesForModel, modelToUse, true, false, {
+                displayExtraData: replyExtraData,
+                transformContext: {
+                    sourcePrompt: context?.sourcePrompt || ''
+                }
+            });
+            addMessageToHistory('model', [{ text: transformedText }], null, null, null, replyExtraData);
+        } catch (error) {
+            showToast(`couldn't ${action.label}.`, 'error', 2600);
+        } finally {
+            isRequestInProgress = false;
+            setTransformButtonsBusy(actionsRow, false);
+            updateActionButtonsState();
+        }
     }
     function showThinkingIndicator(message = 'Thinking...', iconClass = 'fa-brain') {
         removeThinkingIndicator();
@@ -741,6 +1411,9 @@ import {
         bubbleDiv.appendChild(messageDiv);
         wrapper.appendChild(iconDiv);
         wrapper.appendChild(bubbleDiv);
+        if (shouldShowTransformActions({ sender, isError, textContent, generatedMediaSrc, imagePreview, extraData })) {
+            attachTransformActions(wrapper, textContent, extraData);
+        }
         chatMessagesContainer.appendChild(wrapper);
         chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'smooth' });
         return wrapper;
@@ -868,6 +1541,7 @@ import {
         if (!chats[chatId]) return;
         isHomeworkModeActive = false;
         isHomeworkWorkspaceActive = false;
+        isBuildModeActive = false;
         currentChatId = chatId;
         updateHomeworkModeUI();
         saveChats();
@@ -884,6 +1558,7 @@ import {
     function handleNewChat(clearUI = true) {
         isHomeworkModeActive = false;
         isHomeworkWorkspaceActive = false;
+        isBuildModeActive = false;
         const newId = generateChatId();
         chats[newId] = { history: [], title: "New Chat" };
         currentChatId = newId;
@@ -1522,10 +2197,12 @@ import {
             }
         }
     }
-    async function streamOpenAIResponse(messages, modelName, stream = true, silent = false) {
+    async function streamOpenAIResponse(messages, modelName, stream = true, silent = false, options = {}) {
         console.log("sendMessageToOpenAI: Start", modelName);
         // If silent, we don't display a message initially
-        const botMessageElement = (!silent && stream) ? displayMessage([], 'bot') : null;
+        const botMessageElement = (!silent && stream)
+            ? displayMessage([], 'bot', false, null, null, null, null, options.displayExtraData || null)
+            : null;
         const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
         
         let fullResponseText = "";
@@ -1563,6 +2240,9 @@ import {
                         const content = json.choices?.[0]?.delta?.content || '';
                         if (content) {
                             fullResponseText += content;
+                            if (typeof options.onStreamText === 'function') {
+                                options.onStreamText(content, fullResponseText);
+                            }
                             if (paragraph) {
                                processAndAppendText(fullResponseText, paragraph, false); // No highlight during stream
                                chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
@@ -1576,6 +2256,12 @@ import {
             if (paragraph) {
                 processAndAppendText(fullResponseText, paragraph, true); // Highlight at the end
             }
+            if (botMessageElement && options.transformContext && fullResponseText.trim()) {
+                attachTransformActions(botMessageElement, fullResponseText, {
+                    ...(options.displayExtraData || {}),
+                    ...options.transformContext
+                });
+            }
             console.log("sendMessageToOpenAI: End (Success)");
             return fullResponseText;
         } catch (error) {
@@ -1588,10 +2274,12 @@ import {
         }
     }
 
-    async function sendMessageToModel(messages, modelName, stream = true, silent = false) {
+    async function sendMessageToModel(messages, modelName, stream = true, silent = false, options = {}) {
         if (modelName === GEMINI_CHAT_MODEL) {
             console.log("sendMessageToGemini: Start", modelName);
-            const botMessageElement = (!silent && stream) ? displayMessage([], 'bot') : null;
+            const botMessageElement = (!silent && stream)
+                ? displayMessage([], 'bot', false, null, null, null, null, options.displayExtraData || null)
+                : null;
             const paragraph = botMessageElement ? botMessageElement.querySelector('[data-stream-target="true"]') : null;
             let fullResponseText = "";
             try {
@@ -1628,6 +2316,9 @@ import {
                             const content = json.choices?.[0]?.delta?.content || '';
                             if (content) {
                                 fullResponseText += content;
+                                if (typeof options.onStreamText === 'function') {
+                                    options.onStreamText(content, fullResponseText);
+                                }
                                 if (paragraph) {
                                     processAndAppendText(fullResponseText, paragraph, false); // No highlight during stream
                                     chatMessagesContainer.scrollTo({ top: chatMessagesContainer.scrollHeight, behavior: 'auto' });
@@ -1640,6 +2331,12 @@ import {
                 }
                 if (paragraph) {
                     processAndAppendText(fullResponseText, paragraph, true); // Highlight at end
+                }
+                if (botMessageElement && options.transformContext && fullResponseText.trim()) {
+                    attachTransformActions(botMessageElement, fullResponseText, {
+                        ...(options.displayExtraData || {}),
+                        ...options.transformContext
+                    });
                 }
                 console.log("sendMessageToGemini: End (Success)");
                 return fullResponseText;
@@ -1656,7 +2353,7 @@ import {
             }
         }
 
-        return streamOpenAIResponse(messages, modelName, stream, silent);
+        return streamOpenAIResponse(messages, modelName, stream, silent, options);
     }
 
     async function sendSearchRequest(queryText) {
@@ -1805,8 +2502,8 @@ import {
             
             const systemPrompt = getWebDesignSystemPrompt(designMode);
             
-            const historyForAPI = (chats[currentChatId]?.history || [])
-                .slice(-6).map(msg => ({ // Less history for focused design task
+            const historyForAPI = getChatHistoryForContext(6)
+                .map(msg => ({ // Less history for focused design task
                     role: msg.role === 'model' ? 'assistant' : 'user',
                     content: msg.parts.map(p => p.text).join(' ')
                 }));
@@ -1874,16 +2571,22 @@ import {
             
             const modelToUse = DEFAULT_CHAT_MODEL;
             const systemPrompt = getSystemPrompt(modelToUse, userPersonality);
-            const historyForAPI = (chats[currentChatId]?.history || [])
-                .slice(-10).map(msg => ({
+            const historyForAPI = getChatHistoryForContext(10)
+                .map(msg => ({
                     role: msg.role === 'model' ? 'assistant' : 'user',
                     content: msg.parts.map(p => p.text).join(' ')
                 }));
             const messagesForModel = [{ role: "system", content: systemPrompt }, ...historyForAPI];
             
             try {
-                const aiResponse = await sendMessageToModel(messagesForModel, modelToUse);
-                addMessageToHistory('model', [{ text: aiResponse }]);
+                const replyExtraData = createChatReplyExtraData(currentPrompt);
+                const aiResponse = await sendMessageToModel(messagesForModel, modelToUse, true, false, {
+                    displayExtraData: replyExtraData,
+                    transformContext: {
+                        sourcePrompt: currentPrompt
+                    }
+                });
+                addMessageToHistory('model', [{ text: aiResponse }], null, null, null, replyExtraData);
             } catch (error) {
                 // Error is already displayed by sendMessageToModel
             } finally {
@@ -2449,6 +3152,7 @@ import {
         themeContainer = document.getElementById('theme-container');
         newChatBtn = document.getElementById('new-chat-btn');
         homeworkTabButton = document.getElementById('homework-tab-button');
+        buildTabButton = document.getElementById('build-tab-button');
         chatList = document.getElementById('chat-list');
         settingsButton = document.getElementById('settings-button');
         themesButton = document.getElementById('themes-button');
@@ -2457,6 +3161,7 @@ import {
         menuToggleBtn = document.getElementById('menu-toggle-btn');
         chatMessagesContainer = document.getElementById('chat-messages');
         homeworkWorkspace = document.getElementById('homework-workspace');
+        buildWorkspace = document.getElementById('build-workspace');
         chatComposer = document.getElementById('chat-composer');
         homeworkPanel = document.getElementById('homework-panel');
         homeworkUploadBtn = document.getElementById('homework-upload-btn');
@@ -2484,6 +3189,28 @@ import {
         homeworkRegenerateBtn = document.getElementById('homework-regenerate-btn');
         homeworkShorterBtn = document.getElementById('homework-shorter-btn');
         homeworkNextBtn = document.getElementById('homework-next-btn');
+        buildIdleScreen = document.getElementById('build-idle-screen');
+        buildAgentScreen = document.getElementById('build-agent-screen');
+        buildHomeTitle = document.getElementById('build-home-title');
+        buildAgentSprite = document.getElementById('build-agent-sprite');
+        buildAgentKicker = document.getElementById('build-agent-kicker');
+        buildAgentTitle = document.getElementById('build-agent-title');
+        buildAgentSubtitle = document.getElementById('build-agent-subtitle');
+        buildProgressWrap = document.getElementById('build-progress-wrap');
+        buildProgressBar = document.getElementById('build-progress-bar');
+        buildProgressStatus = document.getElementById('build-progress-status');
+        buildWorkbench = document.getElementById('build-workbench');
+        buildThinkingStream = document.getElementById('build-thinking-stream');
+        buildCodeStream = document.getElementById('build-code-stream');
+        buildResultScreen = document.getElementById('build-result-screen');
+        buildPreviewFrame = document.getElementById('build-preview-frame');
+        buildOpenPreviewBtn = document.getElementById('build-open-preview-btn');
+        buildResetBtn = document.getElementById('build-reset-btn');
+        buildLogsList = document.getElementById('build-logs-list');
+        buildPromptWrap = document.querySelector('.build-prompt-wrap');
+        buildPromptInput = document.getElementById('build-prompt-input');
+        buildPromptButton = document.getElementById('build-prompt-button');
+        buildPromptSprite = document.getElementById('build-prompt-sprite');
         messageInput = document.getElementById('message-input');
         chatInputArea = document.querySelector('.chat-input-area');
         chatInputContainer = document.querySelector('.chat-input-container');
@@ -2570,8 +3297,6 @@ import {
         webDesignAgentButton = document.getElementById('web-design-agent-button');
         actionCoachmark = document.getElementById('action-coachmark');
         searchModeButton = document.getElementById('search-mode-button');
-        const launchPopupOverlay = document.getElementById('launch-popup-overlay');
-        const launchPopupCloseBtn = document.getElementById('launch-popup-close-btn');
 
         wipeDataBtn = document.getElementById('wipe-data-btn');
         initialNameOverlay = document.getElementById('initial-name-overlay');
@@ -2741,9 +3466,45 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
                 } else {
                     isHomeworkModeActive = true;
                     isHomeworkWorkspaceActive = false;
+                    isBuildModeActive = false;
                     setHomeworkWorkspaceStage('intake');
                     updateHomeworkModeUI();
                 }
+            });
+        }
+        if (buildTabButton) {
+            buildTabButton.addEventListener('click', () => {
+                if (isBuildModeActive) {
+                    exitBuildMode();
+                } else {
+                    enterBuildMode();
+                }
+            });
+        }
+        if (buildPromptButton) {
+            buildPromptButton.addEventListener('click', handleBuildPromptSubmit);
+        }
+        if (buildPromptInput) {
+            buildPromptInput.addEventListener('input', () => updateActionButtonsState());
+            buildPromptInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleBuildPromptSubmit();
+                }
+            });
+        }
+        if (buildOpenPreviewBtn) {
+            buildOpenPreviewBtn.addEventListener('click', () => {
+                if (!currentBuildHtml) return;
+                const blob = new Blob([currentBuildHtml], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            });
+        }
+        if (buildResetBtn) {
+            buildResetBtn.addEventListener('click', () => {
+                resetBuildFlow();
+                updateActionButtonsState();
             });
         }
         settingsButton.addEventListener('click', showPersonalityModal);
@@ -2874,14 +3635,6 @@ const clickedInsideAgentMenu = agentMenu && (agentMenu.contains(e.target) || age
         removeThemeBtn.addEventListener('click', handleRemoveTheme);
         grassThemeBox.addEventListener('click', () => saveAndApplyTheme('grass'));
         cloudsThemeBox.addEventListener('click', () => saveAndApplyTheme('clouds'));
-        if (launchPopupOverlay) {
-            launchPopupOverlay.classList.add('visible');
-        }
-        if (launchPopupCloseBtn) {
-            launchPopupCloseBtn.addEventListener('click', () => {
-                launchPopupOverlay?.classList.remove('visible');
-            });
-        }
 
         if (meButton) {
             meButton.addEventListener('click', () => {

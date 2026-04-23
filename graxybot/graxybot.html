@@ -198,19 +198,7 @@
     </div>
 </div>
 
-
-
 <div class="chat-app" id="chat-app">
-<div id="launch-popup-overlay" class="launch-popup-overlay">
-    <div class="launch-popup">
-        <img src="gbothomework.png" alt="Graxybot homework illustration">
-        <h3>📚 Graxybot now solves homework</h3>
-        <p>Upload homework sheets and Graxybot will break them down into <strong>quick, easily understandable bits</strong> so the work feels way less overwhelming.<br><br>Use the new Homework button in the sidebar to get started.</p>
-        <div class="launch-popup-actions">
-            <button class="primary" id="launch-popup-close-btn">Let's go</button>
-        </div>
-    </div>
-</div>
      <div id="menu-backdrop"></div>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -227,6 +215,16 @@
                     </svg>
                 </span>
                 <span>Homework</span>
+            </button>
+            <button class="build-entry-btn" id="build-tab-button">
+                <span class="build-entry-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M8 7 4.5 12 8 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m16 7 3.5 5-3.5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m13.2 4.5-2.4 15" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="build-entry-label">Graxybot Build <span class="build-beta-tag">Beta</span></span>
             </button>
         </div>
         <ul class="chat-list" id="chat-list">
@@ -338,6 +336,65 @@
                     </div>
                     <div id="homework-detected-list" class="homework-detected-list">
                         <div class="homework-empty-state">Parsed questions will show up here.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="build-workspace" class="build-workspace" style="display: none;">
+            <div class="build-workspace-shell">
+                <div id="build-idle-screen" class="build-simple-screen">
+                    <h2 id="build-home-title">graxybot build <span class="build-beta-tag build-beta-tag-inline">Beta</span></h2>
+                </div>
+                <div id="build-agent-screen" class="build-agent-screen" style="display: none;">
+                    <div id="build-agent-sprite" class="build-agent-sprite build-agent-sprite--orb" aria-hidden="true"></div>
+                    <div id="build-agent-kicker" class="build-agent-kicker">Graxybot Build <span class="build-beta-tag build-beta-tag-inline">Beta</span></div>
+                    <h2 id="build-agent-title">building</h2>
+                    <p id="build-agent-subtitle">graxybot is turning your prompt into a single-file app.</p>
+                    <div id="build-progress-wrap" class="build-progress-wrap" style="display: none;">
+                        <div class="build-progress-track">
+                            <div id="build-progress-bar" class="build-progress-bar"></div>
+                        </div>
+                        <div id="build-progress-status" class="build-progress-status">starting build...</div>
+                    </div>
+                    <div id="build-workbench" class="build-workbench">
+                        <section class="build-work-panel build-work-panel-doc">
+                            <div class="build-work-header">
+                                <span class="build-work-dot"></span>
+                                <span>planning</span>
+                            </div>
+                            <pre id="build-thinking-stream" class="build-stream-view"></pre>
+                        </section>
+                        <section class="build-work-panel build-work-panel-code">
+                            <div class="build-work-header">
+                                <span class="build-work-dot"></span>
+                                <span>building</span>
+                            </div>
+                            <pre id="build-code-stream" class="build-stream-view build-stream-view-code"></pre>
+                        </section>
+                    </div>
+                </div>
+                <div id="build-result-screen" class="build-result-screen" style="display: none;">
+                    <div class="build-result-bar">
+                        <div>
+                            <div class="build-agent-kicker">Graxybot Build <span class="build-beta-tag build-beta-tag-inline">Beta</span></div>
+                            <h3>preview</h3>
+                        </div>
+                        <div class="build-result-actions">
+                            <button type="button" id="build-open-preview-btn" class="homework-top-btn homework-top-btn-secondary">Open Fullscreen</button>
+                            <button type="button" id="build-reset-btn" class="homework-top-btn homework-top-btn-primary">New Build</button>
+                        </div>
+                    </div>
+                    <iframe id="build-preview-frame" class="build-preview-frame" sandbox="allow-scripts allow-forms allow-modals allow-same-origin"></iframe>
+                </div>
+                <div class="build-prompt-wrap">
+                    <div class="build-prompt-bar chat-input-area">
+                        <div class="build-sprite-anchor" aria-hidden="true">
+                            <div id="build-prompt-sprite" class="build-prompt-sprite build-prompt-sprite--orb"></div>
+                        </div>
+                        <input type="text" id="build-prompt-input" placeholder="Describe what you want to build..." autocomplete="off">
+                        <button type="button" id="build-prompt-button" class="icon-btn" aria-label="Send build prompt">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
                     </div>
                 </div>
             </div>
